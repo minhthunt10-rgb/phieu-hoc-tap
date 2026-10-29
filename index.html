@@ -1,0 +1,581 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Phiếu Học Tập</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lora:wght@700&family=Playpen+Sans:wght@500&display=swap" rel="stylesheet">
+<script src="logo.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+:root{
+  --green:#5A923F; --orange:#E8742F; --navy:#1F3F7A; --ink:#2b2b2b; --muted:#6b6b6b;
+  --bg:#FBF7F0; --card:#fff; --line:#E6DED2; --soft:#FDE5D3;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Be Vietnam Pro',system-ui,sans-serif;font-size:15px}
+button,input,select,textarea{font:inherit}
+header.app{display:flex;align-items:center;gap:12px;padding:10px 16px;background:#fff;border-bottom:3px solid var(--orange);position:sticky;top:0;z-index:10}
+header.app img{width:44px;height:44px;border-radius:50%}
+header.app h1{font-size:18px;margin:0;color:var(--green)}
+header.app small{display:block;color:var(--orange);font-weight:600;font-size:12px}
+nav.tabs{display:flex;gap:6px;padding:10px 16px 0;flex-wrap:wrap}
+nav.tabs button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 14px;cursor:pointer;font-weight:600;color:var(--muted)}
+nav.tabs button.on{background:var(--green);border-color:var(--green);color:#fff}
+main{padding:12px 16px 40px;max-width:1280px;margin:0 auto}
+.view{display:none}.view.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.card h3{margin:0 0 10px;font-size:15px;color:var(--orange)}
+label.f{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:8px 0 4px}
+input[type=text],input[type=number],input[type=date],select,textarea{width:100%;border:1px solid #d9d0c2;border-radius:10px;padding:8px 10px;background:#fff}
+textarea{min-height:56px;resize:vertical}
+.row{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(120px,1fr))}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chips button{border:1px dashed var(--green);background:#F3F8EF;color:#3F6E2A;border-radius:999px;padding:4px 10px;font-size:12.5px;cursor:pointer}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg label{border:1px solid #d9d0c2;border-radius:10px;padding:7px 12px;cursor:pointer;background:#fff}
+.seg input{margin-right:6px}
+.btn{border:0;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer;background:var(--green);color:#fff}
+.btn.o{background:var(--orange)}.btn.n{background:var(--navy)}.btn.g{background:#fff;color:var(--ink);border:1px solid #d9d0c2}
+.btn.r{background:#fff;color:#c62828;border:1px solid #f0c4c4}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+.sticky{position:sticky;top:76px}
+@media (max-width:900px){.grid2{grid-template-columns:minmax(0,1fr)}.sticky{position:static}}
+#previewWrap{width:100%;overflow:hidden;border-radius:6px;box-shadow:0 4px 18px rgba(0,0,0,.12);background:#fff}
+#preview{transform-origin:top left}
+.hint{font-size:12.5px;color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:10px;opacity:0;transition:.3s;z-index:99;pointer-events:none;max-width:90vw}
+.toast.on{opacity:1}
+table.list{width:100%;border-collapse:collapse;font-size:14px}
+table.list th,table.list td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+table.list th{color:var(--muted);font-size:12.5px}
+.pill{display:inline-block;background:var(--soft);color:#a3501b;border-radius:999px;padding:1px 8px;font-size:12px;font-weight:600}
+.tbl-wrap{overflow-x:auto}
+
+/* ============ PHIẾU (kích thước cố định 630px) ============ */
+.sheet{width:630px;position:relative;background:#fff;overflow:hidden;font-family:'Be Vietnam Pro',sans-serif;color:#333;padding:0 0 0}
+.sheet .wm{position:absolute;left:105px;top:230px;width:420px;opacity:.13}
+.sheet .in{position:relative;padding:8px 30px 0}
+.sh-top{display:flex;align-items:center;justify-content:space-between;height:72px}
+.sh-top .logo{width:84px;height:84px;margin-top:10px}
+.sh-motto{font-family:'Lora',serif;font-weight:700;color:var(--navy);font-size:19px;letter-spacing:.3px}
+.sh-tag{border:2px solid #3a9c8f;color:#1f6f63;font-weight:800;font-size:11.5px;padding:7px 12px;border-radius:12px;background:#fff}
+.sh-title{text-align:center;font-weight:800;font-size:32px;color:#EC3F7C;margin-top:2px;letter-spacing:.5px}
+.sh-sub{text-align:center;font-weight:700;font-style:italic;color:#C2187A;font-size:13.5px;margin-top:2px}
+.sh-badge{position:absolute;right:38px;top:84px;width:40px;height:36px;border-radius:8px;background:#3E9B4F;color:#fff;font-weight:800;font-size:20px;display:flex;align-items:center;justify-content:center}
+.sh-info{display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:24px;margin-top:22px}
+.sh-lab{font-weight:800;font-size:12.5px;color:#222;margin-bottom:6px}
+.sh-box{border:1.6px solid #333;background:#fff;min-height:32px;padding:3px 8px;display:flex;align-items:center;justify-content:center}
+.sh-h{text-align:center;font-family:'Lora',serif;font-weight:700;font-size:20px;margin:22px 0 12px}
+.sh-h.green{color:#3E9B4F}.sh-h.purple{color:#8E3FB0}.sh-h.navy{color:#2E4A7D}
+.sh-2{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+.sh-colh{text-align:center;font-weight:800;font-size:13.5px;color:#222;margin-bottom:8px}
+.sh-rbox{border:1.6px solid #333;border-radius:12px;background:#fff;padding:8px 12px;height:96px}
+.sh-rbox.cmt{position:relative;display:flex;padding:6px 10px}
+.cmt .fit{text-wrap:balance;flex:1;display:flex;align-items:center;justify-content:center;text-align:center;padding:0 16px 4px;overflow:hidden}
+.sh-sbox .fit{flex:1;min-height:0;overflow:hidden}
+.fi{display:inline-block;max-width:100%;vertical-align:top}.fit.nw .fi{max-width:none}.fit.nw,.fit.nw *{white-space:pre !important}
+.sh-note .fit{flex:1;height:100%;display:flex;align-items:center;overflow:hidden;line-height:1.25}.sh-note .fit .hw{line-height:1.25}
+.sheet .fit .hw,.sheet.print .fit .hw{font-size:1em}.sheet .fit .hw.k2{font-size:.92em}
+.sh-st{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;margin:3px 0;color:#333}
+.sh-ck{width:18px;height:18px;border:2px solid #3E9B4F;border-radius:4px;display:inline-flex;align-items:center;justify-content:center}
+.sh-sbox{border:1.4px solid #333;background:#fff;height:120px;padding:6px 12px 8px;display:flex;flex-direction:column}
+.sw{position:relative;display:flex;flex-direction:column}.sw>div{position:relative}
+.sw::before{content:"";position:absolute}
+.sw.o::before{left:4px;top:4px;right:-4px;bottom:-4px;background:#F08A3E}
+.sw.p::before{left:7px;top:7px;right:-7px;bottom:-7px;background:#CDA6E6}
+.sw.g::before{left:7px;top:7px;right:-7px;bottom:-7px;background:#8CC152}
+.sh-sbox .t{text-align:center;font-weight:700;font-size:13.5px;margin-bottom:4px}
+.sh-sbox.purple .t{color:#8E3FB0;font-family:'Lora',serif}.sh-sbox.green .t{color:#3E9B4F;font-size:12px}
+.hw{font-family:'Playpen Sans',cursive;font-weight:500;color:#D32F2F;font-size:15.5px;line-height:1.4;white-space:pre-wrap;word-break:break-word}
+.hw.k{color:#333}
+.sheet.print .hw{font-family:'Be Vietnam Pro',sans-serif;font-weight:600;font-size:14px;line-height:1.45}
+.sh-att{display:flex;align-items:center;gap:14px;margin-top:2px}
+.sh-note{flex:1;min-width:0;border:1.6px solid #333;border-radius:10px;height:46px;overflow:hidden;padding:3px 10px;display:flex;align-items:center;font-size:12.5px;color:#4a6fa5;font-weight:600}
+.sh-opt{display:flex;align-items:center;gap:6px;font-weight:800;font-size:12.5px;color:#5b8cc9}
+.sh-circ{width:24px;height:24px;border-radius:50%;border:1.6px solid #333;display:inline-flex;align-items:center;justify-content:center}
+.sh-foot{margin-top:28px;border-top:5px solid var(--navy);padding-top:5px}
+.sh-foot div{background:var(--navy);color:#fff;font-weight:700;font-style:italic;font-size:12.5px;display:flex;justify-content:space-between;padding:10px 24px}
+#exportHolder{position:fixed;left:-10000px;top:0}
+</style>
+</head>
+<body>
+<header class="app">
+  <img id="appLogo" alt="">
+  <div><h1>Phiếu Học Tập</h1><small>Grow with English – Tiếng Anh Ms. Minh Thư</small></div>
+</header>
+<nav class="tabs">
+  <button data-v="nhap" class="on">✏️ Nhập phiếu</button>
+  <button data-v="hs">👩‍🎓 Học sinh</button>
+  <button data-v="luu">📂 Phiếu đã lưu</button>
+  <button data-v="caidat">⚙️ Sao lưu &amp; cài đặt</button>
+</nav>
+<main>
+
+<!-- ================= NHẬP PHIẾU ================= -->
+<section class="view on" id="v-nhap">
+ <div class="grid2">
+  <div>
+   <div class="card">
+    <h3>Học sinh &amp; buổi học <span id="editTag" class="pill" style="display:none">Đang sửa phiếu cũ</span></h3>
+    <label class="f">Học sinh</label>
+    <select id="fStudent"></select>
+    <div class="row">
+      <div><label class="f">Ngày học</label><input type="date" id="fDate"></div>
+      <div><label class="f">Buổi số</label><input type="number" id="fNo" min="1"></div>
+      <div><label class="f">/ Số buổi 1 khóa</label><input type="number" id="fTotal" min="1"></div>
+    </div>
+   </div>
+
+   <div class="card">
+    <h3>Kiểm tra bài tập về nhà</h3>
+    <div class="seg">
+      <label><input type="radio" name="fHw" value="done" checked>Hoàn thành</label>
+      <label><input type="radio" name="fHw" value="not">Chưa hoàn thành</label>
+      <label><input type="radio" name="fHw" value="none">Không có BTVN</label>
+    </div>
+    <label class="f">Mức độ hoàn thành (%)</label>
+    <input type="number" id="fPct" min="0" max="100" placeholder="100">
+    <label class="f">Nhận xét bài tập về nhà</label>
+    <textarea id="fHwCmt"></textarea>
+    <div class="chips" data-for="fHwCmt" data-list="hw"></div>
+   </div>
+
+   <div class="card">
+    <h3>Mục tiêu / nội dung buổi học <span class="pill">nội dung chung</span></h3>
+    <label class="f">Ngữ pháp</label>
+    <textarea id="fGram" placeholder="VD: Sửa BTVN + Tổng ôn kiến thức GHK1 (U1+2+3)"></textarea>
+    <div class="chips" data-for="fGram" data-list="gram" data-sep=" + "></div>
+    <div class="row">
+      <div><label class="f">Khảo từ vựng (bài)</label><input type="text" id="fVUnit" placeholder="Unit 2+3"></div>
+      <div><label class="f">Số từ</label><input type="number" id="fVNum" placeholder="30"></div>
+      <div><label class="f">Điểm khảo (đúng)</label><input type="number" id="fVScore" placeholder="để trống nếu chưa khảo"></div>
+    </div>
+   </div>
+
+   <div class="card">
+    <h3>Tinh thần học tập</h3>
+    <div class="seg">
+      <label><input type="radio" name="fAtt" value="tot" checked>Tốt</label>
+      <label><input type="radio" name="fAtt" value="kha">Khá</label>
+      <label><input type="radio" name="fAtt" value="cct">Cần cải thiện</label>
+    </div>
+    <label class="f">Nhận xét (nếu có)</label>
+    <input type="text" id="fAttCmt">
+    <div class="chips" data-for="fAttCmt" data-list="att"></div>
+   </div>
+
+   <div class="card">
+    <h3>BTVN buổi kế tiếp <span class="pill">nội dung chung</span></h3>
+    <label class="f">Nội dung và vị trí trang tài liệu</label>
+    <textarea id="fNext" placeholder="VD: Làm BT tổng ôn (tr4, 5, 20)&#10;Làm BT đề (c39→56, 99→107)"></textarea>
+    <div class="chips" data-for="fNext" data-list="next" data-sep="&#10;"></div>
+    <div class="row">
+      <div><label class="f">Khảo … từ vựng</label><input type="number" id="fNVNum" placeholder="30"></div>
+      <div><label class="f">bài</label><input type="text" id="fNVUnit" placeholder="Unit 3"></div>
+    </div>
+    <label class="f">Lý thuyết và bài tập cần chuẩn bị (thêm)</label>
+    <textarea id="fPrep" placeholder="VD: Sửa BT tổng ôn + ôn tập"></textarea>
+    <div class="chips" data-for="fPrep" data-list="prep" data-sep=" + "></div>
+    <p class="hint">Bấm câu mẫu có "…" thì chỗ "…" được bôi sẵn – gõ luôn số trang, số câu, Unit vào.</p>
+   </div>
+
+   <div class="card">
+    <div class="btns" style="margin-top:0">
+      <button class="btn" id="bSave">💾 Lưu phiếu</button>
+      <button class="btn o" id="bSaveNext">Lưu &amp; sang HS tiếp (giữ nội dung chung)</button>
+      <button class="btn g" id="bNew">Phiếu mới</button>
+    </div>
+    <p class="hint">Lớp ghép nhiều HS: nhập xong một em bấm nút cam, phần <b>nội dung chung</b> được giữ lại, chỉ cần sửa BTVN và tinh thần của em tiếp theo.</p>
+   </div>
+  </div>
+
+  <div class="sticky">
+   <div class="card">
+    <h3>Xem trước phiếu</h3>
+    <div id="previewWrap"><div id="preview"></div></div>
+    <div class="btns">
+      <button class="btn n" id="bShare">📤 Gửi Zalo (điện thoại)</button>
+      <button class="btn" id="bCopy">📋 Sao chép ảnh (dán vào Zalo PC)</button>
+      <button class="btn g" id="bDown">⬇️ Tải ảnh</button>
+      <button class="btn g" id="bMsg">💬 Sao chép lời nhắn</button>
+    </div>
+    <p class="hint">Trên điện thoại: bấm <b>Gửi Zalo</b> → chọn Zalo → chọn phụ huynh. Trên máy tính: bấm <b>Sao chép ảnh</b> rồi Ctrl+V vào khung chat Zalo.</p>
+   </div>
+  </div>
+ </div>
+</section>
+
+<!-- ================= HỌC SINH ================= -->
+<section class="view" id="v-hs">
+ <div class="card">
+  <h3 id="hsFormTitle">Thêm học sinh</h3>
+  <div class="row">
+   <div style="grid-column:span 2"><label class="f">Họ tên học viên</label><input type="text" id="sName" placeholder="Nguyễn Ngọc Trâm"></div>
+   <div><label class="f">Lớp / khối</label><input type="text" id="sClass" placeholder="Khối 9"></div>
+   <div><label class="f">Số buổi 1 khóa</label><input type="number" id="sTotal" value="12"></div>
+   <div><label class="f">Đã học xong buổi số</label><input type="number" id="sDone" value="0"></div>
+  </div>
+  <div class="row">
+   <div><label class="f">Phụ huynh (tên gọi trên Zalo)</label><input type="text" id="sParent" placeholder="Mẹ Trâm"></div>
+   <div><label class="f">Ghi chú</label><input type="text" id="sNote"></div>
+  </div>
+  <div class="btns"><button class="btn" id="bAddS">➕ Lưu học sinh</button><button class="btn g" id="bCancelS" style="display:none">Hủy sửa</button></div>
+  <p class="hint">"Đã học xong buổi số" dùng khi HS đang học giữa khóa (VD đã xong 8 buổi → phiếu tiếp theo tự ghi buổi 9).</p>
+ </div>
+ <div class="card"><h3>Danh sách học sinh (<span id="sCount">0</span>)</h3>
+  <input type="text" id="sSearch" placeholder="Tìm tên hoặc lớp…">
+  <div class="tbl-wrap"><table class="list" id="sTable"></table></div>
+ </div>
+</section>
+
+<!-- ================= PHIẾU ĐÃ LƯU ================= -->
+<section class="view" id="v-luu">
+ <div class="card">
+  <div class="row">
+   <div><label class="f">Học sinh</label><select id="lStudent"></select></div>
+   <div><label class="f">Tháng</label><input type="month" id="lMonth"></div>
+  </div>
+  <div class="tbl-wrap"><table class="list" id="lTable"></table></div>
+  <p class="hint">Dữ liệu từng buổi (điểm khảo, BTVN, tinh thần) được giữ lại để làm <b>phiếu tổng tháng</b> sau này.</p>
+ </div>
+</section>
+
+<!-- ================= CÀI ĐẶT ================= -->
+<section class="view" id="v-caidat">
+ <div class="card">
+  <h3>Sao lưu dữ liệu</h3>
+  <p class="hint">Dữ liệu chỉ nằm trong trình duyệt của máy này. Nên tải bản sao lưu mỗi tuần (lưu vào Google Drive) – đổi máy hoặc xóa lịch sử trình duyệt thì mở lại bằng nút "Khôi phục".</p>
+  <div class="btns"><button class="btn" id="bExport">⬇️ Tải bản sao lưu (.json)</button>
+   <label class="btn g">⬆️ Khôi phục từ file<input type="file" id="fImport" accept=".json" hidden></label></div>
+  <p class="hint" id="backupInfo"></p>
+ </div>
+ <div class="card">
+  <h3>Kiểu chữ điền trên phiếu</h3>
+  <div class="seg">
+   <label><input type="radio" name="cFont" value="hand" checked>Chữ viết tay rõ nét (đỏ)</label>
+   <label><input type="radio" name="cFont" value="print">Chữ in (dễ đọc)</label>
+  </div>
+ </div>
+ <div class="card">
+  <h3>Câu nhận xét nhanh</h3>
+  <label class="f">Nhận xét BTVN (mỗi dòng một câu)</label><textarea id="cHw" rows="6"></textarea>
+  <label class="f">Nhận xét tinh thần (mỗi dòng một câu)</label><textarea id="cAtt" rows="5"></textarea>
+  <label class="f">Nội dung buổi học – Ngữ pháp (mỗi dòng một câu)</label><textarea id="cGram" rows="6"></textarea>
+  <label class="f">BTVN – Nội dung và vị trí trang tài liệu (mỗi dòng một câu)</label><textarea id="cNext" rows="6"></textarea>
+  <label class="f">BTVN – Lý thuyết và bài tập cần chuẩn bị (mỗi dòng một câu)</label><textarea id="cPrep" rows="6"></textarea>
+  <label class="f">Lời nhắn kèm ảnh – dùng {ten}, {ngay}, {buoi}</label><textarea id="cMsg" rows="3"></textarea>
+  <div class="btns"><button class="btn" id="bSaveCfg">Lưu cài đặt</button></div>
+ </div>
+</section>
+</main>
+
+<div id="exportHolder"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const KEY='gwe-phieu-hoc-tap-v1';
+const DEF_CFG={
+  font:'hand',
+  hw:['Con hoàn thành đầy đủ BTVN. Tiếp tục phát huy!','Con làm bài cẩn thận, đúng gần hết.','Con còn sai một số câu, cô đã chữa trên lớp.','Con làm chưa đủ, PH nhắc con bổ sung phần còn thiếu giúp cô ạ.','Con chưa làm BTVN, PH nhắc con hoàn thành giúp cô ạ.',
+    'Con làm bài đầy đủ, trình bày sạch đẹp.','Con làm đúng …/… câu, cần xem lại phần …','Con còn nhầm lẫn …, cô đã giảng lại trên lớp.','Con làm bài vội nên sai nhiều lỗi nhỏ, cần cẩn thận hơn.','Con làm thiếu phần …, buổi sau con nộp bổ sung ạ.','Con quên mang BTVN, buổi sau con mang đầy đủ giúp cô ạ.'],
+  att:['Con tập trung, phát biểu tích cực.','Con tiến bộ rõ so với buổi trước.','Con cần tập trung hơn trong giờ học.','Con cần học thuộc từ vựng kỹ hơn.',
+    'Con hăng hái xây dựng bài.','Con hiểu bài nhanh, làm bài tốt.','Con còn rụt rè, cần mạnh dạn phát biểu hơn.','Con hay nói chuyện riêng, cần chú ý hơn.','Con đi học muộn, PH nhắc con đi đúng giờ giúp cô ạ.'],
+  gram:['Sửa BTVN','Tổng ôn kiến thức Unit …','Học ngữ pháp mới: …','Ôn tập ngữ pháp Unit …','Luyện đề kiểm tra','Kiểm tra 15 phút','Kiểm tra giữa kỳ','Chữa bài kiểm tra','Luyện dạng bài Đọc hiểu','Luyện dạng bài Viết lại câu','Luyện phát âm + trọng âm','Học từ vựng Unit …'],
+  next:['Làm BT tổng ôn (tr …)','Làm BT đề (câu … → …)','Làm BT Unit … (tr …)','Hoàn thành phiếu bài tập Unit …','Làm lại các câu sai trên lớp','Làm đề kiểm tra số …','Học thuộc công thức ngữ pháp …','Viết lại các từ khảo sai, mỗi từ 3 lần','Học thuộc từ vựng Unit …'],
+  prep:['Sửa BT tổng ôn','Ôn tập','Ôn lại công thức ngữ pháp đã học','Đọc trước bài mới Unit …','Chuẩn bị kiểm tra giữa kỳ','Chuẩn bị kiểm tra cuối kỳ','Ôn tập để làm bài kiểm tra buổi sau','Mang đủ sách vở, tài liệu'],
+  msg:'Ms. Minh Thư gửi phụ huynh phiếu học tập buổi {buoi} ngày {ngay} của con {ten} ạ. PH xem giúp cô và nhắc con làm BTVN nhé ạ!'
+};
+let db={students:[],sessions:[],cfg:{...DEF_CFG},lastBackup:null};
+try{const s=localStorage.getItem(KEY); if(s){const o=JSON.parse(s); db={...db,...o,cfg:{...DEF_CFG,...(o.cfg||{})}};}}catch(e){}
+// bản cũ chỉ có ít câu mẫu: bổ sung câu mới, giữ câu cô đã sửa
+if((db.cfg.ver||1)<2){['hw','att'].forEach(k=>DEF_CFG[k].forEach(t=>{if(!db.cfg[k].includes(t))db.cfg[k].push(t);}));db.cfg.ver=2;}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify(db));}catch(e){toast('⚠️ Không lưu được vào trình duyệt – hãy tải bản sao lưu!');}}
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+const dmy=iso=>{if(!iso)return['','',''];const[y,m,d]=iso.split('-');return[d,m,y];};
+const two=n=>n===''||n==null?'':String(n).padStart(2,'0');
+function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('on'),2600);}
+const stu=id=>db.students.find(s=>s.id===id);
+const sessOf=id=>db.sessions.filter(x=>x.studentId===id).sort((a,b)=>(a.date+a.created).localeCompare(b.date+b.created));
+
+/* ---------- Tabs ---------- */
+$$('nav.tabs button').forEach(b=>b.onclick=()=>{
+  $$('nav.tabs button').forEach(x=>x.classList.toggle('on',x===b));
+  $$('.view').forEach(v=>v.classList.toggle('on',v.id==='v-'+b.dataset.v));
+  if(b.dataset.v==='luu')renderSaved(); if(b.dataset.v==='hs')renderStudents(); if(b.dataset.v==='caidat')loadCfg();
+  if(b.dataset.v==='nhap')fitPreview();
+});
+
+/* ---------- Form ---------- */
+let editingId=null;
+const FIELDS=['fDate','fNo','fTotal','fPct','fHwCmt','fGram','fVUnit','fVNum','fVScore','fAttCmt','fNext','fNVNum','fNVUnit','fPrep'];
+function readForm(){
+  const r={studentId:$('#fStudent').value};
+  FIELDS.forEach(f=>r[f]=$('#'+f).value.trim?$('#'+f).value.trim():$('#'+f).value);
+  r.hw=($('input[name=fHw]:checked')||{}).value; r.att=($('input[name=fAtt]:checked')||{}).value;
+  return r;
+}
+function writeForm(r){
+  FIELDS.forEach(f=>$('#'+f).value=r[f]??'');
+  if(r.studentId)$('#fStudent').value=r.studentId;
+  ($(`input[name=fHw][value=${r.hw||'done'}]`)).checked=true;
+  ($(`input[name=fAtt][value=${r.att||'tot'}]`)).checked=true;
+}
+function nextNo(s){const ss=sessOf(s.id);const last=ss.length?+ss[ss.length-1].fNo:+(s.done||0);const total=+s.total||12;return last>=total?1:last+1;}
+function prefillFor(id,keepShared){
+  const s=stu(id); if(!s)return;
+  const cur=readForm(); const ss=sessOf(id); const last=ss[ss.length-1];
+  const r={studentId:id,fDate:keepShared?cur.fDate:today(),fNo:nextNo(s),fTotal:s.total||12,hw:'done',fPct:100,fHwCmt:'',att:'tot',fAttCmt:'',fVScore:''};
+  if(keepShared){['fGram','fVUnit','fVNum','fNext','fNVNum','fNVUnit','fPrep'].forEach(k=>r[k]=cur[k]);}
+  else if(last){ // gợi ý: nội dung hôm nay = phần "cần chuẩn bị" của buổi trước
+    r.fGram=last.fPrep||''; r.fVUnit=last.fNVUnit||''; r.fVNum=last.fNVNum||'';
+    r.fNVNum=last.fNVNum||''; r.fNext=''; r.fNVUnit=''; r.fPrep='';
+  }
+  writeForm(r); setEditing(null); updatePreview();
+}
+function setEditing(id){editingId=id;$('#editTag').style.display=id?'inline-block':'none';}
+function fillStudentSelects(){
+  const opts=db.students.slice().sort((a,b)=>(a.cls||'').localeCompare(b.cls||'')||a.name.localeCompare(b.name,'vi'))
+    .map(s=>`<option value="${s.id}">${esc(s.name)}${s.cls?' – '+esc(s.cls):''}</option>`).join('');
+  const v1=$('#fStudent').value, v2=$('#lStudent').value;
+  $('#fStudent').innerHTML=db.students.length?opts:'<option value="">(Chưa có học sinh – thêm ở tab Học sinh)</option>';
+  $('#lStudent').innerHTML='<option value="">Tất cả</option>'+opts;
+  if(stu(v1))$('#fStudent').value=v1; if(v2===''||stu(v2))$('#lStudent').value=v2;
+}
+$('#fStudent').onchange=()=>prefillFor($('#fStudent').value,false);
+$$('#v-nhap input, #v-nhap textarea').forEach(el=>el.addEventListener('input',updatePreview));
+$$('#v-nhap input[type=radio]').forEach(el=>el.addEventListener('change',()=>{
+  if(el.name==='fHw'){ if(el.value==='done'&&!$('#fPct').value)$('#fPct').value=100; }
+  updatePreview();
+}));
+
+function renderChips(){
+  $$('.chips').forEach(c=>{
+    const list=db.cfg[c.dataset.list]||[];
+    c.innerHTML=list.map(t=>`<button type="button">${esc(t)}</button>`).join('');
+    c.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+      const t=$('#'+c.dataset.for), sep=c.dataset.sep||' ';
+      const start=t.value?t.value.length+sep.length:0;
+      t.value=t.value?t.value+sep+b.textContent:b.textContent;
+      const i=t.value.indexOf('…',start); t.focus();
+      if(i>=0)t.setSelectionRange(i,i+1); else t.setSelectionRange(t.value.length,t.value.length);
+      updatePreview();});
+  });
+}
+
+function saveCurrent(){
+  const r=readForm();
+  if(!r.studentId){toast('Chọn học sinh trước đã ạ');return null;}
+  if(!r.fDate){toast('Chưa chọn ngày học');return null;}
+  if(editingId){const i=db.sessions.findIndex(x=>x.id===editingId);db.sessions[i]={...db.sessions[i],...r,updated:Date.now()};}
+  else{const rec={id:uid(),created:String(Date.now()),...r};db.sessions.push(rec);setEditing(rec.id);}
+  persist();toast('Đã lưu phiếu của '+stu(r.studentId).name);return r;
+}
+$('#bSave').onclick=saveCurrent;
+$('#bSaveNext').onclick=()=>{
+  const r=saveCurrent(); if(!r)return;
+  const list=$$('#fStudent option').map(o=>o.value); const i=list.indexOf(r.studentId);
+  const cls=(stu(r.studentId).cls||'');
+  // ưu tiên HS cùng lớp tiếp theo
+  let nxt=list.slice(i+1).find(id=>(stu(id).cls||'')===cls)||list[(i+1)%list.length];
+  prefillFor(nxt,true); window.scrollTo({top:0,behavior:'smooth'});
+};
+$('#bNew').onclick=()=>prefillFor($('#fStudent').value,false);
+
+/* ---------- Sheet ---------- */
+function sheetHTML(r){
+  const s=stu(r.studentId)||{name:'',cls:''};
+  const [d,m,y]=dmy(r.fDate);
+  const L=window.LOGO||'';
+  const ck=on=>`<span class="sh-ck">${on?'<span class="hw" style="font-size:20px;line-height:1">✓</span>':''}</span>`;
+  const circ=on=>`<span class="sh-circ">${on?'<span class="hw" style="font-size:20px;line-height:1">✓</span>':''}</span>`;
+  const pct=r.hw==='none'?'—':(r.fPct!==''?r.fPct:'....');
+  const vocab=`<span class="hw k k2">Khảo từ vựng</span> <span class="hw">${esc(r.fVUnit)||'<span class="hw k">......</span>'}</span> <span class="hw k k2">(<span class="hw">${esc(r.fVNum)||'....'}</span> từ)</span>`
+    +(r.fVScore!==''&&r.fVScore!=null?`<div class="hw" style="margin-top:4px">Kết quả: ${esc(r.fVScore)}/${esc(r.fVNum)||'?'} từ</div>`:'');
+  const prep=`<span class="hw k k2">Khảo</span> <span class="hw">${esc(r.fNVNum)||'....'}</span> <span class="hw k k2">từ vựng bài</span> <span class="hw">${esc(r.fNVUnit)}</span>`
+    +(r.fPrep?`<div class="hw">${esc(r.fPrep)}</div>`:'');
+  return `<div class="sheet ${db.cfg.font==='print'?'print':''}">
+   <img class="wm" src="${L}">
+   <div class="in">
+    <div class="sh-top"><img class="logo" src="${L}"><div class="sh-motto">KIÊN TRÌ - YÊU THƯƠNG - TIẾN BỘ</div><div class="sh-tag">MS. MINH THƯ</div></div>
+    <div class="sh-title">📚 PHIẾU HỌC TẬP 📚</div>
+    <div class="sh-badge">${esc(r.fNo)||1}</div>
+    <div class="sh-sub">THEO DÕI TIẾN ĐỘ HỌC TẬP VÀ ĐÁNH GIÁ CỦA HỌC VIÊN</div>
+    <div class="sh-info">
+      <div><div class="sh-lab">HỌ TÊN HỌC VIÊN | LỚP</div><div class="sw o"><div class="sh-box"><span class="hw">${esc(s.name)}${s.cls?' | '+esc(s.cls):''}</span></div></div></div>
+      <div><div class="sh-lab">NGÀY HỌC</div><div class="sw o"><div class="sh-box"><span class="hw">${d}</span>&nbsp;<b>/</b>&nbsp;<span class="hw">${m}</span>&nbsp;<b>/ ${y||'2026'}</b></div></div></div>
+      <div><div class="sh-lab">SỐ BUỔI / 1 KHÓA</div><div class="sw o"><div class="sh-box"><span class="hw">${two(r.fNo)}</span>&nbsp;<b>/</b>&nbsp;<span class="hw">${esc(r.fTotal)}</span></div></div></div>
+    </div>
+    <div class="sh-h green">KIỂM TRA BÀI TẬP VỀ NHÀ</div>
+    <div class="sh-2">
+      <div><div class="sh-colh">TÌNH TRẠNG BÀI TẬP VỀ NHÀ</div><div class="sh-rbox">
+        <div class="sh-st">Hoàn Thành ${ck(r.hw==='done')}</div>
+        <div class="sh-st">Chưa hoàn thành ${ck(r.hw==='not')}</div>
+        <div class="sh-st">Mức độ hoàn thành <span>${r.hw!=="none"&&r.fPct!==""?`<span class="hw">${esc(r.fPct)}%</span>`:`<span class="hw">${esc(pct)}</span>/100%`}</span></div>
+      </div></div>
+      <div><div class="sh-colh">NHẬN XÉT BÀI TẬP VỀ NHÀ</div><div class="sh-rbox cmt"><div class="fit" data-max="22"><div class="hw">${esc(r.fHwCmt)}</div></div></div></div>
+    </div>
+    <div class="sh-h purple">MỤC TIÊU/NỘI DUNG BUỔI HỌC</div>
+    <div class="sh-2">
+      <div class="sw p"><div class="sh-sbox purple"><div class="t">Ngữ pháp</div><div class="fit" data-max="20"><div class="hw">${esc(r.fGram)}</div></div></div></div>
+      <div class="sw p"><div class="sh-sbox purple"><div class="t">Từ vựng</div><div class="fit" data-max="18">${vocab}</div></div></div>
+    </div>
+    <div class="sh-h navy">Tinh thần học tập của học viên</div>
+    <div class="sh-att">
+      <div class="sh-note">${r.fAttCmt?`<div class="fit" data-max="16"><span class="hw">${esc(r.fAttCmt)}</span></div>`:'Nhận xét (nếu có)'}</div>
+      <div class="sh-opt">${circ(r.att==='tot')} TỐT</div>
+      <div class="sh-opt">${circ(r.att==='kha')} KHÁ</div>
+      <div class="sh-opt">${circ(r.att==='cct')} CẦN CẢI THIỆN</div>
+    </div>
+    <div class="sh-h green">BTVN BUỔI KẾ TIẾP</div>
+    <div class="sh-2">
+      <div class="sw g"><div class="sh-sbox green"><div class="t">NỘI DUNG VÀ VỊ TRÍ TRANG TÀI LIỆU</div><div class="fit" data-max="20"><div class="hw">${esc(r.fNext)}</div></div></div></div>
+      <div class="sw g"><div class="sh-sbox green"><div class="t">LÝ THUYẾT VÀ BÀI TẬP CẦN CHUẨN BỊ</div><div class="fit" data-max="18">${prep}</div></div></div>
+    </div>
+   </div>
+   <div class="sh-foot"><div><span>THÔNG TIN LIÊN HỆ</span><span>SĐT: 0966.101.957 (Ms. Minh Thư)</span><span>GROW WITH ENGLISH</span></div></div>
+  </div>`;
+}
+function updatePreview(){const h=sheetHTML(readForm());$('#preview').innerHTML=h;$('#exportHolder').innerHTML=h;fitText();fitPreview();}
+// chữ ít thì phóng to cho vừa ô, chữ nhiều thì thu nhỏ để không tràn
+function fitText(){$$(".sheet .fit").forEach(el=>{
+  if(!el.firstElementChild||!el.firstElementChild.classList.contains("fi")){const w=document.createElement("div");w.className="fi";while(el.firstChild)w.appendChild(el.firstChild);el.appendChild(w);}
+  const fi=el.firstElementChild,cs=getComputedStyle(el);
+  const W=el.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight),H=el.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom);
+  const max=+el.dataset.max||20,set=s=>el.style.fontSize=s+"px";
+  // ưu tiên không xuống dòng: thu nhỏ tới 13px mà vẫn nằm trên 1 dòng (mỗi dòng cô gõ) thì dùng
+  el.classList.add("nw");
+  for(let s=max;s>=13;s-=.5){set(s);if(fi.offsetWidth<=W+1&&fi.offsetHeight<=H+1)return;}
+  el.classList.remove("nw");
+  // phải xuống dòng: lấy số dòng ít nhất (đo ở 13px), rồi chọn cỡ chữ to nhất vẫn giữ số dòng đó
+  set(13);const per=fi.offsetHeight/13;
+  if(fi.offsetHeight<=H+1){for(let s=max;s>13;s-=.5){set(s);if(fi.offsetHeight/s<=per+.05&&fi.offsetHeight<=H+1)return;}set(13);return;}
+  let s=13;while(s>9&&fi.offsetHeight>H+1){s-=.5;set(s);}
+});}
+function fitPreview(){
+  const w=$('#previewWrap').clientWidth; if(!w)return;
+  const k=w/630, el=$('#preview'); el.style.transform=`scale(${k})`;
+  $('#previewWrap').style.height=(el.firstElementChild?el.firstElementChild.offsetHeight*k:0)+'px';
+}
+window.addEventListener('resize',fitPreview);
+
+/* ---------- Xuất ảnh ---------- */
+function fileName(){const r=readForm();const s=stu(r.studentId);const[d,m,y]=dmy(r.fDate);
+  return `Phieu_${(s?s.name:'HS').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/đ/g,'d').replace(/Đ/g,'D').replace(/\s+/g,'_')}_${d}-${m}-${y}.png`;}
+async function makePNG(){
+  if(!window.html2canvas){toast('Chưa tải được công cụ chụp ảnh – kiểm tra mạng internet');throw new Error('no html2canvas');}
+  if(!saveCurrent())throw new Error('chưa lưu được');
+  await document.fonts.ready; updatePreview();
+  const c=await html2canvas($('#exportHolder .sheet'),{scale:2,backgroundColor:'#ffffff',logging:false});
+  return new Promise(res=>c.toBlob(res,'image/png'));
+}
+function download(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);}
+$('#bDown').onclick=async()=>{try{const b=await makePNG();download(b,fileName());}catch(e){console.error(e);}};
+$('#bCopy').onclick=async()=>{try{
+  const b=await makePNG();
+  await navigator.clipboard.write([new ClipboardItem({'image/png':b})]);
+  toast('Đã sao chép ảnh – mở Zalo và bấm Ctrl+V');
+}catch(e){console.error(e);toast('Trình duyệt không cho sao chép ảnh – đã tải ảnh về máy');try{download(await makePNG(),fileName());}catch(_){}}};
+$('#bShare').onclick=async()=>{try{
+  const b=await makePNG(); const f=new File([b],fileName(),{type:'image/png'});
+  if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],text:message()});}
+  else{download(b,fileName());toast('Máy này không hỗ trợ chia sẻ trực tiếp – đã tải ảnh về');}
+}catch(e){if(e.name!=='AbortError'){console.error(e);}}};
+function message(){const r=readForm();const s=stu(r.studentId)||{name:''};const[d,m,y]=dmy(r.fDate);
+  return db.cfg.msg.replace(/\{ten\}/g,s.name.split(' ').pop()).replace(/\{ngay\}/g,`${d}/${m}`).replace(/\{buoi\}/g,`${r.fNo}/${r.fTotal}`);}
+$('#bMsg').onclick=async()=>{try{await navigator.clipboard.writeText(message());toast('Đã sao chép lời nhắn');}catch(e){prompt('Sao chép lời nhắn:',message());}};
+
+/* ---------- Học sinh ---------- */
+let editingS=null;
+function renderStudents(){
+  const q=$('#sSearch').value.toLowerCase();
+  const list=db.students.filter(s=>(s.name+' '+(s.cls||'')).toLowerCase().includes(q))
+    .sort((a,b)=>(a.cls||'').localeCompare(b.cls||'')||a.name.localeCompare(b.name,'vi'));
+  $('#sCount').textContent=db.students.length;
+  $('#sTable').innerHTML='<tr><th>Họ tên</th><th>Lớp</th><th>Buổi</th><th>Phụ huynh</th><th></th></tr>'+list.map(s=>{
+    const ss=sessOf(s.id);const last=ss.length?ss[ss.length-1].fNo:(s.done||0);
+    return `<tr><td><b>${esc(s.name)}</b>${s.note?`<div class="hint">${esc(s.note)}</div>`:''}</td><td>${esc(s.cls)}</td><td>${last}/${s.total}</td><td>${esc(s.parent)}</td>
+    <td style="white-space:nowrap"><button class="btn" data-a="go" data-id="${s.id}" style="padding:5px 9px">✏️ Phiếu</button>
+    <button class="btn g" data-a="ed" data-id="${s.id}" style="padding:5px 9px">Sửa</button>
+    <button class="btn r" data-a="del" data-id="${s.id}" style="padding:5px 9px">Xóa</button></td></tr>`;}).join('');
+  $$('#sTable button').forEach(b=>b.onclick=()=>{
+    const s=stu(b.dataset.id);
+    if(b.dataset.a==='go'){fillStudentSelects();$('#fStudent').value=s.id;prefillFor(s.id,false);$('nav.tabs button[data-v=nhap]').click();}
+    if(b.dataset.a==='ed'){editingS=s.id;$('#sName').value=s.name;$('#sClass').value=s.cls||'';$('#sTotal').value=s.total;$('#sDone').value=s.done||0;$('#sParent').value=s.parent||'';$('#sNote').value=s.note||'';
+      $('#hsFormTitle').textContent='Sửa thông tin: '+s.name;$('#bCancelS').style.display='';window.scrollTo({top:0,behavior:'smooth'});}
+    if(b.dataset.a==='del'){const n=sessOf(s.id).length;
+      if(confirm(`Xóa học sinh ${s.name}${n?` và ${n} phiếu đã lưu`:''}? Không khôi phục được (trừ khi có bản sao lưu).`)){
+        db.students=db.students.filter(x=>x.id!==s.id);db.sessions=db.sessions.filter(x=>x.studentId!==s.id);persist();fillStudentSelects();renderStudents();}}
+  });
+}
+function resetSForm(){editingS=null;['sName','sClass','sParent','sNote'].forEach(i=>$('#'+i).value='');$('#sTotal').value=12;$('#sDone').value=0;$('#hsFormTitle').textContent='Thêm học sinh';$('#bCancelS').style.display='none';}
+$('#bAddS').onclick=()=>{
+  const name=$('#sName').value.trim(); if(!name){toast('Nhập họ tên học sinh');return;}
+  const o={name,cls:$('#sClass').value.trim(),total:+$('#sTotal').value||12,done:+$('#sDone').value||0,parent:$('#sParent').value.trim(),note:$('#sNote').value.trim()};
+  if(editingS)Object.assign(stu(editingS),o); else db.students.push({id:uid(),...o});
+  persist();fillStudentSelects();renderStudents();toast(editingS?'Đã cập nhật':'Đã thêm '+name);
+  const keepCls=o.cls; resetSForm(); $('#sClass').value=keepCls; $('#sName').focus();
+  if(db.students.length===1)prefillFor(db.students[0].id,false);
+};
+$('#bCancelS').onclick=resetSForm;
+$('#sSearch').oninput=renderStudents;
+
+/* ---------- Phiếu đã lưu ---------- */
+function renderSaved(){
+  fillStudentSelects();
+  const sid=$('#lStudent').value, mon=$('#lMonth').value;
+  const list=db.sessions.filter(x=>(!sid||x.studentId===sid)&&(!mon||x.fDate.startsWith(mon)))
+    .sort((a,b)=>b.fDate.localeCompare(a.fDate)||b.created.localeCompare(a.created));
+  const att={tot:'Tốt',kha:'Khá',cct:'Cần cải thiện'}, hw={done:'Hoàn thành',not:'Chưa HT',none:'Không có'};
+  $('#lTable').innerHTML='<tr><th>Ngày</th><th>Học sinh</th><th>Buổi</th><th>BTVN</th><th>Khảo từ</th><th>Tinh thần</th><th></th></tr>'+
+   (list.length?list.map(x=>{const s=stu(x.studentId)||{name:'?'};const[d,m]=dmy(x.fDate);
+    return `<tr><td>${d}/${m}</td><td>${esc(s.name)}</td><td>${esc(x.fNo)}/${esc(x.fTotal)}</td><td>${hw[x.hw]||''}${x.fPct?` (${esc(x.fPct)}%)`:''}</td>
+     <td>${x.fVScore!==''&&x.fVScore!=null?esc(x.fVScore)+'/'+esc(x.fVNum):'—'}</td><td>${att[x.att]||''}</td>
+     <td style="white-space:nowrap"><button class="btn" data-a="op" data-id="${x.id}" style="padding:5px 9px">Mở</button>
+     <button class="btn r" data-a="del" data-id="${x.id}" style="padding:5px 9px">Xóa</button></td></tr>`;}).join('')
+    :'<tr><td colspan="7" class="hint">Chưa có phiếu nào.</td></tr>');
+  $$('#lTable button').forEach(b=>b.onclick=()=>{
+    const x=db.sessions.find(y=>y.id===b.dataset.id);
+    if(b.dataset.a==='op'){$('nav.tabs button[data-v=nhap]').click();writeForm(x);setEditing(x.id);updatePreview();window.scrollTo({top:0});}
+    if(b.dataset.a==='del'&&confirm('Xóa phiếu này?')){db.sessions=db.sessions.filter(y=>y.id!==x.id);persist();if(editingId===x.id)setEditing(null);renderSaved();}
+  });
+}
+$('#lStudent').onchange=renderSaved; $('#lMonth').onchange=renderSaved;
+
+/* ---------- Cài đặt / sao lưu ---------- */
+const LISTS={hw:'cHw',att:'cAtt',gram:'cGram',next:'cNext',prep:'cPrep'};
+function loadCfg(){
+  Object.entries(LISTS).forEach(([k,id])=>$('#'+id).value=db.cfg[k].join('\n'));$('#cMsg').value=db.cfg.msg;
+  $(`input[name=cFont][value=${db.cfg.font}]`).checked=true;
+  $('#backupInfo').textContent=db.lastBackup?'Lần sao lưu gần nhất: '+new Date(db.lastBackup).toLocaleString('vi-VN'):'Chưa sao lưu lần nào.';
+}
+$('#bSaveCfg').onclick=()=>{
+  Object.entries(LISTS).forEach(([k,id])=>db.cfg[k]=$('#'+id).value.split('\n').map(s=>s.trim()).filter(Boolean));
+  db.cfg.msg=$('#cMsg').value.trim()||DEF_CFG.msg; persist();renderChips();toast('Đã lưu cài đặt');
+};
+$$('input[name=cFont]').forEach(r=>r.onchange=()=>{db.cfg.font=r.value;persist();updatePreview();});
+$('#bExport').onclick=()=>{db.lastBackup=Date.now();persist();
+  download(new Blob([JSON.stringify(db,null,1)],{type:'application/json'}),`SaoLuu_PhieuHocTap_${today()}.json`);loadCfg();};
+$('#fImport').onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();
+  rd.onload=()=>{try{const o=JSON.parse(rd.result);if(!Array.isArray(o.students))throw 0;
+    if(!confirm(`Khôi phục ${o.students.length} học sinh, ${o.sessions.length} phiếu? Dữ liệu hiện tại trên máy sẽ bị thay thế.`))return;
+    db={...db,...o,cfg:{...DEF_CFG,...(o.cfg||{})}};persist();init();toast('Đã khôi phục dữ liệu');}catch(_){toast('File không đúng định dạng sao lưu');}};
+  rd.readAsText(f);e.target.value='';};
+
+/* ---------- Khởi động ---------- */
+function init(){
+  $('#appLogo').src=window.LOGO||'';
+  fillStudentSelects();renderChips();
+  if(db.students.length)prefillFor($('#fStudent').value,false); else{writeForm({fDate:today(),fNo:1,fTotal:12,fPct:100});updatePreview();}
+  $('#lMonth').value=today().slice(0,7);
+}
+init();
+document.fonts&&document.fonts.ready.then(()=>{fitText();fitPreview();});
+</script>
+</body>
+</html>
