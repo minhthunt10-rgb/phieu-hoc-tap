@@ -416,7 +416,7 @@ function sheetHTML(r){
       <div><div class="sh-colh">TÌNH TRẠNG BÀI TẬP VỀ NHÀ</div><div class="sh-rbox">
         <div class="sh-st">Hoàn Thành ${ck(r.hw==='done')}</div>
         <div class="sh-st">Chưa hoàn thành ${ck(r.hw==='not')}</div>
-        <div class="sh-st">Mức độ hoàn thành <span>${r.hw!=="none"&&r.fPct!==""?`<span class="hw">${esc(r.fPct)}%</span>`:`<span class="hw">${esc(pct)}</span>/100%`}</span></div>
+        <div class="sh-st">Mức độ hoàn thành <span>${r.hw!=="none"&&r.fPct!==""?`<span class="hw">${esc(r.fPct)}%</span>/100%`:`<span class="hw">${esc(pct)}</span>/100%`}</span></div>
       </div></div>
       <div><div class="sh-colh">NHẬN XÉT BÀI TẬP VỀ NHÀ</div><div class="sh-rbox cmt"><div class="fit" data-max="22"><div class="hw">${esc(r.fHwCmt)}</div></div></div></div>
     </div>
