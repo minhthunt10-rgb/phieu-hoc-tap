@@ -89,7 +89,7 @@ table.list th{color:var(--muted);font-size:12.5px}
 .sw.g::before{left:7px;top:7px;right:-7px;bottom:-7px;background:#8CC152}
 .sh-sbox .t{text-align:center;font-weight:700;font-size:13.5px;margin-bottom:4px}
 .sh-sbox.purple .t{color:#8E3FB0;font-family:'Lora',serif}.sh-sbox.green .t{color:#3E9B4F;font-size:12px}
-.hw{font-family:'Playpen Sans',cursive;font-weight:500;color:#D32F2F;font-size:15.5px;line-height:1.4;white-space:pre-wrap;word-break:break-word}
+.hw{font-family:'Playpen Sans',cursive;font-weight:500;color:#D32F2F;font-size:15px;line-height:1.4;white-space:pre-wrap;word-break:break-word}
 .hw.k{color:#333}
 .sheet.print .hw{font-family:'Be Vietnam Pro',sans-serif;font-weight:600;font-size:14px;line-height:1.45}
 .sh-att{display:flex;align-items:center;gap:14px;margin-top:2px}
@@ -418,24 +418,24 @@ function sheetHTML(r){
         <div class="sh-st">Chưa hoàn thành ${ck(r.hw==='not')}</div>
         <div class="sh-st">Mức độ hoàn thành <span>${r.hw!=="none"&&r.fPct!==""?`<span class="hw">${esc(r.fPct)}%</span>/100%`:`<span class="hw">${esc(pct)}</span>/100%`}</span></div>
       </div></div>
-      <div><div class="sh-colh">NHẬN XÉT BÀI TẬP VỀ NHÀ</div><div class="sh-rbox cmt"><div class="fit" data-max="22"><div class="hw">${esc(r.fHwCmt)}</div></div></div></div>
+      <div><div class="sh-colh">NHẬN XÉT BÀI TẬP VỀ NHÀ</div><div class="sh-rbox cmt"><div class="fit" data-max="15"><div class="hw">${esc(r.fHwCmt)}</div></div></div></div>
     </div>
     <div class="sh-h purple">MỤC TIÊU/NỘI DUNG BUỔI HỌC</div>
     <div class="sh-2">
-      <div class="sw p"><div class="sh-sbox purple"><div class="t">Ngữ pháp</div><div class="fit" data-max="20"><div class="hw">${esc(r.fGram)}</div></div></div></div>
-      <div class="sw p"><div class="sh-sbox purple"><div class="t">Từ vựng</div><div class="fit" data-max="18">${vocab}</div></div></div>
+      <div class="sw p"><div class="sh-sbox purple"><div class="t">Ngữ pháp</div><div class="fit" data-max="15"><div class="hw">${esc(r.fGram)}</div></div></div></div>
+      <div class="sw p"><div class="sh-sbox purple"><div class="t">Từ vựng</div><div class="fit" data-max="15">${vocab}</div></div></div>
     </div>
     <div class="sh-h navy">Tinh thần học tập của học viên</div>
     <div class="sh-att">
-      <div class="sh-note">${r.fAttCmt?`<div class="fit" data-max="16"><span class="hw">${esc(r.fAttCmt)}</span></div>`:'Nhận xét (nếu có)'}</div>
+      <div class="sh-note">${r.fAttCmt?`<div class="fit" data-max="15"><span class="hw">${esc(r.fAttCmt)}</span></div>`:'Nhận xét (nếu có)'}</div>
       <div class="sh-opt">${circ(r.att==='tot')} TỐT</div>
       <div class="sh-opt">${circ(r.att==='kha')} KHÁ</div>
       <div class="sh-opt">${circ(r.att==='cct')} CẦN CẢI THIỆN</div>
     </div>
     <div class="sh-h green">BTVN BUỔI KẾ TIẾP</div>
     <div class="sh-2">
-      <div class="sw g"><div class="sh-sbox green"><div class="t">NỘI DUNG VÀ VỊ TRÍ TRANG TÀI LIỆU</div><div class="fit" data-max="20"><div class="hw">${esc(r.fNext)}</div></div></div></div>
-      <div class="sw g"><div class="sh-sbox green"><div class="t">LÝ THUYẾT VÀ BÀI TẬP CẦN CHUẨN BỊ</div><div class="fit" data-max="18">${prep}</div></div></div>
+      <div class="sw g"><div class="sh-sbox green"><div class="t">NỘI DUNG VÀ VỊ TRÍ TRANG TÀI LIỆU</div><div class="fit" data-max="15"><div class="hw">${esc(r.fNext)}</div></div></div></div>
+      <div class="sw g"><div class="sh-sbox green"><div class="t">LÝ THUYẾT VÀ BÀI TẬP CẦN CHUẨN BỊ</div><div class="fit" data-max="15">${prep}</div></div></div>
     </div>
    </div>
    <div class="sh-foot"><div><span>THÔNG TIN LIÊN HỆ</span><span>SĐT: 0966.101.957 (Ms. Minh Thư)</span><span>GROW WITH ENGLISH</span></div></div>
@@ -448,14 +448,12 @@ function fitText(){$$(".sheet .fit").forEach(el=>{
   const fi=el.firstElementChild,cs=getComputedStyle(el);
   const W=el.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight),H=el.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom);
   const max=+el.dataset.max||20,set=s=>el.style.fontSize=s+"px";
-  // ưu tiên không xuống dòng: thu nhỏ tới 13px mà vẫn nằm trên 1 dòng (mỗi dòng cô gõ) thì dùng
+  // ưu tiên không xuống dòng: thu nhỏ tối đa tới 14px mà vẫn nằm trên 1 dòng (mỗi dòng cô gõ) thì dùng
   el.classList.add("nw");
-  for(let s=max;s>=13;s-=.5){set(s);if(fi.offsetWidth<=W+1&&fi.offsetHeight<=H+1)return;}
+  for(let s=max;s>=14;s-=.5){set(s);if(fi.offsetWidth<=W+1&&fi.offsetHeight<=H+1)return;}
   el.classList.remove("nw");
-  // phải xuống dòng: lấy số dòng ít nhất (đo ở 13px), rồi chọn cỡ chữ to nhất vẫn giữ số dòng đó
-  set(13);const per=fi.offsetHeight/13;
-  if(fi.offsetHeight<=H+1){for(let s=max;s>13;s-=.5){set(s);if(fi.offsetHeight/s<=per+.05&&fi.offsetHeight<=H+1)return;}set(13);return;}
-  let s=13;while(s>9&&fi.offsetHeight>H+1){s-=.5;set(s);}
+  // phải xuống dòng: giữ cỡ chữ chuẩn cho đều, chỉ thu nhỏ khi tràn ô
+  let s=max;set(s);while(s>9&&fi.offsetHeight>H+1){s-=.5;set(s);}
 });}
 function fitPreview(){
   const w=$('#previewWrap').clientWidth; if(!w)return;
