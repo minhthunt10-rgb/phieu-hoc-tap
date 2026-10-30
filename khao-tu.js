@@ -1,7 +1,7 @@
-/* ================= KHẢO TỪ VỰNG (mặt sau phiếu) =================
+/* ================= KHẢO TỪ VỰNG (trang riêng cho trợ giảng) =================
    TG gõ/dán danh sách từ → bài khảo 20–30 từ, nghĩa Việt → viết Anh.
    Chấm trên giấy (TG bấm ✓/✗) hoặc HS gõ trên máy (tự chấm). Lưu vào db.tests,
-   từ sai vào db.vocab[hs] (từ chưa thuộc), điểm tự điền sang mặt trước. */
+   từ sai vào db.vocab[hs] (từ chưa thuộc). Không nối với phiếu mặt trước. */
 db.tests=db.tests||[]; db.vocab=db.vocab||{};
 let kt=db.kt||{studentId:'',date:today(),no:'',unit:'Unit ',n:30,raw:'',items:[],testId:null};
 if(!kt.testId&&kt.date!==today()){kt.date=today();kt.items.forEach(x=>{x.ans='';x.ok=null;});}
@@ -52,13 +52,11 @@ function ktOpen(){
   $('#kRaw').value=kt.raw||'';
   ktTable();ktHist();ktPool();ktRender();
 }
-function ktDefaults(){ // buổi số + bài lấy từ phiếu mặt trước
+function ktDefaults(){ // buổi số: bài khảo cùng ngày, không thì buổi khảo gần nhất + 1
   const s=stu(kt.studentId); if(!s)return;
-  const ss=sessOf(s.id), same=ss.find(x=>x.fDate===kt.date), last=ss[ss.length-1];
-  kt.no=same?same.fNo:nextNo(s);
-  const u=same?same.fVUnit:(last&&last.fNVUnit);
-  if(u&&u.trim()!=='Unit')kt.unit=u;
-  const n=same?same.fVNum:(last&&last.fNVNum); if(n)kt.n=+n;
+  const ts=db.tests.filter(x=>x.studentId===s.id).sort((a,b)=>a.date.localeCompare(b.date)||a.created-b.created);
+  const same=ts.find(x=>x.date===kt.date), last=ts[ts.length-1];
+  if(same)kt.no=same.no; else if(last&&+last.no)kt.no=+last.no>=(+s.total||12)?1:+last.no+1; else kt.no=(+s.done||0)+1;
 }
 function ktPool(){
   const p=db.vocab[kt.studentId]||[];
@@ -146,7 +144,7 @@ $('#kStuExit').onclick=()=>{
   ktStuClose();ktTable();ktKeep();
 };
 
-/* ---------- Lưu: kết quả + từ chưa thuộc + điểm mặt trước ---------- */
+/* ---------- Lưu: kết quả + từ chưa thuộc ---------- */
 function ktSave(){
   if(!kt.studentId||!kt.items.length){toast('Chưa có bài khảo để lưu');return null;}
   if(!kt.date){toast('Chưa chọn ngày');return null;}
@@ -162,14 +160,8 @@ function ktSave(){
   t.items.forEach(x=>{const k=kNorm(x.en);if(!k)return;const j=p.findIndex(w=>kNorm(w.en)===k);
     if(x.ok){if(j>=0)p.splice(j,1);} else if(j<0)p.push({en:x.en,vi:x.vi,since:t.date}); else p[j].vi=x.vi||p[j].vi;});
   db.vocab[t.studentId]=p;
-  // điền điểm sang mặt trước (phiếu đã lưu cùng ngày + phiếu đang mở)
-  const unit=t.unit&&t.unit!=='Unit'?t.unit:'';
-  let synced=0;
-  db.sessions.filter(x=>x.studentId===t.studentId&&x.fDate===t.date).forEach(x=>{x.fVScore=t.score;x.fVNum=t.n;if(unit)x.fVUnit=unit;synced++;});
-  const f=readForm();
-  if(f.studentId===t.studentId&&f.fDate===t.date){$('#fVScore').value=t.score;$('#fVNum').value=t.n;if(unit)$('#fVUnit').value=unit;updatePreview();synced=1;}
   persist();ktTable();ktHist();ktPool();ktRender();
-  toast(`Đã lưu: đúng ${t.score}/${t.n}`+(synced?' – đã điền điểm vào mặt trước':' – khi mở phiếu mặt trước ngày này, điểm tự điền'));
+  toast(`Đã lưu: đúng ${t.score}/${t.n}`);
   return t;
 }
 $('#kSave').onclick=ktSave;
@@ -271,3 +263,39 @@ $('#kShare').onclick=async()=>{try{const b=await ktPNG();const f=new File([b],kt
   if(navigator.canShare&&navigator.canShare({files:[f]}))await navigator.share({files:[f],text:ktMsg()});
   else{download(b,ktName());toast('Máy này không hỗ trợ chia sẻ trực tiếp – đã tải ảnh về');}}catch(e){if(e.name!=='AbortError')console.error(e);}};
 $('#kMsg').onclick=async()=>{try{await navigator.clipboard.writeText(ktMsg());toast('Đã sao chép lời nhắn');}catch(e){prompt('Sao chép lời nhắn:',ktMsg());}};
+
+/* ---------- Học sinh (danh sách riêng của trang khảo từ) ---------- */
+let sEditing=null;
+function sFormShow(s){sEditing=s?s.id:null;$('#sForm').style.display='';$('#sDel').style.display=s?'':'none';
+  $('#sName').value=s?s.name:'';$('#sClass').value=s?s.cls||'':'';$('#sTotal').value=s?s.total||12:12;$('#sName').focus();}
+$('#sNew').onclick=()=>sFormShow(null);
+$('#sEdit').onclick=()=>{const s=stu(kt.studentId);if(s)sFormShow(s);else toast('Chưa có học sinh – bấm HS mới');};
+$('#sCancel').onclick=()=>$('#sForm').style.display='none';
+$('#sSave').onclick=()=>{
+  const name=$('#sName').value.trim(); if(!name){toast('Nhập họ tên học sinh');return;}
+  const o={name,cls:$('#sClass').value.trim(),total:+$('#sTotal').value||12};
+  if(sEditing)Object.assign(stu(sEditing),o); else{const s={id:uid(),done:0,...o};db.students.push(s);kt.studentId=s.id;kt.testId=null;kt.items.forEach(x=>{x.ans='';x.ok=null;});ktDefaults();}
+  $('#sForm').style.display='none';persist();ktOpen();toast(sEditing?'Đã cập nhật':'Đã thêm '+name);
+};
+$('#sDel').onclick=()=>{const s=stu(sEditing);if(!s)return;const n=db.tests.filter(x=>x.studentId===s.id).length;
+  if(!confirm(`Xóa học sinh ${s.name}${n?` và ${n} bài khảo đã lưu`:''}?`))return;
+  db.students=db.students.filter(x=>x.id!==s.id);db.tests=db.tests.filter(x=>x.studentId!==s.id);delete db.vocab[s.id];
+  kt.studentId='';$('#sForm').style.display='none';persist();ktOpen();};
+
+/* ---------- Sao lưu / nhập danh sách HS ---------- */
+$('#bExport').onclick=()=>{db.lastBackup=Date.now();persist();
+  download(new Blob([JSON.stringify({kind:'khao-tu',...db},null,1)],{type:'application/json'}),`SaoLuu_KhaoTu_${today()}.json`);};
+$('#fImport').onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();
+  rd.onload=()=>{try{const o=JSON.parse(rd.result);if(!Array.isArray(o.students))throw 0;
+    if(o.kind==='khao-tu'){if(!confirm(`Khôi phục ${o.students.length} học sinh, ${(o.tests||[]).length} bài khảo? Dữ liệu hiện tại trên máy sẽ bị thay thế.`))return;
+      delete o.kind;db={...db,...o};kt=db.kt||kt;persist();ktOpen();toast('Đã khôi phục dữ liệu');return;}
+    // file danh sách HS (hoặc sao lưu phiếu học tập): chỉ lấy tên/lớp/số buổi, gộp theo tên
+    const key=n=>n.normalize('NFC').toLowerCase().replace(/\s+/g,' ').trim();let add=0,upd=0;
+    o.students.forEach(n=>{if(!n.name)return;const s=db.students.find(x=>key(x.name)===key(n.name));
+      if(s){if(n.cls)s.cls=n.cls;if(n.total)s.total=n.total;upd++;}
+      else{db.students.push({id:uid(),name:n.name,cls:n.cls||'',total:n.total||12,done:n.done||0});add++;}});
+    persist();ktOpen();toast(`Đã thêm ${add} HS, cập nhật ${upd} HS`);}catch(_){toast('File không đúng định dạng');}};
+  rd.readAsText(f);e.target.value='';};
+
+ktOpen();
+document.fonts&&document.fonts.ready.then(()=>ktRender());

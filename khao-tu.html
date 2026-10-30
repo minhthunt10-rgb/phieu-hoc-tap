@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Khảo Từ Vựng</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lora:wght@700&family=Playpen+Sans:wght@500&display=swap" rel="stylesheet">
+<script src="logo.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<link rel="stylesheet" href="style.css">
+<style>
+.ks{display:flex;gap:6px}.ks select{flex:1;min-width:0}.ks .btn{padding:8px 10px;white-space:nowrap}
+.sf{border:1px dashed var(--line);border-radius:12px;padding:4px 12px 12px;margin-top:10px;background:#FFFCF7}
+</style>
+</head>
+<body>
+<header class="app">
+  <img id="appLogo" alt="">
+  <div><h1>Khảo Từ Vựng</h1><small>Grow with English – Tiếng Anh Ms. Minh Thư</small></div>
+</header>
+<main>
+<section class="view on" id="v-kt">
+ <div class="grid2">
+  <div>
+   <div class="card">
+    <h3>1. Học sinh &amp; buổi khảo</h3>
+    <label class="f">Học sinh</label>
+    <div class="ks"><select id="kStudent"></select>
+      <button class="btn g" id="sNew" type="button">➕ HS mới</button><button class="btn g" id="sEdit" type="button">Sửa</button></div>
+    <div id="sForm" class="sf" style="display:none">
+      <div class="row">
+        <div style="grid-column:span 2"><label class="f">Họ tên học viên</label><input type="text" id="sName"></div>
+        <div><label class="f">Lớp</label><input type="text" id="sClass" placeholder="9"></div>
+        <div><label class="f">Số buổi 1 khóa</label><input type="number" id="sTotal" value="12"></div>
+      </div>
+      <div class="btns"><button class="btn" id="sSave" type="button">Lưu HS</button><button class="btn g" id="sCancel" type="button">Hủy</button><button class="btn r" id="sDel" type="button">Xóa HS này</button></div>
+    </div>
+    <div class="row">
+      <div><label class="f">Ngày</label><input type="date" id="k_date"></div>
+      <div><label class="f">Buổi số</label><input type="number" id="k_no" min="1"></div>
+      <div><label class="f">Bài</label><input type="text" id="k_unit" placeholder="Unit 3"></div>
+    </div>
+   </div>
+
+   <div class="card">
+    <h3>2. Danh sách từ</h3>
+    <label class="f">Mỗi dòng một từ: <b>tiếng Anh – nghĩa tiếng Việt</b> (gõ, dán hoặc sửa tại đây)</label>
+    <textarea id="kRaw" rows="8" placeholder="coupon – phiếu giảm giá&#10;donate – quyên góp&#10;charity – từ thiện"></textarea>
+    <label class="f">Số từ khảo</label>
+    <div class="kn">
+      <button type="button" data-n="20">20 từ</button><button type="button" data-n="25">25 từ</button><button type="button" data-n="30">30 từ</button>
+      <input type="number" id="k_n" min="1" placeholder="30" aria-label="Số từ khác">
+      <label><input type="checkbox" id="kShuf" checked> Trộn thứ tự</label>
+    </div>
+    <div class="btns"><button class="btn" id="kMake">✨ Tạo bài khảo</button><button class="btn g" id="kNorm">🧹 Chuẩn hoá danh sách</button></div>
+    <p class="hint">Danh sách dài hơn số từ khảo thì web lấy ngẫu nhiên đủ số từ.</p>
+    <details style="margin-top:6px"><summary class="hint" style="cursor:pointer">Xem từ chưa thuộc của HS này (<span id="kPoolN">0</span> từ)</summary>
+      <div id="kPoolList" style="margin-top:6px;line-height:2"></div>
+      <button class="btn r" id="kPoolClear" style="padding:5px 9px;margin-top:6px">Xoá danh sách này</button></details>
+   </div>
+
+   <div class="card">
+    <h3>3. Làm bài &amp; chấm <span class="pill" id="kScoreTag"></span></h3>
+    <div class="btns" style="margin-top:0">
+      <button class="btn n" id="kStuMode">🧑‍🎓 HS làm trên máy</button>
+      <button class="btn g" id="kBlank">🖨️ Tải đề trống (làm trên giấy)</button>
+    </div>
+    <p class="hint"><b>Trên giấy:</b> bấm <b>✓ Tích đúng hết</b>, rồi chỉ cần bấm ✗ ở các từ HS viết sai. <b>Trên máy:</b> đưa máy cho HS, HS gõ rồi bấm Nộp bài – web tự chấm, TG vẫn sửa được ✓/✗.</p>
+    <div class="btns" style="margin:0 0 10px"><button class="btn" id="kAllOk">✓ Tích đúng hết</button><button class="btn g" id="kClear">Bỏ chấm</button></div>
+    <div id="kTable"></div>
+    <div class="btns">
+      <button class="btn" id="kSave">💾 Lưu kết quả</button>
+      <button class="btn o" id="kNextStu">Lưu &amp; khảo HS tiếp (giữ bộ từ)</button>
+    </div>
+    <p class="hint">Lưu xong: điểm tự điền vào ô "Điểm khảo" ở mặt trước (phiếu cùng ngày), từ sai được ghi vào danh sách <b>từ chưa thuộc</b> để khảo lại buổi sau.</p>
+   </div>
+
+   <div class="card"><h3>Bài khảo đã lưu của HS</h3><div class="tbl-wrap"><table class="list" id="kHist"></table></div></div>
+
+   <div class="card">
+    <h3>Sao lưu dữ liệu</h3>
+    <p class="hint">Dữ liệu chỉ nằm trong trình duyệt của máy này. Nên tải bản sao lưu mỗi tuần. Nút "Nhập file" cũng dùng để nhập <b>danh sách học sinh</b> cô gửi (file .json) – HS trùng tên không bị nhập trùng.</p>
+    <div class="btns"><button class="btn" id="bExport">⬇️ Tải bản sao lưu (.json)</button>
+     <label class="btn g">⬆️ Nhập file (sao lưu / danh sách HS)<input type="file" id="fImport" accept=".json" hidden></label></div>
+   </div>
+  </div>
+
+  <div class="sticky">
+   <div class="card">
+    <h3>Xem trước mặt sau – khảo từ</h3>
+    <div id="kPrevWrap"><div id="kPrev"></div></div>
+    <div class="btns">
+      <button class="btn n" id="kShare">📤 Gửi Zalo (điện thoại)</button>
+      <button class="btn" id="kCopy">📋 Sao chép ảnh (dán vào Zalo PC)</button>
+      <button class="btn g" id="kDown">⬇️ Tải ảnh</button>
+      <button class="btn g" id="kMsg">💬 Sao chép lời nhắn</button>
+    </div>
+   </div>
+  </div>
+ </div>
+</section>
+</main>
+
+<div id="ktExport"></div>
+<div class="ov" id="kStu"><div class="ov-in">
+  <h2 style="color:var(--green);margin:4px 0">📝 Khảo từ vựng – <span id="kStuName"></span></h2>
+  <p class="hint" style="font-size:14px">Đọc nghĩa tiếng Việt, viết từ tiếng Anh. Viết xong bấm <b>Nộp bài</b>.</p>
+  <div id="kStuList"></div>
+  <div class="btns"><button class="btn o" id="kSubmit">✅ Nộp bài</button><button class="btn g" id="kStuExit">Thoát (TG)</button></div>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+// trang riêng cho trợ giảng: dữ liệu riêng, không nối với phiếu mặt trước
+const KEY='gwe-khao-tu-v1';
+let db={students:[],tests:[],vocab:{},kt:null,cfg:{font:'hand'},lastBackup:null};
+try{const s=localStorage.getItem(KEY); if(s)db={...db,...JSON.parse(s)};}catch(e){}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify(db));}catch(e){toast('⚠️ Không lưu được vào trình duyệt – hãy tải bản sao lưu!');}}
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+const dmy=iso=>{if(!iso)return['','',''];const[y,m,d]=iso.split('-');return[d,m,y];};
+const two=n=>n===''||n==null?'':String(n).padStart(2,'0');
+function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('on'),2600);}
+const stu=id=>db.students.find(s=>s.id===id);
+const khoi=s=>{const m=String(s.cls||'').match(/\d+/);return m?+m[0]:99;};
+const tenRieng=n=>n.trim().split(/\s+/).pop();
+const byKhoi=(a,b)=>khoi(a)-khoi(b)||tenRieng(a.name).localeCompare(tenRieng(b.name),'vi')||a.name.localeCompare(b.name,'vi');
+function download(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);}
+$('#appLogo').src=window.LOGO||'';
+</script>
+<script src="khao-tu.js"></script>
+</body>
+</html>
