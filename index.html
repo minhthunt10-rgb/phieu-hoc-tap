@@ -72,7 +72,7 @@ table.list th{color:var(--muted);font-size:12.5px}
 .sh-h{text-align:center;font-family:'Lora',serif;font-weight:700;font-size:20px;margin:22px 0 12px}
 .sh-h.green{color:#3E9B4F}.sh-h.purple{color:#8E3FB0}.sh-h.navy{color:#2E4A7D}
 .sh-2{display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start}
-.sh-sbox.short{height:84px}
+.sh-sbox.purple{height:100px}
 .sh-colh{text-align:center;font-weight:800;font-size:13.5px;color:#222;margin-bottom:8px}
 .sh-rbox{border:1.6px solid #333;border-radius:12px;background:#fff;padding:8px 12px;height:96px}
 .sh-rbox.cmt{position:relative;display:flex;padding:6px 10px}
@@ -338,6 +338,8 @@ function prefillFor(id,keepShared){
     r.fGram=last.fPrep||''; r.fVUnit=last.fNVUnit||''; r.fVNum=last.fNVNum||'';
     r.fNVNum=last.fNVNum||''; r.fNext=''; r.fNVUnit=''; r.fPrep='';
   }
+  // điền sẵn Unit và 30 từ (cô sửa lại được)
+  if(!r.fVUnit)r.fVUnit='Unit ';if(!r.fVNum)r.fVNum=30;if(!r.fNVUnit)r.fNVUnit='Unit ';if(!r.fNVNum)r.fNVNum=30;
   writeForm(r); setEditing(null); updatePreview();
 }
 function setEditing(id){editingId=id;$('#editTag').style.display=id?'inline-block':'none';}
@@ -426,7 +428,7 @@ function sheetHTML(r){
     <div class="sh-h purple">MỤC TIÊU/NỘI DUNG BUỔI HỌC</div>
     <div class="sh-2">
       <div class="sw p"><div class="sh-sbox purple"><div class="t">Ngữ pháp</div><div class="fit" data-max="15"><div class="hw">${esc(r.fGram)}</div></div></div></div>
-      <div class="sw p"><div class="sh-sbox purple short"><div class="t">Từ vựng</div><div class="fit" data-max="15">${vocab}</div></div></div>
+      <div class="sw p"><div class="sh-sbox purple"><div class="t">Từ vựng</div><div class="fit" data-max="15">${vocab}</div></div></div>
     </div>
     <div class="sh-h navy">Tinh thần học tập của học viên</div>
     <div class="sh-att">
@@ -587,7 +589,7 @@ $('#fImport').onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new F
 function init(){
   $('#appLogo').src=window.LOGO||'';
   fillStudentSelects();renderChips();
-  if(db.students.length)prefillFor($('#fStudent').value,false); else{writeForm({fDate:today(),fNo:1,fTotal:12,fPct:100});updatePreview();}
+  if(db.students.length)prefillFor($('#fStudent').value,false); else{writeForm({fDate:today(),fNo:1,fTotal:12,fPct:100,fVUnit:'Unit ',fVNum:30,fNVUnit:'Unit ',fNVNum:30});updatePreview();}
   $('#lMonth').value=today().slice(0,7);
 }
 init();
