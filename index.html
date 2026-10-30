@@ -164,6 +164,11 @@
   <p class="hint" id="backupInfo"></p>
  </div>
  <div class="card">
+  <h3>Chuyển danh sách học sinh sang máy khác</h3>
+  <p class="hint">Chỉ chuyển danh sách HS (tên, lớp, số buổi), không đụng tới phiếu đã lưu ở máy kia. Máy laptop: bấm nút dưới → gửi file vào Zalo "Cloud của tôi". Điện thoại: mở file trong Zalo, lưu về máy → vào trang này → "Khôi phục từ file" → chọn file. HS trùng tên được cập nhật, HS mới được thêm vào.</p>
+  <div class="btns"><button class="btn" id="bExportHS">📤 Xuất danh sách HS</button></div>
+ </div>
+ <div class="card">
   <h3>Kiểu chữ điền trên phiếu</h3>
   <div class="seg">
    <label><input type="radio" name="cFont" value="hand" checked>Chữ viết tay rõ nét (đỏ)</label>
@@ -444,7 +449,8 @@ $('#bCopy').onclick=async()=>{if(!saveCurrent())return;try{
 $('#bZalo').onclick=openZalo;
 $('#bShare').onclick=async()=>{if(!saveCurrent())return;try{
   const b=await makePNG(); const f=new File([b],fileName(),{type:'image/png'});
-  if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],text:message()});}
+  // chỉ gửi ảnh, không kèm lời nhắn (cô yêu cầu 2026-10-30)
+  if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f]});}
   else{download(b,fileName());toast('Máy này không hỗ trợ chia sẻ trực tiếp – đã tải ảnh về');}
 }catch(e){if(e.name!=='AbortError'){console.error(e);}}};
 function message(){const r=readForm();const s=stu(r.studentId)||{name:''};const[d,m,y]=dmy(r.fDate);
@@ -530,6 +536,14 @@ $('#bSaveCfg').onclick=()=>{
 $$('input[name=cFont]').forEach(r=>r.onchange=()=>{db.cfg.font=r.value;persist();updatePreview();});
 $('#bExport').onclick=()=>{db.lastBackup=Date.now();persist();
   download(new Blob([JSON.stringify(db,null,1)],{type:'application/json'}),`SaoLuu_PhieuHocTap_${today()}.json`);loadCfg();};
+// file danh sách HS: máy nhận sẽ gộp theo tên (xem nhánh kind==='danh-sach-hs' dưới)
+$('#bExportHS').onclick=async()=>{
+  const o={kind:'danh-sach-hs',students:[...db.students].sort(byKhoi).map(s=>({name:s.name,cls:s.cls||'',total:s.total,done:s.done,note:s.note||''}))};
+  const name=`DanhSachHS_${today()}.json`, b=new Blob([JSON.stringify(o,null,1)],{type:'application/json'});
+  const f=new File([b],name,{type:'application/json'});
+  // điện thoại: mở bảng chia sẻ; laptop: tải file về (bảng chia sẻ của Windows dễ gây rối)
+  try{if(matchMedia('(pointer:coarse)').matches&&navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f]});return;}}catch(e){if(e.name==='AbortError')return;}
+  download(b,name);toast(`Đã tải ${name} (${o.students.length} HS)`);};
 $('#fImport').onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();
   rd.onload=()=>{try{const o=JSON.parse(rd.result);if(!Array.isArray(o.students))throw 0;
     if(o.kind==='danh-sach-hs'){ // file danh sách HS: gộp thêm, không xoá dữ liệu cũ
