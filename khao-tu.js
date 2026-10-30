@@ -217,7 +217,7 @@ function ktSheetHTML(blank){
       +'<div class="nt">Con viết mỗi từ 3 lần và học thuộc, buổi sau cô khảo lại các từ này ạ.</div>'
       :'<div class="ok"><span class="hw">Con thuộc hết các từ hôm nay. Giỏi lắm! 🎉</span></div>'}</div></div>`;
   const unit=(kt.unit||'').trim();
-  return `<div class="sheet kt ${db.cfg.font==='print'?'print':''}">
+  return `<div class="sheet kt ${db.cfg.font==='print'?'print':'f-'+db.cfg.font}">
    <img class="wm" src="${L}">
    <div class="in">
     <div class="sh-top"><img class="logo" src="${L}"><div class="sh-motto">KIÊN TRÌ - YÊU THƯƠNG - TIẾN BỘ</div><div class="sh-tag">MS. MINH THƯ</div></div>

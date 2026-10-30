@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Khảo Từ Vựng</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lora:wght@700&family=Playpen+Sans:wght@500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lora:ital,wght@0,700;1,600&family=Playpen+Sans:wght@500&family=Playwrite+VN:wght@300&family=Charm:wght@700&display=swap" rel="stylesheet">
 <script src="logo.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <link rel="stylesheet" href="style.css">
@@ -116,8 +116,9 @@
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 // trang riêng cho trợ giảng: dữ liệu riêng, không nối với phiếu mặt trước
 const KEY='gwe-khao-tu-v1';
-let db={students:[],tests:[],vocab:{},kt:null,cfg:{font:'hand'},lastBackup:null};
+let db={students:[],tests:[],vocab:{},kt:null,cfg:{font:'lora'},lastBackup:null};
 try{const s=localStorage.getItem(KEY); if(s)db={...db,...JSON.parse(s)};}catch(e){}
+db.cfg.font='lora'; // kiểu chữ in nghiêng nét thanh nét đậm (cô chốt)
 function persist(){try{localStorage.setItem(KEY,JSON.stringify(db));}catch(e){toast('⚠️ Không lưu được vào trình duyệt – hãy tải bản sao lưu!');}}
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
