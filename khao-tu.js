@@ -212,7 +212,7 @@ function ktSheetHTML(blank){
    <div class="in">
     <div class="sh-top"><img class="logo" src="${L}"><div class="sh-motto">KIÊN TRÌ - YÊU THƯƠNG - TIẾN BỘ</div><div class="sh-tag">MS. MINH THƯ</div></div>
     <div class="sh-title">📚 PHIẾU HỌC TẬP 📚</div>
-    <div class="sh-badge">${esc(kt.no)||1}</div>
+    <div class="sh-badge">2</div>
     <div class="sh-sub">THEO DÕI TIẾN ĐỘ HỌC TẬP VÀ ĐÁNH GIÁ CỦA HỌC VIÊN</div>
     <div class="sh-info">
       <div><div class="sh-lab">HỌ TÊN HỌC VIÊN | LỚP</div><div class="sw o"><div class="sh-box"><span class="hw">${esc(s.name)}${s.cls?' | '+esc(s.cls):''}</span></div></div></div>

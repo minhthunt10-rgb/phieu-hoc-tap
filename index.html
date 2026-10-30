@@ -107,7 +107,8 @@
     <div id="previewWrap"><div id="preview"></div></div>
     <div class="btns">
       <button class="btn n" id="bShare">📤 Gửi Zalo (điện thoại)</button>
-      <button class="btn" id="bCopy">📋 Sao chép ảnh (dán vào Zalo PC)</button>
+      <button class="btn" id="bCopy">📋 Sao chép ảnh + mở nhóm Zalo</button>
+      <button class="btn g" id="bZalo">💬 Mở nhóm Zalo</button>
       <button class="btn g" id="bDown">⬇️ Tải ảnh</button>
       <button class="btn g" id="bMsg">💬 Sao chép lời nhắn</button>
     </div>
@@ -176,6 +177,8 @@
   <label class="f">BTVN – Nội dung và vị trí trang tài liệu (mỗi dòng một câu)</label><textarea id="cNext" rows="6"></textarea>
   <label class="f">BTVN – Lý thuyết và bài tập cần chuẩn bị (mỗi dòng một câu)</label><textarea id="cPrep" rows="6"></textarea>
   <label class="f">Lời nhắn kèm ảnh – dùng {ten}, {ngay}, {buoi}</label><textarea id="cMsg" rows="3"></textarea>
+  <label class="f">Link nhóm Zalo (sao chép ảnh xong tự mở nhóm này)</label><input type="text" id="cZalo" placeholder="https://zalo.me/g/...">
+  <p class="hint">Link chỉ lưu trong máy này, không đưa lên trang web công khai.</p>
   <div class="btns"><button class="btn" id="bSaveCfg">Lưu cài đặt</button></div>
  </div>
 </section>
@@ -316,7 +319,7 @@ function sheetHTML(r){
    <div class="in">
     <div class="sh-top"><img class="logo" src="${L}"><div class="sh-motto">KIÊN TRÌ - YÊU THƯƠNG - TIẾN BỘ</div><div class="sh-tag">MS. MINH THƯ</div></div>
     <div class="sh-title">📚 PHIẾU HỌC TẬP 📚</div>
-    <div class="sh-badge">${esc(r.fNo)||1}</div>
+    <div class="sh-badge">1</div>
     <div class="sh-sub">THEO DÕI TIẾN ĐỘ HỌC TẬP VÀ ĐÁNH GIÁ CỦA HỌC VIÊN</div>
     <div class="sh-info">
       <div><div class="sh-lab">HỌ TÊN HỌC VIÊN | LỚP</div><div class="sw o"><div class="sh-box"><span class="hw">${esc(s.name)}${s.cls?' | '+esc(s.cls):''}</span></div></div></div>
@@ -353,7 +356,7 @@ function sheetHTML(r){
    <div class="sh-foot"><div><span>THÔNG TIN LIÊN HỆ</span><span>SĐT: 0966.101.957 (Ms. Minh Thư)</span><span>GROW WITH ENGLISH</span></div></div>
   </div>`;
 }
-function updatePreview(){const h=sheetHTML(readForm());$('#preview').innerHTML=h;$('#exportHolder').innerHTML=h;fitText();fitPreview();}
+function updatePreview(){const h=sheetHTML(readForm());$('#preview').innerHTML=h;$('#exportHolder').innerHTML=h;fitText();fitPreview();preRender();}
 // chữ ít thì phóng to cho vừa ô, chữ nhiều thì thu nhỏ để không tràn
 function fitText(){$$(".sheet .fit").forEach(el=>{
   if(!el.clientWidth)return; // ô đang ẩn (tab khác) – đo sẽ sai
@@ -394,21 +397,41 @@ window.addEventListener('resize',fitPreview);
 /* ---------- Xuất ảnh ---------- */
 function fileName(){const r=readForm();const s=stu(r.studentId);const[d,m,y]=dmy(r.fDate);
   return `Phieu_${(s?s.name:'HS').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/đ/g,'d').replace(/Đ/g,'D').replace(/\s+/g,'_')}_${d}-${m}-${y}.png`;}
-async function makePNG(){
-  if(!window.html2canvas){toast('Chưa tải được công cụ chụp ảnh – kiểm tra mạng internet');throw new Error('no html2canvas');}
-  if(!saveCurrent())throw new Error('chưa lưu được');
-  await document.fonts.ready; updatePreview();
-  const c=await html2canvas($('#exportHolder .sheet'),{scale:2,backgroundColor:'#ffffff',logging:false});
-  return new Promise(res=>c.toBlob(res,'image/png'));
+// ảnh được dựng sẵn ngầm sau mỗi lần sửa (nghỉ gõ ~0.8 giây) → bấm sao chép/gửi là có ngay
+let pngCache={key:null,job:null};
+const sheetKey=()=>sheetHTML(readForm());
+function renderPNG(key){
+  const job=(async()=>{await document.fonts.ready;fitText();
+    const c=await html2canvas($('#exportHolder .sheet'),{scale:2,backgroundColor:'#ffffff',logging:false});
+    return new Promise(res=>c.toBlob(res,'image/png'));})();
+  pngCache={key,job}; job.catch(()=>{if(pngCache.job===job)pngCache={key:null,job:null};});
+  return job;
+}
+function preRender(){clearTimeout(preRender.t);preRender.t=setTimeout(()=>{
+  if(!window.html2canvas||!$('#exportHolder .sheet'))return;const k=sheetKey();if(pngCache.key!==k)renderPNG(k);},800);}
+function makePNG(){ // gọi sau khi đã lưu phiếu
+  if(!window.html2canvas){toast('Chưa tải được công cụ chụp ảnh – kiểm tra mạng internet');return Promise.reject(new Error('no html2canvas'));}
+  const k=sheetKey(); if(pngCache.key===k)return pngCache.job;
+  updatePreview(); return renderPNG(k);
 }
 function download(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);}
-$('#bDown').onclick=async()=>{try{const b=await makePNG();download(b,fileName());}catch(e){console.error(e);}};
-$('#bCopy').onclick=async()=>{try{
-  const b=await makePNG();
-  await navigator.clipboard.write([new ClipboardItem({'image/png':b})]);
-  toast('Đã sao chép ảnh – mở Zalo và bấm Ctrl+V');
-}catch(e){console.error(e);toast('Trình duyệt không cho sao chép ảnh – đã tải ảnh về máy');try{download(await makePNG(),fileName());}catch(_){}}};
-$('#bShare').onclick=async()=>{try{
+// link nhóm Zalo lưu trong máy (không đưa lên web công khai)
+function zaloLink(){
+  let l=db.cfg.zalo;
+  if(!l){l=(prompt('Dán link nhóm Zalo để sao chép ảnh xong tự mở nhóm (chỉ cần làm 1 lần):')||'').trim();
+    if(!/^https:\/\/zalo\.me\//.test(l)){if(l)toast('Link phải bắt đầu bằng https://zalo.me/');return null;}
+    db.cfg.zalo=l;persist();}
+  return l;
+}
+function openZalo(){const l=zaloLink();if(l&&!window.open(l,'_blank'))location.href=l;}
+$('#bDown').onclick=async()=>{if(!saveCurrent())return;try{download(await makePNG(),fileName());}catch(e){console.error(e);}};
+$('#bCopy').onclick=async()=>{if(!saveCurrent())return;try{
+  // đưa "lời hứa" ảnh vào clipboard ngay trong cú bấm, không phải chờ ảnh xong mới gọi
+  await navigator.clipboard.write([new ClipboardItem({'image/png':makePNG()})]);
+  toast('Đã sao chép ảnh – vào nhóm Zalo bấm Ctrl+V'); openZalo();
+}catch(e){console.error(e);toast('Trình duyệt không cho sao chép ảnh – đã tải ảnh về máy, kéo ảnh vào nhóm Zalo');try{download(await makePNG(),fileName());openZalo();}catch(_){}}};
+$('#bZalo').onclick=openZalo;
+$('#bShare').onclick=async()=>{if(!saveCurrent())return;try{
   const b=await makePNG(); const f=new File([b],fileName(),{type:'image/png'});
   if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],text:message()});}
   else{download(b,fileName());toast('Máy này không hỗ trợ chia sẻ trực tiếp – đã tải ảnh về');}
@@ -483,13 +506,15 @@ $('#lStudent').onchange=renderSaved; $('#lMonth').onchange=renderSaved;
 /* ---------- Cài đặt / sao lưu ---------- */
 const LISTS={hw:'cHw',att:'cAtt',gram:'cGram',next:'cNext',prep:'cPrep'};
 function loadCfg(){
-  Object.entries(LISTS).forEach(([k,id])=>$('#'+id).value=db.cfg[k].join('\n'));$('#cMsg').value=db.cfg.msg;
+  Object.entries(LISTS).forEach(([k,id])=>$('#'+id).value=db.cfg[k].join('\n'));$('#cMsg').value=db.cfg.msg;$('#cZalo').value=db.cfg.zalo||'';
   $(`input[name=cFont][value=${db.cfg.font}]`).checked=true;
   $('#backupInfo').textContent=db.lastBackup?'Lần sao lưu gần nhất: '+new Date(db.lastBackup).toLocaleString('vi-VN'):'Chưa sao lưu lần nào.';
 }
 $('#bSaveCfg').onclick=()=>{
   Object.entries(LISTS).forEach(([k,id])=>db.cfg[k]=$('#'+id).value.split('\n').map(s=>s.trim()).filter(Boolean));
-  db.cfg.msg=$('#cMsg').value.trim()||DEF_CFG.msg; persist();renderChips();toast('Đã lưu cài đặt');
+  db.cfg.msg=$('#cMsg').value.trim()||DEF_CFG.msg;
+  const z=$('#cZalo').value.trim(); if(z&&!/^https:\/\/zalo\.me\//.test(z)){toast('Link Zalo phải bắt đầu bằng https://zalo.me/');return;} db.cfg.zalo=z;
+  persist();renderChips();toast('Đã lưu cài đặt');
 };
 $$('input[name=cFont]').forEach(r=>r.onchange=()=>{db.cfg.font=r.value;persist();updatePreview();});
 $('#bExport').onclick=()=>{db.lastBackup=Date.now();persist();
