@@ -51,7 +51,6 @@
     <label class="f">Nhận xét bài tập về nhà</label>
     <textarea id="fHwCmt"></textarea>
     <div class="chips" data-for="fHwCmt" data-list="hw" data-sep="replace"></div>
-    <label class="stamp-tg"><input type="checkbox" id="fStamp"> 🖋️ Đóng dấu của cô vào góc ô nhận xét</label>
    </div>
 
    <div class="card">
@@ -236,14 +235,13 @@ const FIELDS=['fDate','fNo','fTotal','fPct','fHwCmt','fGram','fVUnit','fVNum','f
 function readForm(){
   const r={studentId:$('#fStudent').value};
   FIELDS.forEach(f=>r[f]=$('#'+f).value.trim?$('#'+f).value.trim():$('#'+f).value);
-  r.hw=($('input[name=fHw]:checked')||{}).value; r.att=($('input[name=fAtt]:checked')||{}).value; r.stamp=$('#fStamp').checked;
+  r.hw=($('input[name=fHw]:checked')||{}).value; r.att=($('input[name=fAtt]:checked')||{}).value;
   return r;
 }
 function writeForm(r){
   FIELDS.forEach(f=>$('#'+f).value=r[f]??'');
   if(r.studentId)$('#fStudent').value=r.studentId;
   ($(`input[name=fHw][value=${r.hw||'done'}]`)).checked=true;
-  if(r.stamp!=null)$('#fStamp').checked=!!r.stamp;
   ($(`input[name=fAtt][value=${r.att||'tot'}]`)).checked=true;
 }
 function nextNo(s){const ss=sessOf(s.id);const last=ss.length?+ss[ss.length-1].fNo:+(s.done||0);const total=+s.total||12;return last>=total?1:last+1;}
@@ -277,7 +275,6 @@ function fillStudentSelects(){
   if($$('#fStudent option').some(o=>o.value===v1))$('#fStudent').value=v1; if(v2===''||stu(v2))$('#lStudent').value=v2;
 }
 $('#fStudent').onchange=()=>prefillFor($('#fStudent').value,false);
-$('#fStamp').addEventListener('change',()=>{db.cfg.stamp=$('#fStamp').checked;persist();updatePreview();});
 $('#fFind').addEventListener('input',()=>{const v=$('#fStudent').value;fillStudentSelects();
   if($('#fStudent').value&&$('#fStudent').value!==v)prefillFor($('#fStudent').value,false);});
 function clearFind(){if($('#fFind').value){$('#fFind').value='';fillStudentSelects();}}
@@ -328,6 +325,8 @@ function sheetHTML(r){
   const L=window.LOGO||'';
   const ck=on=>`<span class="sh-ck">${on?'<span class="hw" style="font-size:20px;line-height:1">✓</span>':''}</span>`;
   const circ=on=>`<span class="sh-circ">${on?'<span class="hw" style="font-size:20px;line-height:1">✓</span>':''}</span>`;
+  // hoàn thành BTVN từ 80% trở lên thì đóng dấu của cô
+  const stamp=r.hw!=='none'&&r.fPct!==''&&+r.fPct>=80;
   const pct=r.hw==='none'?'—':(r.fPct!==''?r.fPct:'....');
   const vocab=`<span class="hw k k2">Khảo từ vựng</span> <span class="hw">${esc(r.fVUnit)||'<span class="hw k">......</span>'}</span> <span class="hw k k2">(<span class="hw">${esc(r.fVNum)||'....'}</span> từ)</span>`
     +(r.fVScore!==''&&r.fVScore!=null?`<div class="hw" style="margin-top:4px">Kết quả: ${esc(r.fVScore)}/${esc(r.fVNum)||'?'} từ</div>`:'');
@@ -352,7 +351,7 @@ function sheetHTML(r){
         <div class="sh-st">Chưa hoàn thành ${ck(r.hw==='not')}</div>
         <div class="sh-st">Mức độ hoàn thành <span>${r.hw!=="none"&&r.fPct!==""?`<span class="hw">${esc(r.fPct)}%</span>/100%`:`<span class="hw">${esc(pct)}</span>/100%`}</span></div>
       </div></div>
-      <div><div class="sh-colh">NHẬN XÉT BÀI TẬP VỀ NHÀ</div><div class="sh-rbox cmt${r.stamp?' st':''}"><div class="fit" data-max="19" data-lines="2"><div class="hw">${esc(r.fHwCmt)}</div></div>${r.stamp?'<img class="stamp" src="stamp.png" alt="">':''}</div></div>
+      <div><div class="sh-colh">NHẬN XÉT BÀI TẬP VỀ NHÀ</div><div class="sh-rbox cmt${stamp?' st':''}"><div class="fit" data-max="19" data-lines="2"><div class="hw">${esc(r.fHwCmt)}</div></div>${stamp?'<img class="stamp" src="stamp.png" alt="">':''}</div></div>
     </div>
     <div class="sh-h purple">MỤC TIÊU/NỘI DUNG BUỔI HỌC</div>
     <div class="sh-2">
@@ -562,7 +561,6 @@ $('#fImport').onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new F
 /* ---------- Khởi động ---------- */
 function init(){
   $('#appLogo').src=window.LOGO||'';
-  $('#fStamp').checked=!!db.cfg.stamp; // nhớ lần chọn đóng dấu gần nhất
   fillStudentSelects();renderChips();
   if(db.students.length)prefillFor($('#fStudent').value,false); else{writeForm({fDate:today(),fNo:1,fTotal:12,fPct:100,fVUnit:'Unit ',fVNum:30,fNVUnit:'Unit ',fNVNum:30});updatePreview();}
   $('#lMonth').value=today().slice(0,7);
