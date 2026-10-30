@@ -44,10 +44,9 @@ const kScore=()=>kt.items.filter(x=>x.ok===true).length;
 
 /* ---------- Giao diện ---------- */
 function ktOpen(){
-  const opts=db.students.slice().sort(byKhoi).map(s=>`<option value="${s.id}">${esc(s.name)}${s.cls?' – '+esc(s.cls):''}</option>`).join('');
-  $('#kStudent').innerHTML=db.students.length?opts:'<option value="">(Chưa có học sinh)</option>';
+  ktFill();
   if(!stu(kt.studentId)){kt.studentId=$('#kStudent').value;ktDefaults();}
-  $('#kStudent').value=kt.studentId;
+  if(kt.studentId)$('#kStudent').value=kt.studentId;
   ['date','no','unit','n'].forEach(k=>$('#k_'+k).value=kt[k]??'');ktNBtn();
   $('#kRaw').value=kt.raw||'';
   ktTable();ktHist();ktPool();ktRender();
@@ -63,6 +62,16 @@ function ktPool(){
   $('#kPoolN').textContent=p.length;
   $('#kPoolList').innerHTML=p.length?p.map(w=>`<span class="pill" title="Sai từ ${esc(w.since||'')}">${esc(w.en)} – ${esc(w.vi)}</span>`).join(' '):'<span class="hint">Chưa có từ nào.</span>';
 }
+// tìm tên không cần gõ dấu
+const boDau=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[đĐ]/g,'d').toLowerCase().replace(/\s+/g,' ').trim();
+const khop=(s,q)=>{const t=boDau(s.name+' '+(s.cls||''));return q.split(' ').every(w=>t.includes(w))||t.replace(/ /g,'').includes(q.replace(/ /g,''));};
+function ktFill(){
+  const q=boDau($('#kFind').value), all=db.students.slice().sort(byKhoi), found=q?all.filter(s=>khop(s,q)):all;
+  $('#kStudent').innerHTML=!all.length?'<option value="">(Chưa có học sinh)</option>'
+    :found.length?found.map(s=>`<option value="${s.id}">${esc(s.name)}${s.cls?' – '+esc(s.cls):''}</option>`).join(''):'<option value="">(Không tìm thấy học sinh)</option>';
+  if(found.some(s=>s.id===kt.studentId))$('#kStudent').value=kt.studentId;
+}
+$('#kFind').addEventListener('input',()=>{ktFill();const v=$('#kStudent').value;if(v&&v!==kt.studentId)$('#kStudent').onchange();});
 $('#kStudent').onchange=()=>{
   kt.studentId=$('#kStudent').value;
   if(kt.testId||kt.items.some(x=>x.ans||x.ok!=null)){kt.items.forEach(x=>{x.ans='';x.ok=null;});kt.testId=null;}
@@ -169,6 +178,7 @@ $('#kNextStu').onclick=()=>{
   if(!ktSave())return;
   const list=$$('#kStudent option').map(o=>o.value), i=list.indexOf(kt.studentId), cls=(stu(kt.studentId).cls||'');
   const nxt=list.slice(i+1).find(id=>(stu(id).cls||'')===cls)||list[(i+1)%list.length];
+  $('#kFind').value='';ktFill();
   $('#kStudent').value=nxt; kt.testId=null; kt.items.forEach(x=>{x.ans='';x.ok=null;});
   if($('#kShuf').checked)shuffle(kt.items);
   $('#kStudent').onchange(); window.scrollTo({top:0,behavior:'smooth'});

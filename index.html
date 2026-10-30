@@ -30,6 +30,7 @@
    <div class="card">
     <h3>Học sinh &amp; buổi học <span id="editTag" class="pill" style="display:none">Đang sửa phiếu cũ</span></h3>
     <label class="f">Học sinh</label>
+    <input type="search" id="fFind" placeholder="🔍 Gõ tên để tìm học sinh…" autocomplete="off" style="margin-bottom:6px">
     <select id="fStudent"></select>
     <div class="row">
       <div><label class="f">Ngày học</label><input type="date" id="fDate"></div>
@@ -253,15 +254,25 @@ function prefillFor(id,keepShared){
   writeForm(r); setEditing(null); updatePreview();
 }
 function setEditing(id){editingId=id;$('#editTag').style.display=id?'inline-block':'none';}
+// tìm tên không cần gõ dấu: "lan anh", "lananh" đều ra Lan Anh
+const boDau=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[đĐ]/g,'d').toLowerCase().replace(/\s+/g,' ').trim();
+// mỗi chữ gõ vào đều có trong tên ("doan gia" ra Đoàn Nguyễn Gia Hảo); gõ liền "lananh" cũng được
+const khop=(s,q)=>{const t=boDau(s.name+' '+(s.cls||''));return q.split(' ').every(w=>t.includes(w))||t.replace(/ /g,'').includes(q.replace(/ /g,''));};
+const opt=s=>`<option value="${s.id}">${esc(s.name)}${s.cls?' – '+esc(s.cls):''}</option>`;
 function fillStudentSelects(){
-  const opts=db.students.slice().sort(byKhoi)
-    .map(s=>`<option value="${s.id}">${esc(s.name)}${s.cls?' – '+esc(s.cls):''}</option>`).join('');
+  const all=db.students.slice().sort(byKhoi), q=boDau($('#fFind').value);
+  const found=q?all.filter(s=>khop(s,q)):all;
+  const opts=all.map(opt).join('');
   const v1=$('#fStudent').value, v2=$('#lStudent').value;
-  $('#fStudent').innerHTML=db.students.length?opts:'<option value="">(Chưa có học sinh – thêm ở tab Học sinh)</option>';
+  $('#fStudent').innerHTML=!all.length?'<option value="">(Chưa có học sinh – thêm ở tab Học sinh)</option>'
+    :found.length?found.map(opt).join(''):'<option value="">(Không tìm thấy học sinh)</option>';
   $('#lStudent').innerHTML='<option value="">Tất cả</option>'+opts;
-  if(stu(v1))$('#fStudent').value=v1; if(v2===''||stu(v2))$('#lStudent').value=v2;
+  if($$('#fStudent option').some(o=>o.value===v1))$('#fStudent').value=v1; if(v2===''||stu(v2))$('#lStudent').value=v2;
 }
 $('#fStudent').onchange=()=>prefillFor($('#fStudent').value,false);
+$('#fFind').addEventListener('input',()=>{const v=$('#fStudent').value;fillStudentSelects();
+  if($('#fStudent').value&&$('#fStudent').value!==v)prefillFor($('#fStudent').value,false);});
+function clearFind(){if($('#fFind').value){$('#fFind').value='';fillStudentSelects();}}
 $$('#v-nhap input, #v-nhap textarea').forEach(el=>el.addEventListener('input',updatePreview));
 $$('#v-nhap input[type=radio]').forEach(el=>el.addEventListener('change',()=>{
   if(el.name==='fHw'){ if(el.value==='done'&&!$('#fPct').value)$('#fPct').value=100; }
@@ -293,7 +304,7 @@ function saveCurrent(){
 }
 $('#bSave').onclick=saveCurrent;
 $('#bSaveNext').onclick=()=>{
-  const r=saveCurrent(); if(!r)return;
+  const r=saveCurrent(); if(!r)return; clearFind();
   const list=$$('#fStudent option').map(o=>o.value); const i=list.indexOf(r.studentId);
   const cls=(stu(r.studentId).cls||'');
   // ưu tiên HS cùng lớp tiếp theo
@@ -461,7 +472,7 @@ function renderStudents(){
     <button class="btn r" data-a="del" data-id="${s.id}" style="padding:5px 9px">Xóa</button></td></tr>`;}).join('');
   $$('#sTable button').forEach(b=>b.onclick=()=>{
     const s=stu(b.dataset.id);
-    if(b.dataset.a==='go'){fillStudentSelects();$('#fStudent').value=s.id;prefillFor(s.id,false);$('nav.tabs button[data-v=nhap]').click();}
+    if(b.dataset.a==='go'){$('#fFind').value='';fillStudentSelects();$('#fStudent').value=s.id;prefillFor(s.id,false);$('nav.tabs button[data-v=nhap]').click();}
     if(b.dataset.a==='ed'){editingS=s.id;$('#sName').value=s.name;$('#sClass').value=s.cls||'';$('#sTotal').value=s.total;$('#sDone').value=s.done||0;$('#sParent').value=s.parent||'';$('#sNote').value=s.note||'';
       $('#hsFormTitle').textContent='Sửa thông tin: '+s.name;$('#bCancelS').style.display='';window.scrollTo({top:0,behavior:'smooth'});}
     if(b.dataset.a==='del'){const n=sessOf(s.id).length;
