@@ -61,10 +61,10 @@ table.list th{color:var(--muted);font-size:12.5px}
 .sh-h{text-align:center;font-family:'Lora',serif;font-weight:700;font-size:20px;margin:22px 0 12px}
 .sh-h.green{color:#3E9B4F}.sh-h.purple{color:#8E3FB0}.sh-h.navy{color:#2E4A7D}
 .sh-2{display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start}
-.sh-sbox.purple{height:100px}
+/* ô BTVN kế tiếp (xanh lá) cùng cỡ với ô Mục tiêu/Nội dung (tím) – cô chốt */
+.sh-sbox.purple,.sh-sbox.green{height:100px}
 .sh-colh{text-align:center;font-weight:800;font-size:13.5px;color:#222;margin-bottom:8px}
-/* ô Kiểm tra BTVN không có bóng màu: rộng thêm 7px cho mép phải khớp ô Mục tiêu/Nội dung (gồm cả bóng) */
-.sh-rbox{border:1.6px solid #333;border-radius:12px;background:#fff;padding:8px 12px;height:96px;margin-right:-7px}
+.sh-rbox{border:1.6px solid #333;border-radius:12px;background:#fff;padding:8px 12px;height:96px}
 .sh-rbox.cmt{position:relative;display:flex;padding:6px 10px}
 .sh-rbox.cmt .stamp{position:absolute;right:-20px;bottom:-30px;width:96px;pointer-events:none}
 .cmt .fit{text-wrap:balance;flex:1;display:flex;align-items:center;justify-content:center;text-align:center;padding:0 16px 4px;overflow:hidden}
