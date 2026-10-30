@@ -423,7 +423,7 @@ function sheetHTML(r){
         <div class="sh-st">Chưa hoàn thành ${ck(r.hw==='not')}</div>
         <div class="sh-st">Mức độ hoàn thành <span>${r.hw!=="none"&&r.fPct!==""?`<span class="hw">${esc(r.fPct)}%</span>/100%`:`<span class="hw">${esc(pct)}</span>/100%`}</span></div>
       </div></div>
-      <div><div class="sh-colh">NHẬN XÉT BÀI TẬP VỀ NHÀ</div><div class="sh-rbox cmt"><div class="fit" data-max="15"><div class="hw">${esc(r.fHwCmt)}</div></div></div></div>
+      <div><div class="sh-colh">NHẬN XÉT BÀI TẬP VỀ NHÀ</div><div class="sh-rbox cmt"><div class="fit" data-max="19" data-lines="2"><div class="hw">${esc(r.fHwCmt)}</div></div></div></div>
     </div>
     <div class="sh-h purple">MỤC TIÊU/NỘI DUNG BUỔI HỌC</div>
     <div class="sh-2">
@@ -461,6 +461,9 @@ function fitText(){$$(".sheet .fit").forEach(el=>{
 
   el.classList.remove("nw");
   // phải xuống dòng: giữ cỡ chữ chuẩn cho đều, chỉ thu nhỏ khi tràn ô
+  // data-lines: ưu tiên chữ to nhất mà vẫn chỉ chiếm chừng ấy dòng (ô nhận xét BTVN: 2 dòng)
+  const L=+el.dataset.lines,lh=1.4; // .hw line-height
+  if(L)for(let s=max;s>=14;s-=.5){set(s);if(fi.offsetHeight<=s*lh*L+2&&fi.offsetHeight<=H+1)return;}
   let s=max;set(s);while(s>9&&fi.offsetHeight>H+1){s-=.5;set(s);}
 });}
 function fitPreview(){
