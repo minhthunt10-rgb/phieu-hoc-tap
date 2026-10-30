@@ -65,6 +65,9 @@ table.list th{color:var(--muted);font-size:12.5px}
 .sh-colh{text-align:center;font-weight:800;font-size:13.5px;color:#222;margin-bottom:8px}
 .sh-rbox{border:1.6px solid #333;border-radius:12px;background:#fff;padding:8px 12px;height:96px}
 .sh-rbox.cmt{position:relative;display:flex;padding:6px 10px}
+.sh-rbox.cmt .stamp{position:absolute;right:-18px;bottom:-24px;width:100px;pointer-events:none}
+.sh-rbox.cmt.st .fit{padding:0 46px 12px 6px}
+.stamp-tg{display:inline-flex;align-items:center;gap:6px;margin-top:10px;border:1px solid #f0c4c4;background:#FFF5F5;color:#c62828;border-radius:10px;padding:7px 12px;font-weight:700;cursor:pointer;font-size:14px}
 .cmt .fit{text-wrap:balance;flex:1;display:flex;align-items:center;justify-content:center;text-align:center;padding:0 16px 4px;overflow:hidden}
 .sh-sbox .fit{flex:1;min-height:0;overflow:hidden}
 .sheet .sh-sbox .fit .hw{line-height:var(--lh,1.4)}
