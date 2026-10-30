@@ -78,6 +78,7 @@ table.list th{color:var(--muted);font-size:12.5px}
 .sh-rbox.cmt{position:relative;display:flex;padding:6px 10px}
 .cmt .fit{text-wrap:balance;flex:1;display:flex;align-items:center;justify-content:center;text-align:center;padding:0 16px 4px;overflow:hidden}
 .sh-sbox .fit{flex:1;min-height:0;overflow:hidden}
+.sheet .sh-sbox .fit .hw{line-height:var(--lh,1.4)}
 .fi{display:inline-block;max-width:100%;vertical-align:top}.fit.nw .fi{max-width:none}.fit.nw,.fit.nw *{white-space:pre !important}
 .sh-note .fit{flex:1;height:100%;display:flex;align-items:center;overflow:hidden;line-height:1.25}.sh-note .fit .hw{line-height:1.25}
 .sheet .fit .hw,.sheet.print .fit .hw{font-size:1em}.sheet .fit .hw.k2{font-size:.92em}
@@ -563,6 +564,16 @@ function updatePreview(){const h=sheetHTML(readForm());$('#preview').innerHTML=h
 // chữ ít thì phóng to cho vừa ô, chữ nhiều thì thu nhỏ để không tràn
 function fitText(){$$(".sheet .fit").forEach(el=>{
   if(!el.clientWidth)return; // ô đang ẩn (tab khác) – đo sẽ sai
+  el.style.removeProperty('--lh'); fitOne(el); spreadLines(el);
+});}
+// ô Ngữ pháp / BTVN chỉ có vài dòng: giãn dòng cho chữ phủ kín ô, không dư khoảng trống phía dưới (cỡ chữ giữ nguyên)
+function spreadLines(el){
+  if(!el.closest('.sh-sbox'))return;
+  const fi=el.firstElementChild,s=parseFloat(el.style.fontSize)||15,H=el.clientHeight;
+  const n=Math.round(fi.offsetHeight/(s*1.4)); if(n<2)return;
+  el.style.setProperty('--lh',Math.min(3,Math.max(1.4,(H-2)/n/s)).toFixed(3));
+}
+function fitOne(el){{
   if(!el.firstElementChild||!el.firstElementChild.classList.contains("fi")){const w=document.createElement("div");w.className="fi";while(el.firstChild)w.appendChild(el.firstChild);el.appendChild(w);}
   const fi=el.firstElementChild,cs=getComputedStyle(el);
   const W=el.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight),H=el.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom);
@@ -579,7 +590,7 @@ function fitText(){$$(".sheet .fit").forEach(el=>{
   const L=+el.dataset.lines,lh=1.4; // .hw line-height
   if(L)for(let s=max;s>=14;s-=.5){set(s);if(fi.offsetHeight<=s*lh*L+2&&fi.offsetHeight<=H+1)return;}
   let s=max;set(s);while(s>9&&fi.offsetHeight>H+1){s-=.5;set(s);}
-});}
+}}
 function fitPreview(){
   const w=$('#previewWrap').clientWidth; if(!w)return;
   const k=w/630, el=$('#preview'); el.style.transform=`scale(${k})`;
