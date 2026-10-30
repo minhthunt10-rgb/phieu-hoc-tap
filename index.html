@@ -71,7 +71,8 @@ table.list th{color:var(--muted);font-size:12.5px}
 .sh-box{border:1.6px solid #333;background:#fff;min-height:32px;padding:3px 8px;display:flex;align-items:center;justify-content:center}
 .sh-h{text-align:center;font-family:'Lora',serif;font-weight:700;font-size:20px;margin:22px 0 12px}
 .sh-h.green{color:#3E9B4F}.sh-h.purple{color:#8E3FB0}.sh-h.navy{color:#2E4A7D}
-.sh-2{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+.sh-2{display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start}
+.sh-sbox.short{height:84px}
 .sh-colh{text-align:center;font-weight:800;font-size:13.5px;color:#222;margin-bottom:8px}
 .sh-rbox{border:1.6px solid #333;border-radius:12px;background:#fff;padding:8px 12px;height:96px}
 .sh-rbox.cmt{position:relative;display:flex;padding:6px 10px}
@@ -141,14 +142,14 @@ table.list th{color:var(--muted);font-size:12.5px}
     <input type="number" id="fPct" min="0" max="100" placeholder="100">
     <label class="f">Nhận xét bài tập về nhà</label>
     <textarea id="fHwCmt"></textarea>
-    <div class="chips" data-for="fHwCmt" data-list="hw"></div>
+    <div class="chips" data-for="fHwCmt" data-list="hw" data-sep="replace"></div>
    </div>
 
    <div class="card">
     <h3>Mục tiêu / nội dung buổi học <span class="pill">nội dung chung</span></h3>
     <label class="f">Ngữ pháp</label>
     <textarea id="fGram" placeholder="VD: Sửa BTVN + Tổng ôn kiến thức GHK1 (U1+2+3)"></textarea>
-    <div class="chips" data-for="fGram" data-list="gram" data-sep=" + "></div>
+    <div class="chips" data-for="fGram" data-list="gram" data-sep="&#10;"></div>
     <div class="row">
       <div><label class="f">Khảo từ vựng (bài)</label><input type="text" id="fVUnit" placeholder="Unit 2+3"></div>
       <div><label class="f">Số từ</label><input type="number" id="fVNum" placeholder="30"></div>
@@ -361,8 +362,9 @@ function renderChips(){
     c.innerHTML=list.map(t=>`<button type="button">${esc(t)}</button>`).join('');
     c.querySelectorAll('button').forEach(b=>b.onclick=()=>{
       const t=$('#'+c.dataset.for), sep=c.dataset.sep||' ';
+      if(sep==='replace')t.value='';
       const start=t.value?t.value.length+sep.length:0;
-      t.value=t.value?t.value+sep+b.textContent:b.textContent;
+      t.value=t.value&&sep!=="replace"?t.value+sep+b.textContent:b.textContent;
       const i=t.value.indexOf('…',start); t.focus();
       if(i>=0)t.setSelectionRange(i,i+1); else t.setSelectionRange(t.value.length,t.value.length);
       updatePreview();});
@@ -424,7 +426,7 @@ function sheetHTML(r){
     <div class="sh-h purple">MỤC TIÊU/NỘI DUNG BUỔI HỌC</div>
     <div class="sh-2">
       <div class="sw p"><div class="sh-sbox purple"><div class="t">Ngữ pháp</div><div class="fit" data-max="15"><div class="hw">${esc(r.fGram)}</div></div></div></div>
-      <div class="sw p"><div class="sh-sbox purple"><div class="t">Từ vựng</div><div class="fit" data-max="15">${vocab}</div></div></div>
+      <div class="sw p"><div class="sh-sbox purple short"><div class="t">Từ vựng</div><div class="fit" data-max="15">${vocab}</div></div></div>
     </div>
     <div class="sh-h navy">Tinh thần học tập của học viên</div>
     <div class="sh-att">
@@ -436,7 +438,7 @@ function sheetHTML(r){
     <div class="sh-h green">BTVN BUỔI KẾ TIẾP</div>
     <div class="sh-2">
       <div class="sw g"><div class="sh-sbox green"><div class="t">NỘI DUNG VÀ VỊ TRÍ TRANG TÀI LIỆU</div><div class="fit" data-max="15"><div class="hw">${esc(r.fNext)}</div></div></div></div>
-      <div class="sw g"><div class="sh-sbox green"><div class="t">LÝ THUYẾT VÀ BÀI TẬP CẦN CHUẨN BỊ</div><div class="fit" data-max="15">${prep}</div></div></div>
+      <div class="sw g"><div class="sh-sbox green"><div class="t">LÝ THUYẾT VÀ BÀI TẬP CẦN CHUẨN BỊ</div><div class="fit" data-max="15" data-force="1">${prep}</div></div></div>
     </div>
    </div>
    <div class="sh-foot"><div><span>THÔNG TIN LIÊN HỆ</span><span>SĐT: 0966.101.957 (Ms. Minh Thư)</span><span>GROW WITH ENGLISH</span></div></div>
@@ -451,7 +453,10 @@ function fitText(){$$(".sheet .fit").forEach(el=>{
   const max=+el.dataset.max||20,set=s=>el.style.fontSize=s+"px";
   // ưu tiên không xuống dòng: thu nhỏ tối đa tới 14px mà vẫn nằm trên 1 dòng (mỗi dòng cô gõ) thì dùng
   el.classList.add("nw");
-  for(let s=max;s>=14;s-=.5){set(s);if(fi.offsetWidth<=W+1&&fi.offsetHeight<=H+1)return;}
+  // data-force: bắt buộc mỗi dòng cô gõ nằm trên 1 dòng (ô Lý thuyết chỉ 2 dòng; quá dài mới cho xuống dòng)
+  const floor=el.dataset.force?12.5:14;
+  for(let s=max;s>=floor;s-=.5){set(s);if(fi.offsetWidth<=W+1&&fi.offsetHeight<=H+1)return;}
+
   el.classList.remove("nw");
   // phải xuống dòng: giữ cỡ chữ chuẩn cho đều, chỉ thu nhỏ khi tràn ô
   let s=max;set(s);while(s>9&&fi.offsetHeight>H+1){s-=.5;set(s);}
