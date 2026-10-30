@@ -6,9 +6,9 @@
 <title>Khảo Từ Vựng</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lora:ital,wght@0,700;1,600&family=Playpen+Sans:wght@500&display=swap" rel="stylesheet">
-<script src="logo.js"></script>
+<script src="logo.js?v=202610301547"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=202610301547">
 <style>
 .ks{display:flex;gap:6px}.ks select{flex:1;min-width:0}.ks .btn{padding:8px 10px;white-space:nowrap}
 .sf{border:1px dashed var(--line);border-radius:12px;padding:4px 12px 12px;margin-top:10px;background:#FFFCF7}
@@ -133,6 +133,6 @@ const byKhoi=(a,b)=>khoi(a)-khoi(b)||tenRieng(a.name).localeCompare(tenRieng(b.n
 function download(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);}
 $('#appLogo').src=window.LOGO||'';
 </script>
-<script src="khao-tu.js"></script>
+<script src="khao-tu.js?v=202610301547"></script>
 </body>
 </html>
