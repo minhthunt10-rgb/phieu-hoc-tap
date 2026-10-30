@@ -387,7 +387,10 @@ function spreadLines(el){
   // đo theo cỡ chữ thật của chữ điền (kiểu chữ khác nhau có thể to/nhỏ hơn cỡ ô)
   const fi=el.firstElementChild,h=fi.querySelector('.hw'),s=h?parseFloat(getComputedStyle(h).fontSize):parseFloat(el.style.fontSize)||15,H=el.clientHeight;
   const n=Math.round(fi.offsetHeight/(s*1.4)); if(n<2)return;
-  el.style.setProperty('--lh',Math.min(3,Math.max(1.4,(H-2)/n/s)).toFixed(3));
+  let lh=Math.min(3,Math.max(1.4,(H-2)/n/s));
+  el.style.setProperty('--lh',lh.toFixed(3));
+  // dòng đầu (Khảo … từ vựng bài …) cao hơn ước tính → giãn xong mà tràn thì thu lại cho dòng cuối không bị cắt
+  while(lh>1.4&&fi.offsetHeight>H){lh=Math.max(1.4,lh-.02);el.style.setProperty('--lh',lh.toFixed(3));}
 }
 function fitOne(el){{
   if(!el.firstElementChild||!el.firstElementChild.classList.contains("fi")){const w=document.createElement("div");w.className="fi";while(el.firstChild)w.appendChild(el.firstChild);el.appendChild(w);}
