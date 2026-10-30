@@ -1,5 +1,5 @@
 /* ================= KHẢO TỪ VỰNG (mặt sau phiếu) =================
-   TG chụp ảnh danh sách từ → đọc chữ (Tesseract) → bài khảo nghĩa Việt → viết Anh.
+   TG gõ/dán danh sách từ → bài khảo 20–30 từ, nghĩa Việt → viết Anh.
    Chấm trên giấy (TG bấm ✓/✗) hoặc HS gõ trên máy (tự chấm). Lưu vào db.tests,
    từ sai vào db.vocab[hs] (từ chưa thuộc), điểm tự điền sang mặt trước. */
 db.tests=db.tests||[]; db.vocab=db.vocab||{};
@@ -48,7 +48,7 @@ function ktOpen(){
   $('#kStudent').innerHTML=db.students.length?opts:'<option value="">(Chưa có học sinh)</option>';
   if(!stu(kt.studentId)){kt.studentId=$('#kStudent').value;ktDefaults();}
   $('#kStudent').value=kt.studentId;
-  ['date','no','unit','n'].forEach(k=>$('#k_'+k).value=kt[k]??'');
+  ['date','no','unit','n'].forEach(k=>$('#k_'+k).value=kt[k]??'');ktNBtn();
   $('#kRaw').value=kt.raw||'';
   ktTable();ktHist();ktPool();ktRender();
 }
@@ -68,61 +68,26 @@ function ktPool(){
 $('#kStudent').onchange=()=>{
   kt.studentId=$('#kStudent').value;
   if(kt.testId||kt.items.some(x=>x.ans||x.ok!=null)){kt.items.forEach(x=>{x.ans='';x.ok=null;});kt.testId=null;}
-  ktDefaults();['no','unit','n'].forEach(k=>$('#k_'+k).value=kt[k]??'');
+  ktDefaults();['no','unit','n'].forEach(k=>$('#k_'+k).value=kt[k]??'');ktNBtn();
   ktTable();ktHist();ktPool();ktKeep();
 };
-['date','no','unit','n'].forEach(k=>$('#k_'+k).addEventListener('input',()=>{kt[k]=$('#k_'+k).value;if(k==='date'){ktDefaults();$('#k_no').value=kt.no;}ktKeep();}));
+['date','no','unit','n'].forEach(k=>$('#k_'+k).addEventListener('input',()=>{kt[k]=$('#k_'+k).value;if(k==='date'){ktDefaults();$('#k_no').value=kt.no;}if(k==='n')ktNBtn();ktKeep();}));
+// nút chọn nhanh số từ (20/25/30), ô số để gõ số khác
+function ktNBtn(){$$('.kn button').forEach(b=>b.classList.toggle('on',+b.dataset.n===+kt.n));}
+$$('.kn button').forEach(b=>b.onclick=()=>{kt.n=+b.dataset.n;$('#k_n').value=kt.n;ktNBtn();ktKeep();});
 $('#kRaw').addEventListener('input',()=>{kt.raw=$('#kRaw').value;ktKeep();});
-
-/* ---------- Ảnh → chữ ---------- */
-function loadTess(){
-  if(window.Tesseract)return Promise.resolve();
-  return new Promise((ok,no)=>{const s=document.createElement('script');
-    s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';s.onload=ok;s.onerror=no;document.head.appendChild(s);});
-}
-function shrinkImg(file){ // ảnh điện thoại rất to: thu về ≤2000px cho đọc nhanh
-  return new Promise(res=>{const im=new Image();im.onload=()=>{const k=Math.min(1,2000/Math.max(im.width,im.height));
-    const c=document.createElement('canvas');c.width=im.width*k;c.height=im.height*k;
-    const g=c.getContext('2d');g.filter='grayscale(1) contrast(1.4)';g.drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(im.src);res(c);};
-    im.onerror=()=>res(file);im.src=URL.createObjectURL(file);});
-}
-$('#kImg').onchange=async e=>{
-  const f=e.target.files[0]; e.target.value=''; if(!f)return;
-  const msg=t=>$('#kOcrMsg').innerHTML=t;
-  try{
-    msg('⏳ Đang tải bộ đọc chữ (lần đầu hơi lâu, khoảng 15MB)…');
-    await loadTess();
-    const img=await shrinkImg(f);
-    const {data}=await Tesseract.recognize(img,'eng+vie',{logger:m=>{if(m.status==='recognizing text')msg(`⏳ Đang đọc ảnh… ${Math.round(m.progress*100)}%`);}});
-    // chỉ giữ dòng bộ đọc chắc chắn (chữ in ~90, chữ viết tay đọc nhầm thường <50)
-    const txt=data.lines&&data.lines.length?data.lines.filter(l=>l.confidence>=60).map(l=>l.text).join('\n'):data.text;
-    const u=/\bunit\s*(\d{1,2})\b/i.exec(data.text);
-    if(u&&(!kt.unit||kt.unit.trim()==='Unit')){kt.unit='Unit '+u[1];$('#k_unit').value=kt.unit;}
-    // bỏ dòng tiêu đề và dòng rác (đọc nhầm chữ viết tay): phần tiếng Anh phải là chữ cái thường gặp
-    const words=parseRaw(txt).filter(w=>!/^(vocabulary|từ vựng|unit\s*\d+)\b/i.test(w.en||w.vi)
-      &&/^[A-Za-z][A-Za-z '’\-\/().,]*$/.test(w.en)&&w.en.replace(/[^A-Za-z]/g,'').length>=2);
-    if(words.length<3){msg('⚠️ Không đọc ra từ nào. Ảnh <b>chữ viết tay</b> bộ đọc này không đọc được – xem cách dùng Google Lens / Văn bản trực tiếp bên dưới, hoặc gõ danh sách vào ô.');return;}
-    const lines=words.map(w=>`${w.en||'?'} – ${w.vi||'?'}`).join('\n');
-    kt.raw=($('#kRaw').value.trim()?$('#kRaw').value.trim()+'\n':'')+lines; $('#kRaw').value=kt.raw;
-    const bad=words.filter(w=>!w.en||!w.vi).length;
-    msg(`✅ Đọc được <b>${words.length}</b> từ. <b>TG soát lại chính tả</b> trong ô dưới${bad?`, bổ sung ${bad} dòng có dấu "?"`:''} rồi bấm <b>Tạo bài khảo</b>.`);
-    ktKeep();
-  }catch(err){console.error(err);msg('⚠️ Không tải được bộ đọc chữ – kiểm tra mạng, hoặc gõ/dán danh sách vào ô bên dưới.');}
-};
 
 /* ---------- Tạo bài khảo ---------- */
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
 $('#kMake').onclick=()=>{
   if(!kt.studentId){toast('Chọn học sinh trước đã ạ');return;}
   const n=+kt.n||30, seen=new Set(), uniq=w=>{const k=kNorm(w.en)||kNorm(w.vi);if(!k||seen.has(k))return false;seen.add(k);return true;};
-  const pool=$('#kUsePool').checked?(db.vocab[kt.studentId]||[]).map(w=>({en:w.en,vi:w.vi,old:1})).filter(uniq):[];
-  let list=parseRaw($('#kRaw').value).filter(uniq);
-  if(!pool.length&&!list.length){toast('Chưa có từ nào – chụp ảnh hoặc gõ danh sách từ');return;}
+  let pick=parseRaw($('#kRaw').value).filter(uniq);
+  if(!pick.length){toast('Chưa có từ nào – gõ hoặc dán danh sách từ');return;}
   if(kt.items.some(x=>x.ans||x.ok!=null)&&!confirm('Tạo bài mới sẽ xoá phần chấm hiện tại. Tiếp tục?'))return;
-  let pick=pool.slice(0,n); const room=n-pick.length;
-  if(list.length>room)list=shuffle(list.slice()).slice(0,room);
-  pick=pick.concat(list); if($('#kShuf').checked)shuffle(pick);
-  kt.items=pick.map(w=>({en:w.en,vi:w.vi,ans:'',ok:null,old:w.old||0})); kt.testId=null;
+  if(pick.length>n)pick=shuffle(pick.slice()).slice(0,n);
+  if($('#kShuf').checked)shuffle(pick);
+  kt.items=pick.map(w=>({en:w.en,vi:w.vi,ans:'',ok:null})); kt.testId=null;
   ktTable();ktKeep();
   const miss=kt.items.filter(x=>!x.vi||!x.en).length;
   toast(`Đã tạo bài khảo ${kt.items.length} từ`+(kt.items.length<n?` (danh sách chỉ có ${kt.items.length} từ)`:'')+(miss?` – ${miss} từ còn thiếu nghĩa/đáp án`:''));
@@ -130,14 +95,18 @@ $('#kMake').onclick=()=>{
 
 function ktTable(){
   const T=$('#kTable');
-  if(!kt.items.length){T.innerHTML='<tr><td class="hint">Chưa có bài khảo – làm bước 2 trước.</td></tr>';ktScoreTag();return;}
-  T.innerHTML='<tr><th>#</th><th>Nghĩa (đề)</th><th>Đáp án</th><th>HS viết</th><th>Chấm</th></tr>'+kt.items.map((x,i)=>
-    `<tr data-i="${i}"><td>${i+1}${x.old?'<div class="hint">nợ</div>':''}</td><td><input type="text" data-k="vi" value="${esc(x.vi)}"></td><td><input type="text" data-k="en" value="${esc(x.en)}"></td>
-     <td><input type="text" data-k="ans" value="${esc(x.ans)}" placeholder="(nếu cần)" autocomplete="off" autocapitalize="off" spellcheck="false"></td>
-     <td style="white-space:nowrap"><button type="button" class="mk ok">✓</button> <button type="button" class="mk no">✗</button></td></tr>`).join('');
-  T.querySelectorAll('tr[data-i]').forEach(tr=>{
+  if(!kt.items.length){T.innerHTML='<p class="hint">Chưa có bài khảo – làm bước 2 trước.</p>';ktScoreTag();return;}
+  // mỗi từ 1 khối: nghĩa + đáp án hiện đủ chữ (tự xuống dòng), dưới là ô HS viết + nút chấm
+  T.innerHTML=kt.items.map((x,i)=>
+    `<div class="kr" data-i="${i}"><b>${i+1}</b><div class="kr-w"><textarea rows="1" data-k="vi" placeholder="nghĩa">${esc(x.vi)}</textarea><textarea rows="1" data-k="en" placeholder="đáp án" autocapitalize="off" spellcheck="false">${esc(x.en)}</textarea></div>
+     <div class="kr-g"><input type="text" data-k="ans" value="${esc(x.ans)}" placeholder="HS viết (nếu sai)" autocomplete="off" autocapitalize="off" spellcheck="false">
+     <button type="button" class="mk ok">✓</button><button type="button" class="mk no">✗</button></div></div>`).join('');
+  const grow=t=>{t.style.height='auto';if(t.scrollHeight)t.style.height=t.scrollHeight+2+'px';};
+  T.querySelectorAll('textarea').forEach(grow);
+  T.querySelectorAll('.kr').forEach(tr=>{
     const x=kt.items[+tr.dataset.i];
-    tr.querySelectorAll('input').forEach(inp=>inp.addEventListener('input',()=>{
+    tr.querySelectorAll('input,textarea').forEach(inp=>inp.addEventListener('input',()=>{
+      if(inp.tagName==='TEXTAREA'){inp.value=inp.value.replace(/\n/g,' ');grow(inp);}
       x[inp.dataset.k]=inp.value.trim();
       if(inp.dataset.k!=='vi'&&x.ans)x.ok=kCheck(x.ans,x.en);
       ktMarks(tr,x);ktKeep();}));
@@ -149,7 +118,8 @@ function ktTable(){
 function ktMarks(tr,x){tr.querySelector('.ok').classList.toggle('on',x.ok===true);tr.querySelector('.no').classList.toggle('on',x.ok===false);ktScoreTag();}
 function ktScoreTag(){const g=kt.items.filter(x=>x.ok!=null).length;
   $('#kScoreTag').textContent=kt.items.length?`Đúng ${kScore()}/${kt.items.length}`+(g<kt.items.length?` · còn ${kt.items.length-g} từ chưa chấm`:''):'';}
-$('#kAllOk').onclick=()=>{kt.items.forEach(x=>{if(x.ok==null)x.ok=true;});ktTable();ktKeep();};
+$('#kAllOk').onclick=()=>{kt.items.forEach(x=>x.ok=true);ktTable();ktKeep();toast('Đã tích đúng hết – bấm ✗ ở các từ HS viết sai');};
+$('#kClear').onclick=()=>{kt.items.forEach(x=>x.ok=null);ktTable();ktKeep();};
 
 /* ---------- HS làm trên máy ---------- */
 $('#kStuMode').onclick=()=>{
