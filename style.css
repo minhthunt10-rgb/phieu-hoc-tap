@@ -83,7 +83,7 @@ table.list th{color:var(--muted);font-size:12.5px}
 .sw.g::before{left:7px;top:7px;right:-7px;bottom:-7px;background:#8CC152}
 .sh-sbox .t{text-align:center;font-weight:700;font-size:13.5px;margin-bottom:4px}
 .sh-sbox.purple .t{color:#8E3FB0;font-family:'Lora',serif}.sh-sbox.green .t{color:#3E9B4F;font-size:12px}
-.hw{font-family:'Playpen Sans',cursive;font-weight:500;color:#D32F2F;font-size:15px;line-height:1.4;white-space:pre-wrap;word-break:break-word}
+.hw{font-family:'Lora',serif;font-style:italic;font-weight:600;color:#D32F2F;font-size:15px;line-height:1.4;white-space:pre-wrap;word-break:break-word}
 .hw.k{color:#333}
 .sheet.print .hw{font-family:'Be Vietnam Pro',sans-serif;font-weight:600;font-size:14px;line-height:1.45}
 /* kiểu chữ nét thanh nét đậm, nghiêng nhẹ (cô chọn trong Cài đặt) */
@@ -129,7 +129,7 @@ table.list th{color:var(--muted);font-size:12.5px}
 .kt-a{white-space:nowrap;overflow:hidden;line-height:1.35;min-height:20px}
 .sheet .kt-a .hw,.sheet.print .kt-a .hw{font-size:1em;line-height:1.35;white-space:nowrap}
 .hw.bl{color:#1E4FA8}.hw.st{text-decoration:line-through;text-decoration-color:#D32F2F}
-.kt-mk{flex:none;width:15px;font-family:'Playpen Sans',cursive;color:#D32F2F;font-size:17px;text-align:center}
+.kt-mk{flex:none;width:15px;font-family:'Lora',serif;color:#D32F2F;font-size:17px;text-align:center}
 .kt-tot{display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-top:12px;font-weight:800;font-size:14px}
 .kt-tot .sh-box{min-width:110px;border-radius:10px}
 .kt-miss{border:1.6px solid #333;border-radius:14px;background:#fff;padding:10px 16px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:3px 18px;font-size:13px;align-items:baseline}

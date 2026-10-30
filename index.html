@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Phiếu Học Tập</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lora:ital,wght@0,700;1,600&family=Playpen+Sans:wght@500&display=swap" rel="stylesheet">
-<script src="logo.js?v=202610301725"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<link rel="stylesheet" href="style.css?v=202610301725">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="preload" as="image" href="logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lora:ital,wght@0,700;1,600&display=swap" rel="stylesheet">
+<script src="logo.js?v=202610302000"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<link rel="stylesheet" href="style.css?v=202610302000">
 </head>
 <body>
 <header class="app">
@@ -570,6 +570,8 @@ function init(){
 }
 init();
 document.fonts&&document.fonts.ready.then(()=>{fitText();fitPreview();});
+// công cụ chụp ảnh tải sau (không chặn trang) → tải xong mới dựng sẵn ảnh
+window.addEventListener('load',preRender);
 </script>
 </body>
 </html>
