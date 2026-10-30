@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Phiếu Học Tập</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lora:ital,wght@0,700;1,600&family=Playpen+Sans:wght@500&family=Playwrite+VN:wght@300&family=Charm:wght@700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lora:ital,wght@0,700;1,600&family=Playpen+Sans:wght@500&display=swap" rel="stylesheet">
 <script src="logo.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <link rel="stylesheet" href="style.css">
@@ -170,16 +170,6 @@
   <div class="btns"><button class="btn" id="bExportHS">📤 Xuất danh sách HS</button></div>
  </div>
  <div class="card">
-  <h3>Kiểu chữ điền trên phiếu</h3>
-  <div class="seg">
-   <label><input type="radio" name="cFont" value="hand">Chữ viết tay rõ nét (đỏ)</label>
-   <label><input type="radio" name="cFont" value="print">Chữ in (dễ đọc)</label>
-   <label><input type="radio" name="cFont" value="vn">Nét thanh nét đậm – chữ viết tay học sinh VN</label>
-   <label><input type="radio" name="cFont" value="charm">Nét thanh nét đậm – bút lông nghiêng</label>
-   <label><input type="radio" name="cFont" value="lora">Nét thanh nét đậm – chữ in nghiêng</label>
-  </div>
- </div>
- <div class="card">
   <h3>Câu nhận xét nhanh</h3>
   <label class="f">Nhận xét BTVN (mỗi dòng một câu)</label><textarea id="cHw" rows="6"></textarea>
   <label class="f">Nhận xét tinh thần (mỗi dòng một câu)</label><textarea id="cAtt" rows="5"></textarea>
@@ -216,7 +206,7 @@ try{const s=localStorage.getItem(KEY); if(s){const o=JSON.parse(s); db={...db,..
 // bản cũ chỉ có ít câu mẫu: bổ sung câu mới, giữ câu cô đã sửa
 if((db.cfg.ver||1)<2){['hw','att'].forEach(k=>DEF_CFG[k].forEach(t=>{if(!db.cfg[k].includes(t))db.cfg[k].push(t);}));db.cfg.ver=2;}
 // cô chốt 2026-10-30: kiểu chữ in nghiêng nét thanh nét đậm (Lora) làm mặc định
-if(db.cfg.ver<3){if(db.cfg.font==='hand')db.cfg.font='lora';db.cfg.ver=3;}
+db.cfg.font='lora'; // chỉ dùng 1 kiểu chữ cô đã chốt
 function persist(){try{localStorage.setItem(KEY,JSON.stringify(db));}catch(e){toast('⚠️ Không lưu được vào trình duyệt – hãy tải bản sao lưu!');}}
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -366,7 +356,7 @@ function sheetHTML(r){
     </div>
     <div class="sh-h purple">MỤC TIÊU/NỘI DUNG BUỔI HỌC</div>
     <div class="sh-2">
-      <div class="sw p"><div class="sh-sbox purple"><div class="t">Ngữ pháp</div><div class="fit" data-max="15"><div class="hw">${esc(r.fGram)}</div></div></div></div>
+      <div class="sw p"><div class="sh-sbox purple"><div class="t">Ngữ pháp</div><div class="fit" data-max="15" data-force="1"><div class="hw">${esc(r.fGram)}</div></div></div></div>
       <div class="sw p"><div class="sh-sbox purple"><div class="t">Từ vựng</div><div class="fit" data-max="15">${vocab}</div></div></div>
     </div>
     <div class="sh-h navy">Tinh thần học tập của học viên</div>
@@ -378,7 +368,7 @@ function sheetHTML(r){
     </div>
     <div class="sh-h green">BTVN BUỔI KẾ TIẾP</div>
     <div class="sh-2">
-      <div class="sw g"><div class="sh-sbox green"><div class="t">NỘI DUNG VÀ VỊ TRÍ TRANG TÀI LIỆU</div><div class="fit" data-max="15"><div class="hw">${esc(r.fNext)}</div></div></div></div>
+      <div class="sw g"><div class="sh-sbox green"><div class="t">NỘI DUNG VÀ VỊ TRÍ TRANG TÀI LIỆU</div><div class="fit" data-max="15" data-force="1"><div class="hw">${esc(r.fNext)}</div></div></div></div>
       <div class="sw g"><div class="sh-sbox green"><div class="t">LÝ THUYẾT VÀ BÀI TẬP CẦN CHUẨN BỊ</div><div class="fit" data-max="15" data-force="1">${prep}</div></div></div>
     </div>
    </div>
@@ -538,7 +528,6 @@ $('#lStudent').onchange=renderSaved; $('#lMonth').onchange=renderSaved;
 const LISTS={hw:'cHw',att:'cAtt',gram:'cGram',next:'cNext',prep:'cPrep'};
 function loadCfg(){
   Object.entries(LISTS).forEach(([k,id])=>$('#'+id).value=db.cfg[k].join('\n'));$('#cMsg').value=db.cfg.msg;$('#cZalo').value=db.cfg.zalo||'';
-  $(`input[name=cFont][value=${db.cfg.font}]`).checked=true;
   $('#backupInfo').textContent=db.lastBackup?'Lần sao lưu gần nhất: '+new Date(db.lastBackup).toLocaleString('vi-VN'):'Chưa sao lưu lần nào.';
 }
 $('#bSaveCfg').onclick=()=>{
@@ -547,7 +536,6 @@ $('#bSaveCfg').onclick=()=>{
   const z=$('#cZalo').value.trim(); if(z&&!/^https:\/\/zalo\.me\//.test(z)){toast('Link Zalo phải bắt đầu bằng https://zalo.me/');return;} db.cfg.zalo=z;
   persist();renderChips();toast('Đã lưu cài đặt');
 };
-$$('input[name=cFont]').forEach(r=>r.onchange=()=>{db.cfg.font=r.value;persist();updatePreview();});
 $('#bExport').onclick=()=>{db.lastBackup=Date.now();persist();
   download(new Blob([JSON.stringify(db,null,1)],{type:'application/json'}),`SaoLuu_PhieuHocTap_${today()}.json`);loadCfg();};
 // file danh sách HS: máy nhận sẽ gộp theo tên (xem nhánh kind==='danh-sach-hs' dưới)
