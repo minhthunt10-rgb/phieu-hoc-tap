@@ -561,6 +561,12 @@ $('#bExport').onclick=()=>{db.lastBackup=Date.now();persist();
   download(new Blob([JSON.stringify(db,null,1)],{type:'application/json'}),`SaoLuu_PhieuHocTap_${today()}.json`);loadCfg();};
 $('#fImport').onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();
   rd.onload=()=>{try{const o=JSON.parse(rd.result);if(!Array.isArray(o.students))throw 0;
+    if(o.kind==='danh-sach-hs'){ // file danh sách HS: gộp thêm, không xoá dữ liệu cũ
+      const key=n=>n.normalize('NFC').toLowerCase().replace(/\s+/g,' ').trim();let add=0,upd=0;
+      o.students.forEach(n=>{const s=db.students.find(x=>key(x.name)===key(n.name));
+        if(s){if(n.cls)s.cls=n.cls;if(n.total)s.total=n.total;if(n.done!=null&&!sessOf(s.id).length)s.done=n.done;upd++;}
+        else{db.students.push({id:uid(),name:n.name,cls:n.cls||'',total:n.total||12,done:n.done||0,parent:'',note:n.note||''});add++;}});
+      persist();init();toast(`Đã thêm ${add} HS, cập nhật ${upd} HS`);return;}
     if(!confirm(`Khôi phục ${o.students.length} học sinh, ${o.sessions.length} phiếu? Dữ liệu hiện tại trên máy sẽ bị thay thế.`))return;
     db={...db,...o,cfg:{...DEF_CFG,...(o.cfg||{})}};persist();init();toast('Đã khôi phục dữ liệu');}catch(_){toast('File không đúng định dạng sao lưu');}};
   rd.readAsText(f);e.target.value='';};
