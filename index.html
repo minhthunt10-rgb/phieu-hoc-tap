@@ -53,6 +53,7 @@ table.list th,table.list td{padding:8px 6px;border-bottom:1px solid var(--line);
 table.list th{color:var(--muted);font-size:12.5px}
 .pill{display:inline-block;background:var(--soft);color:#a3501b;border-radius:999px;padding:1px 8px;font-size:12px;font-weight:600}
 .tbl-wrap{overflow-x:auto}
+.khoi-h{background:var(--soft);color:#a3501b;font-weight:800;font-size:13px}
 
 /* ============ PHIẾU (kích thước cố định 630px) ============ */
 .sheet{width:630px;position:relative;background:#fff;overflow:hidden;font-family:'Be Vietnam Pro',sans-serif;color:#333;padding:0 0 0}
@@ -340,7 +341,7 @@ function prefillFor(id,keepShared){
 }
 function setEditing(id){editingId=id;$('#editTag').style.display=id?'inline-block':'none';}
 function fillStudentSelects(){
-  const opts=db.students.slice().sort((a,b)=>(a.cls||'').localeCompare(b.cls||'')||a.name.localeCompare(b.name,'vi'))
+  const opts=db.students.slice().sort(byKhoi)
     .map(s=>`<option value="${s.id}">${esc(s.name)}${s.cls?' – '+esc(s.cls):''}</option>`).join('');
   const v1=$('#fStudent').value, v2=$('#lStudent').value;
   $('#fStudent').innerHTML=db.students.length?opts:'<option value="">(Chưa có học sinh – thêm ở tab Học sinh)</option>';
@@ -490,14 +491,20 @@ $('#bMsg').onclick=async()=>{try{await navigator.clipboard.writeText(message());
 
 /* ---------- Học sinh ---------- */
 let editingS=null;
+// sắp theo khối (số đầu tiên trong ô Lớp), chưa ghi lớp để cuối; trong khối xếp theo tên
+const khoi=s=>{const m=String(s.cls||'').match(/\d+/);return m?+m[0]:99;};
+const tenRieng=n=>n.trim().split(/\s+/).pop();
+const byKhoi=(a,b)=>khoi(a)-khoi(b)||tenRieng(a.name).localeCompare(tenRieng(b.name),'vi')||a.name.localeCompare(b.name,'vi');
 function renderStudents(){
   const q=$('#sSearch').value.toLowerCase();
-  const list=db.students.filter(s=>(s.name+' '+(s.cls||'')).toLowerCase().includes(q))
-    .sort((a,b)=>(a.cls||'').localeCompare(b.cls||'')||a.name.localeCompare(b.name,'vi'));
+  const list=db.students.filter(s=>(s.name+' '+(s.cls||'')).toLowerCase().includes(q)).sort(byKhoi);
   $('#sCount').textContent=db.students.length;
-  $('#sTable').innerHTML='<tr><th>Họ tên</th><th>Lớp</th><th>Buổi</th><th>Phụ huynh</th><th></th></tr>'+list.map(s=>{
+  let grp=null,stt=0;
+  $('#sTable').innerHTML='<tr><th>STT</th><th>Họ tên</th><th>Lớp</th><th>Buổi</th><th>Phụ huynh</th><th></th></tr>'+list.map(s=>{
     const ss=sessOf(s.id);const last=ss.length?ss[ss.length-1].fNo:(s.done||0);
-    return `<tr><td><b>${esc(s.name)}</b>${s.note?`<div class="hint">${esc(s.note)}</div>`:''}</td><td>${esc(s.cls)}</td><td>${last}/${s.total}</td><td>${esc(s.parent)}</td>
+    const k=khoi(s), head=k!==grp?`<tr><td colspan="6" class="khoi-h">${k<99?'Khối '+k:'Chưa ghi lớp'}</td></tr>`:'';
+    if(k!==grp){grp=k;stt=0;} stt++;
+    return `${head}<tr><td>${stt}</td><td><b>${esc(s.name)}</b>${s.note?`<div class="hint">${esc(s.note)}</div>`:''}</td><td>${esc(s.cls)}</td><td>${last}/${s.total}</td><td>${esc(s.parent)}</td>
     <td style="white-space:nowrap"><button class="btn" data-a="go" data-id="${s.id}" style="padding:5px 9px">✏️ Phiếu</button>
     <button class="btn g" data-a="ed" data-id="${s.id}" style="padding:5px 9px">Sửa</button>
     <button class="btn r" data-a="del" data-id="${s.id}" style="padding:5px 9px">Xóa</button></td></tr>`;}).join('');
