@@ -278,6 +278,9 @@ $('#fStudent').onchange=()=>prefillFor($('#fStudent').value,false);
 $('#fFind').addEventListener('input',()=>{const v=$('#fStudent').value;fillStudentSelects();
   if($('#fStudent').value&&$('#fStudent').value!==v)prefillFor($('#fStudent').value,false);});
 function clearFind(){if($('#fFind').value){$('#fFind').value='';fillStudentSelects();}}
+// gõ % hoàn thành: từ 80% trở lên tự tích Hoàn thành, dưới 80% tích Chưa hoàn thành (cô chốt)
+$('#fPct').addEventListener('input',()=>{const v=$('#fPct').value;if(v===''||($('input[name=fHw]:checked')||{}).value==='none')return;
+  $(`input[name=fHw][value=${+v>=80?'done':'not'}]`).checked=true;});
 $$('#v-nhap input, #v-nhap textarea').forEach(el=>el.addEventListener('input',updatePreview));
 $$('#v-nhap input[type=radio]').forEach(el=>el.addEventListener('change',()=>{
   if(el.name==='fHw'){ if(el.value==='done'&&!$('#fPct').value)$('#fPct').value=100; }
