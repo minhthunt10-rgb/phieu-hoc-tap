@@ -116,14 +116,14 @@ var DD_URL = 'https://script.google.com/macros/s/AKfycbx-C1ww--MTKMQXTNWNrcto5rV
   };
 
   // ---------- Trang trợ giảng ----------
-  // Vào trước/đúng 18:00 → đủ 3 giờ. Vào sau 18:00 → trừ theo số phút muộn và ghi "Muộn".
+  // Buổi nào cũng tính đủ 3 giờ. Vào sau 18:00 chỉ ghi "Muộn N phút", không trừ giờ.
   var SO_GIO = 3;
   function mins(t) { var a = String(t || '').split(':'); return a.length < 2 ? NaN : +a[0] * 60 + +a[1]; }
   function lateMin(tin) { var m = mins(tin) - mins(GIO_TOI[0]); return m > 0 ? m : 0; }
   function hours() {
     var a = mins($('cIn').value), b = mins($('cOut').value);
     if (isNaN(a) || isNaN(b) || b <= a) return 0;
-    return Math.max(0, Math.round((SO_GIO * 60 - lateMin($('cIn').value)) / 60 * 100) / 100);
+    return SO_GIO;
   }
   function calc() {
     var l = lateMin($('cIn').value);
@@ -209,13 +209,13 @@ var DD_URL = 'https://script.google.com/macros/s/AKfycbx-C1ww--MTKMQXTNWNrcto5rV
     var ok = recs.filter(function (x) { return x.status === 'Đã duyệt' && x.date.slice(0, 7) === m && (!who || norm(x.name) === norm(who)); }).sort(function (a, b) { return -byDate(a, b); });
     var tot = {};
     ok.forEach(function (x) {
-      var t = tot[x.name] || (tot[x.name] = { n: 0, h: 0 });
-      t.n++; t.h += +x.hours || 0;
+      var t = tot[x.name] || (tot[x.name] = { n: 0, h: 0, ml: 0, lm: 0 });
+      t.n++; t.h += +x.hours || 0; if (lateMin(x.tin)) { t.ml++; t.lm += lateMin(x.tin); }
     });
     var names = Object.keys(tot);
-    $('coTotal').innerHTML = '<tr><th>Trợ giảng</th><th>Số buổi tối</th><th>Tổng giờ</th></tr>' +
-      (names.length ? names.map(function (n) { var t = tot[n]; return '<tr><td><b>' + esc(n) + '</b></td><td><b>' + t.n + '</b></td><td><b>' + Math.round(t.h * 100) / 100 + '</b></td></tr>'; }).join('')
-        : '<tr><td colspan="3" class="empty">Chưa có buổi nào được duyệt trong tháng.</td></tr>');
+    $('coTotal').innerHTML = '<tr><th>Trợ giảng</th><th>Số buổi tối</th><th>Tổng giờ</th><th>Đi muộn</th></tr>' +
+      (names.length ? names.map(function (n) { var t = tot[n]; return '<tr><td><b>' + esc(n) + '</b></td><td><b>' + t.n + '</b></td><td><b>' + Math.round(t.h * 100) / 100 + '</b></td><td>' + (t.ml ? '<span style="color:#b42318">' + t.ml + ' lần · ' + t.lm + ' phút</span>' : '–') + '</td></tr>'; }).join('')
+        : '<tr><td colspan="4" class="empty">Chưa có buổi nào được duyệt trong tháng.</td></tr>');
     $('coDetail').innerHTML = '<tr><th>Ngày</th><th>Trợ giảng</th><th>Giờ vào</th><th>Giờ ra</th><th>Số giờ</th><th>Lớp / công việc</th><th></th></tr>' +
       ok.map(function (x) { return '<tr><td>' + esc(viDate(x.date)) + '</td><td>' + esc(x.name) + '</td><td><b style="color:var(--orange)">' + esc(x.tin) + '</b></td><td>' + esc(x.tout) + '</td><td>' + x.hours + '</td><td>' + esc(x.lop) + '</td><td><button class="btn r" style="padding:4px 8px;font-size:12px" data-undo="' + esc(x.id) + '">Bỏ duyệt</button></td></tr>'; }).join('');
 
