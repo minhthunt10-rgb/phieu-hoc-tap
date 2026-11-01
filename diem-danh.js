@@ -116,13 +116,19 @@ var DD_URL = 'https://script.google.com/macros/s/AKfycbx-C1ww--MTKMQXTNWNrcto5rV
   };
 
   // ---------- Trang trợ giảng ----------
+  // Vào trước/đúng 18:00 → đủ 3 giờ. Vào sau 18:00 → trừ theo số phút muộn và ghi "Muộn".
+  var SO_GIO = 3;
+  function mins(t) { var a = String(t || '').split(':'); return a.length < 2 ? NaN : +a[0] * 60 + +a[1]; }
+  function lateMin(tin) { var m = mins(tin) - mins(GIO_TOI[0]); return m > 0 ? m : 0; }
   function hours() {
-    var a = $('cIn').value.split(':'), b = $('cOut').value.split(':');
-    if (a.length < 2 || b.length < 2) return 0;
-    var m = (+b[0] * 60 + +b[1]) - (+a[0] * 60 + +a[1]);
-    return m > 0 ? Math.round(m / 60 * 100) / 100 : 0;
+    var a = mins($('cIn').value), b = mins($('cOut').value);
+    if (isNaN(a) || isNaN(b) || b <= a) return 0;
+    return Math.max(0, Math.round((SO_GIO * 60 - lateMin($('cIn').value)) / 60 * 100) / 100);
   }
-  function calc() { $('cHours').textContent = hours(); }
+  function calc() {
+    var l = lateMin($('cIn').value);
+    $('cHours').innerHTML = hours() + (l ? ' <span style="color:#b42318">(muộn ' + l + ' phút)</span>' : ' (đúng giờ)');
+  }
   $('cIn').oninput = $('cOut').oninput = calc;
 
   function resetForm() {
@@ -142,13 +148,16 @@ var DD_URL = 'https://script.google.com/macros/s/AKfycbx-C1ww--MTKMQXTNWNrcto5rV
       .catch(function (e) { toast(e.message); });
   }
   function byDate(a, b) { return (a.date + a.tin) < (b.date + b.tin) ? 1 : -1; }
+  // Ghi chú trong Sheet có sẵn "Muộn N phút." – trên thẻ đã có nhãn đỏ nên bỏ đi
+  function noteOf(x) { return String(x.note || '').replace(/^Muộn \d+ phút\.\s*/, '').trim(); }
   function card(x, extra) {
     var cls = x.status === 'Đã duyệt' ? 'ok' : x.status === 'Từ chối' ? 'no' : 'cho';
     return '<div class="item"><div class="t"><div><b>' + esc(viDate(x.date)) + '</b>' +
       (extra && extra.name ? ' – <b style="color:var(--green)">' + esc(x.name) + '</b>' : '') + '</div><span class="st ' + cls + '">' + esc(x.status) + '</span></div>' +
-      '<div class="gio"><span>Giờ vào <b>' + esc(x.tin) + '</b></span><span>Giờ ra <b>' + esc(x.tout) + '</b></span><span>' + x.hours + ' giờ</span></div>' +
+      '<div class="gio"><span>Giờ vào <b>' + esc(x.tin) + '</b></span><span>Giờ ra <b>' + esc(x.tout) + '</b></span><span>' + x.hours + ' giờ</span>' +
+      (lateMin(x.tin) ? '<span class="late">Muộn ' + lateMin(x.tin) + ' phút</span>' : '') + '</div>' +
       (x.lop ? '<div class="m">' + esc(x.lop) + '</div>' : '') +
-      (x.note ? '<div class="m">📝 ' + esc(x.note) + '</div>' : '') +
+      (noteOf(x) ? '<div class="m">📝 ' + esc(noteOf(x)) + '</div>' : '') +
       (x.reason ? '<div class="m" style="color:#b42318">Lý do: ' + esc(x.reason) + '</div>' : '') +
       (extra && extra.btns ? '<div class="btns"><button class="btn" data-ok="' + esc(x.id) + '">✓ Duyệt</button><button class="btn r" data-no="' + esc(x.id) + '">✗ Từ chối</button></div>' : '') +
       '</div>';
@@ -171,7 +180,8 @@ var DD_URL = 'https://script.google.com/macros/s/AKfycbx-C1ww--MTKMQXTNWNrcto5rV
     if (!h) return toast('Giờ ra phải sau giờ vào');
     busy(btn, true);
     api('checkin', { name: me.name, pw: me.pw, date: $('cDate').value, buoi: buoi, tin: $('cIn').value, tout: $('cOut').value,
-      hours: h, lop: $('cLop').value.trim(), note: $('cNote').value.trim() })
+      hours: h, lop: $('cLop').value.trim(),
+      note: (lateMin($('cIn').value) ? 'Muộn ' + lateMin($('cIn').value) + ' phút. ' : '') + $('cNote').value.trim() })
       .then(function () { toast('Đã gửi – chờ cô duyệt'); resetForm(); loadMine(); })
       .catch(function (e) { toast(e.message); }).then(function () { busy(btn, false); });
   };
