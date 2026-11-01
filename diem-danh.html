@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Điểm Danh Trợ Giảng</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="preload" as="image" href="logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="logo.js?v=202611011800"></script>
+<link rel="stylesheet" href="style.css?v=202611011800">
+<style>
+.login{max-width:420px;margin:24px auto}
+.who{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.who b{color:var(--green);font-size:16px}
+.gio{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.gio span{background:#F7F3EC;border-radius:8px;padding:4px 10px;font-size:13px;color:var(--muted)}
+.gio span:first-child{background:var(--soft);color:#a3501b}
+.gio b{font-size:17px;color:var(--ink);margin-left:2px}.gio span:first-child b{color:var(--orange)}
+.st{display:inline-block;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:700;white-space:nowrap}
+.st.cho{background:#FFF4D6;color:#9a6a00}.st.ok{background:#E3F1DA;color:#3F6E2A}.st.no{background:#FBE3E3;color:#b42318}
+.sum{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:10px}
+.sum div{background:#F3F8EF;border-radius:12px;padding:10px;text-align:center}
+.sum b{display:block;font-size:22px;color:var(--green)}.sum span{font-size:12px;color:var(--muted)}
+.item{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px;background:#fff}
+.item .t{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.item .m{font-size:13px;color:var(--muted);margin-top:4px}
+.item .btns{margin-top:8px}.item .btns .btn{padding:7px 12px;font-size:13px}
+.empty{color:var(--muted);text-align:center;padding:14px;font-size:14px}
+.demo{background:#FFF4D6;color:#7a5500;border-radius:10px;padding:8px 12px;font-size:13px;margin-bottom:12px}
+.foot{text-align:center;margin-top:18px}.foot a{color:var(--muted);font-size:12.5px}
+.month{display:flex;gap:8px;align-items:center}.month input{max-width:180px}
+</style>
+</head>
+<body>
+<header class="app">
+  <img id="appLogo" alt="">
+  <div><h1>Điểm Danh Trợ Giảng</h1><small>Grow with English – Tiếng Anh Ms. Minh Thư</small></div>
+</header>
+<main>
+<div class="demo" id="demoNote" hidden>Đang chạy <b>chế độ thử</b>: dữ liệu chỉ lưu trên máy này. Khi cô cài Google Sheet xong, dán link vào <code>DD_URL</code> trong diem-danh.js.</div>
+
+<!-- ĐĂNG NHẬP -->
+<section class="view on" id="v-login">
+  <div class="card login">
+    <h3 id="lgTitle">Trợ giảng đăng nhập</h3>
+    <div id="lgTA">
+      <label class="f">Tên trợ giảng</label><input type="text" id="lgName" autocomplete="username" placeholder="VD: Nguyễn Thị Lan">
+    </div>
+    <label class="f">Mật khẩu</label><input type="password" id="lgPw" autocomplete="current-password" style="width:100%;border:1px solid #d9d0c2;border-radius:10px;padding:8px 10px">
+    <label class="hint" style="display:block;margin-top:8px"><input type="checkbox" id="lgRemember" checked> Ghi nhớ trên máy này</label>
+    <div class="btns"><button class="btn" id="lgGo" type="button">Đăng nhập</button></div>
+    <p class="hint" id="lgHint">Chưa có tài khoản? Nhắn cô Minh Thư để được cấp tên và mật khẩu.</p>
+  </div>
+  <div class="foot"><a href="#" id="toCo">Dành cho cô Minh Thư (duyệt điểm danh)</a><a href="#" id="toTA" hidden>← Về trang trợ giảng</a></div>
+</section>
+
+<!-- TRỢ GIẢNG -->
+<section class="view" id="v-ta">
+  <div class="card who"><div>Xin chào <b id="taName"></b></div><button class="btn g" id="taOut" type="button">Đăng xuất</button></div>
+  <div class="grid2">
+    <div class="card">
+      <h3>1. Điểm danh buổi tối</h3>
+      <div class="row">
+        <div><label class="f">Ngày</label><input type="date" id="cDate"></div>
+      </div>
+      <div class="row">
+        <div><label class="f">Giờ vào</label><input type="time" id="cIn" style="width:100%;border:1px solid #d9d0c2;border-radius:10px;padding:8px 10px"></div>
+        <div><label class="f">Giờ ra</label><input type="time" id="cOut" style="width:100%;border:1px solid #d9d0c2;border-radius:10px;padding:8px 10px"></div>
+      </div>
+      <p class="hint">Số giờ: <b id="cHours">0</b> giờ</p>
+      <label class="f">Lớp / công việc</label><input type="text" id="cLop" placeholder="VD: Lớp 9A – chấm BTVN, khảo từ">
+      <label class="f">Ghi chú cho cô (không bắt buộc)</label><textarea id="cNote" rows="2"></textarea>
+      <div class="btns"><button class="btn o" id="cSend" type="button">✅ Gửi điểm danh</button></div>
+      <p class="hint">Gửi xong sẽ ở mục <b>Chờ cô duyệt</b>. Cô duyệt rồi mới hiện trong bảng công.</p>
+    </div>
+    <div>
+      <div class="card">
+        <h3>2. Bảng công (đã được duyệt)</h3>
+        <div class="month"><label class="f" style="margin:0">Tháng</label><input type="month" id="mMonth"></div>
+        <div class="sum" style="margin-top:10px"><div><b id="sBuoi">0</b><span>buổi</span></div><div><b id="sGio">0</b><span>giờ</span></div><div><b id="sCho">0</b><span>chờ duyệt</span></div></div>
+        <div id="taOk"></div>
+      </div>
+      <div class="card"><h3>Chờ cô duyệt / bị từ chối</h3><div id="taWait"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- CÔ DUYỆT -->
+<section class="view" id="v-co">
+  <div class="card who"><div><b>Cô Minh Thư</b> – duyệt điểm danh</div><div class="btns" style="margin:0"><button class="btn g" id="coReload" type="button">🔄 Tải lại</button><button class="btn g" id="coOut" type="button">Đăng xuất</button></div></div>
+  <nav class="tabs" style="padding:0 0 10px"><button class="on" data-t="t-wait">Chờ duyệt <span class="pill" id="nWait">0</span></button><button data-t="t-sum">Bảng công tháng</button><button data-t="t-ta">Tài khoản trợ giảng</button></nav>
+  <div class="card cot" id="t-wait"><div id="coWait"></div></div>
+  <div class="card cot" id="t-sum" hidden>
+    <div class="month"><label class="f" style="margin:0">Tháng</label><input type="month" id="coMonth"><select id="coTA" style="max-width:220px"></select></div>
+    <div class="tbl-wrap" style="margin-top:10px"><table class="list" id="coTotal"></table></div>
+    <h3 style="margin-top:16px">Chi tiết đã duyệt</h3>
+    <div class="tbl-wrap"><table class="list" id="coDetail"></table></div>
+  </div>
+  <div class="card cot" id="t-ta" hidden>
+    <h3>Thêm trợ giảng / đặt lại mật khẩu</h3>
+    <div class="row">
+      <div><label class="f">Tên trợ giảng</label><input type="text" id="nName"></div>
+      <div><label class="f">Mật khẩu</label><input type="text" id="nPw" placeholder="ít nhất 4 ký tự"></div>
+    </div>
+    <div class="btns"><button class="btn" id="nSave" type="button">Lưu tài khoản</button></div>
+    <p class="hint">Gõ đúng tên trợ giảng đã có để đặt lại mật khẩu mới.</p>
+    <div class="tbl-wrap" style="margin-top:10px"><table class="list" id="taList"></table></div>
+  </div>
+</section>
+</main>
+<div class="toast" id="toast"></div>
+<script src="diem-danh.js?v=202611012100"></script>
+</body>
+</html>
