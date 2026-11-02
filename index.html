@@ -270,9 +270,11 @@ function fillStudentSelects(){
   $('#lStudent').innerHTML='<option value="">Tất cả</option>'+opts;
   if($$('#fStudent option').some(o=>o.value===v1))$('#fStudent').value=v1; if(v2===''||stu(v2))$('#lStudent').value=v2;
 }
-$('#fStudent').onchange=()=>prefillFor($('#fStudent').value,false);
+// lớp ghép: đã bấm "Lưu & sang HS tiếp" thì chọn HS khác vẫn giữ nội dung chung (tới khi bấm Phiếu mới)
+let keepShared=false;
+$('#fStudent').onchange=()=>prefillFor($('#fStudent').value,keepShared);
 $('#fFind').addEventListener('input',()=>{const v=$('#fStudent').value;fillStudentSelects();
-  if($('#fStudent').value&&$('#fStudent').value!==v)prefillFor($('#fStudent').value,false);});
+  if($('#fStudent').value&&$('#fStudent').value!==v)prefillFor($('#fStudent').value,keepShared);});
 function clearFind(){if($('#fFind').value){$('#fFind').value='';fillStudentSelects();}}
 // gõ % hoàn thành: từ 80% trở lên tự tích Hoàn thành, dưới 80% tích Chưa hoàn thành (cô chốt)
 $('#fPct').addEventListener('input',()=>{const v=$('#fPct').value;if(v===''||($('input[name=fHw]:checked')||{}).value==='none')return;
@@ -315,9 +317,9 @@ $('#bSaveNext').onclick=()=>{
   const cls=(stu(r.studentId).cls||'');
   // ưu tiên HS cùng lớp tiếp theo
   let nxt=list.slice(i+1).find(id=>(stu(id).cls||'')===cls)||list[(i+1)%list.length];
-  prefillFor(nxt,true); window.scrollTo({top:0,behavior:'smooth'});
+  keepShared=true; prefillFor(nxt,true); window.scrollTo({top:0,behavior:'smooth'});
 };
-$('#bNew').onclick=()=>prefillFor($('#fStudent').value,false);
+$('#bNew').onclick=()=>{keepShared=false;prefillFor($('#fStudent').value,false);};
 
 /* ---------- Sheet ---------- */
 function sheetHTML(r){
