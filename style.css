@@ -137,3 +137,10 @@ table.list th{color:var(--muted);font-size:12.5px}
 .sheet .kt-miss .hw{font-size:15px}
 .kt-miss .ok{grid-column:1/-1;text-align:center;padding:6px 0}
 .kt-miss .nt{grid-column:1/-1;font-size:12px;font-style:italic;color:#555;margin-top:6px}
+
+/* 4 phần phiếu – 4 màu nhẹ để không điền nhầm ô (cô yêu cầu 2026-11-05):
+   chỉ tô thẻ nhập bên trái, phiếu giữ nền trắng */
+.card.sec1{background:#FFF1F5;border-color:#F6C3D4}.card.sec1 h3{color:#C2185B}
+.card.sec2{background:#F6EEFC;border-color:#D9C0EF}.card.sec2 h3{color:#8E3FB0}
+.card.sec3{background:#EEF4FC;border-color:#BED3EF}.card.sec3 h3{color:#2E4A7D}
+.card.sec4{background:#F0F8EA;border-color:#C3E2AE}.card.sec4 h3{color:#3E8E3F}
