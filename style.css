@@ -144,3 +144,10 @@ table.list th{color:var(--muted);font-size:12.5px}
 .card.sec2{background:#F6EEFC;border-color:#D9C0EF}.card.sec2 h3{color:#8E3FB0}
 .card.sec3{background:#EEF4FC;border-color:#BED3EF}.card.sec3 h3{color:#2E4A7D}
 .card.sec4{background:#F0F8EA;border-color:#C3E2AE}.card.sec4 h3{color:#3E8E3F}
+
+/* ============ ĐỒNG BỘ SHEET CHUNG (sync.js) ============ */
+.sync-btn{margin-left:auto;border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font-weight:700;font-size:12.5px;cursor:pointer;color:var(--green);white-space:nowrap}
+.sync-btn[data-s=busy]{color:var(--muted)}
+.sync-btn[data-s=err],.sync-btn[data-s=badcode],.sync-btn[data-s=nocode]{color:#c62828;border-color:#f0c4c4;background:#FFF5F5}
+@media (max-width:520px){.sync-btn{padding:5px 9px;font-size:11.5px}header.app small{display:none}}
+nav.tabs a{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 14px;font-weight:600;color:var(--orange);text-decoration:none}

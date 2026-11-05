@@ -162,7 +162,7 @@ function ktSave(){
   kt.items.forEach(x=>{if(x.ok==null)x.ok=false;});
   const t={id:kt.testId||uid(),studentId:kt.studentId,date:kt.date,no:kt.no,unit:(kt.unit||'').trim(),n:kt.items.length,
     items:kt.items.map(x=>({en:x.en,vi:x.vi,ans:x.ans,ok:x.ok})),score:kScore(),created:Date.now()};
-  const i=db.tests.findIndex(x=>x.id===t.id); if(i>=0)db.tests[i]=t; else db.tests.push(t);
+  const i=db.tests.findIndex(x=>x.id===t.id); if(i>=0)db.tests[i]=t; else db.tests.push(t); SYNC.touch('tests',t);
   kt.testId=t.id;
   // từ sai → danh sách chưa thuộc; từ đúng → bỏ khỏi danh sách
   let p=db.vocab[t.studentId]||[];
@@ -193,7 +193,7 @@ function ktHist(){
   $$('#kHist button').forEach(b=>b.onclick=()=>{const t=db.tests.find(x=>x.id===b.dataset.id);
     if(b.dataset.a==='op'){Object.assign(kt,{date:t.date,no:t.no,unit:t.unit,n:t.n,items:t.items.map(x=>({...x})),testId:t.id});
       ['date','no','unit','n'].forEach(k=>$('#k_'+k).value=kt[k]??'');ktTable();ktKeep();window.scrollTo({top:0,behavior:'smooth'});}
-    if(b.dataset.a==='del'&&confirm('Xóa bài khảo này?')){db.tests=db.tests.filter(x=>x.id!==t.id);if(kt.testId===t.id)kt.testId=null;persist();ktHist();}
+    if(b.dataset.a==='del'&&confirm('Xóa bài khảo này?')){SYNC.remove('tests',t.id);db.tests=db.tests.filter(x=>x.id!==t.id);if(kt.testId===t.id)kt.testId=null;persist();ktHist();}
   });
 }
 $('#kPoolClear').onclick=()=>{if(confirm('Xoá hết danh sách từ chưa thuộc của HS này?')){db.vocab[kt.studentId]=[];persist();ktPool();}};
@@ -284,11 +284,12 @@ $('#sCancel').onclick=()=>$('#sForm').style.display='none';
 $('#sSave').onclick=()=>{
   const name=$('#sName').value.trim(); if(!name){toast('Nhập họ tên học sinh');return;}
   const o={name,cls:$('#sClass').value.trim(),total:+$('#sTotal').value||12};
-  if(sEditing)Object.assign(stu(sEditing),o); else{const s={id:uid(),done:0,...o};db.students.push(s);kt.studentId=s.id;kt.testId=null;kt.items.forEach(x=>{x.ans='';x.ok=null;});ktDefaults();}
+  if(sEditing)SYNC.touch('students',Object.assign(stu(sEditing),o)); else{const s={id:uid(),done:0,...o};db.students.push(s);SYNC.touch('students',s);kt.studentId=s.id;kt.testId=null;kt.items.forEach(x=>{x.ans='';x.ok=null;});ktDefaults();}
   $('#sForm').style.display='none';persist();ktOpen();toast(sEditing?'Đã cập nhật':'Đã thêm '+name);
 };
 $('#sDel').onclick=()=>{const s=stu(sEditing);if(!s)return;const n=db.tests.filter(x=>x.studentId===s.id).length;
   if(!confirm(`Xóa học sinh ${s.name}${n?` và ${n} bài khảo đã lưu`:''}?`))return;
+  db.tests.filter(x=>x.studentId===s.id).forEach(x=>SYNC.remove('tests',x.id));SYNC.remove('students',s.id);
   db.students=db.students.filter(x=>x.id!==s.id);db.tests=db.tests.filter(x=>x.studentId!==s.id);delete db.vocab[s.id];
   kt.studentId='';$('#sForm').style.display='none';persist();ktOpen();};
 
@@ -302,10 +303,15 @@ $('#fImport').onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new F
     // file danh sách HS (hoặc sao lưu phiếu học tập): chỉ lấy tên/lớp/số buổi, gộp theo tên
     const key=n=>n.normalize('NFC').toLowerCase().replace(/\s+/g,' ').trim();let add=0,upd=0;
     o.students.forEach(n=>{if(!n.name)return;const s=db.students.find(x=>key(x.name)===key(n.name));
-      if(s){if(n.cls)s.cls=n.cls;if(n.total)s.total=n.total;upd++;}
-      else{db.students.push({id:uid(),name:n.name,cls:n.cls||'',total:n.total||12,done:n.done||0});add++;}});
+      if(s){if(n.cls)s.cls=n.cls;if(n.total)s.total=n.total;SYNC.touch('students',s);upd++;}
+      else{const s1={id:uid(),name:n.name,cls:n.cls||'',total:n.total||12,done:n.done||0};db.students.push(s1);SYNC.touch('students',s1);add++;}});
     persist();ktOpen();toast(`Đã thêm ${add} HS, cập nhật ${upd} HS`);}catch(_){toast('File không đúng định dạng');}};
   rd.readAsText(f);e.target.value='';};
+
+/* ---------- Đồng bộ Sheet chung (sync.js) ---------- */
+const SYNC=createSync({app:'khao-tu',cols:['students','tests'],get:c=>db[c],set:(c,a)=>db[c]=a,save:persist,
+  remap:(o,n)=>{if(kt.studentId===o)kt.studentId=n;if(db.vocab[o]){db.vocab[n]=(db.vocab[n]||[]).concat(db.vocab[o]);delete db.vocab[o];}},
+  onChange:()=>{ktFill();if(!stu(kt.studentId)){kt.studentId=$('#kStudent').value;ktDefaults();}ktHist();ktPool();ktRender();}});
 
 ktOpen();
 document.fonts&&document.fonts.ready.then(()=>ktRender());

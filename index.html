@@ -6,9 +6,9 @@
 <title>Phiếu Học Tập</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="preload" as="image" href="logo.png">
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lora:ital,wght@0,700;1,600&display=swap" rel="stylesheet">
-<script src="logo.js?v=202611051013"></script>
+<script src="logo.js?v=202611051400"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<link rel="stylesheet" href="style.css?v=202611051013">
+<link rel="stylesheet" href="style.css?v=202611051400">
 </head>
 <body>
 <header class="app">
@@ -20,6 +20,7 @@
   <button data-v="hs">👩‍🎓 Học sinh</button>
   <button data-v="luu">📂 Phiếu đã lưu</button>
   <button data-v="caidat">⚙️ Sao lưu &amp; cài đặt</button>
+  <a href="bao-cao.html">📊 Báo cáo tháng</a>
 </nav>
 <main>
 
@@ -159,7 +160,7 @@
 <section class="view" id="v-caidat">
  <div class="card">
   <h3>Sao lưu dữ liệu</h3>
-  <p class="hint">Dữ liệu chỉ nằm trong trình duyệt của máy này. Nên tải bản sao lưu mỗi tuần (lưu vào Google Drive) – đổi máy hoặc xóa lịch sử trình duyệt thì mở lại bằng nút "Khôi phục".</p>
+  <p class="hint">Học sinh và phiếu đã lưu được gửi lên <b>Google Sheet chung</b> (nút ☁️ góc trên) – máy nào mở trang này cũng thấy. Bản sao lưu .json dưới đây để dự phòng.</p>
   <div class="btns"><button class="btn" id="bExport">⬇️ Tải bản sao lưu (.json)</button>
    <label class="btn g">⬆️ Khôi phục từ file<input type="file" id="fImport" accept=".json" hidden></label></div>
   <p class="hint" id="backupInfo"></p>
@@ -187,6 +188,7 @@
 <div id="exportHolder"></div>
 <div class="toast" id="toast"></div>
 
+<script src="sync.js?v=202611051400"></script>
 <script>
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const KEY='gwe-phieu-hoc-tap-v1';
@@ -306,9 +308,10 @@ function saveCurrent(){
   const r=readForm();
   if(!r.studentId){toast('Chọn học sinh trước đã ạ');return null;}
   if(!r.fDate){toast('Chưa chọn ngày học');return null;}
-  if(editingId){const i=db.sessions.findIndex(x=>x.id===editingId);db.sessions[i]={...db.sessions[i],...r,updated:Date.now()};}
-  else{const rec={id:uid(),created:String(Date.now()),...r};db.sessions.push(rec);setEditing(rec.id);}
-  persist();toast('Đã lưu phiếu của '+stu(r.studentId).name);return r;
+  let rec; const i=editingId?db.sessions.findIndex(x=>x.id===editingId):-1;
+  if(i>=0){rec=db.sessions[i]={...db.sessions[i],...r};}
+  else{rec={id:uid(),created:String(Date.now()),...r};db.sessions.push(rec);setEditing(rec.id);}
+  SYNC.touch('sessions',rec); persist();toast('Đã lưu phiếu của '+stu(r.studentId).name);return r;
 }
 $('#bSave').onclick=saveCurrent;
 $('#bSaveNext').onclick=()=>{
@@ -501,6 +504,7 @@ function renderStudents(){
       $('#hsFormTitle').textContent='Sửa thông tin: '+s.name;$('#bCancelS').style.display='';window.scrollTo({top:0,behavior:'smooth'});}
     if(b.dataset.a==='del'){const n=sessOf(s.id).length;
       if(confirm(`Xóa học sinh ${s.name}${n?` và ${n} phiếu đã lưu`:''}? Không khôi phục được (trừ khi có bản sao lưu).`)){
+        sessOf(s.id).forEach(x=>SYNC.remove('sessions',x.id));SYNC.remove('students',s.id);
         db.students=db.students.filter(x=>x.id!==s.id);db.sessions=db.sessions.filter(x=>x.studentId!==s.id);persist();fillStudentSelects();renderStudents();}}
   });
 }
@@ -508,7 +512,7 @@ function resetSForm(){editingS=null;['sName','sClass','sParent','sNote'].forEach
 $('#bAddS').onclick=()=>{
   const name=$('#sName').value.trim(); if(!name){toast('Nhập họ tên học sinh');return;}
   const o={name,cls:$('#sClass').value.trim(),total:+$('#sTotal').value||12,done:+$('#sDone').value||0,parent:$('#sParent').value.trim(),note:$('#sNote').value.trim()};
-  if(editingS)Object.assign(stu(editingS),o); else db.students.push({id:uid(),...o});
+  let s0; if(editingS)s0=Object.assign(stu(editingS),o); else db.students.push(s0={id:uid(),...o}); SYNC.touch('students',s0);
   persist();fillStudentSelects();renderStudents();toast(editingS?'Đã cập nhật':'Đã thêm '+name);
   const keepCls=o.cls; resetSForm(); $('#sClass').value=keepCls; $('#sName').focus();
   if(db.students.length===1)prefillFor(db.students[0].id,false);
@@ -533,7 +537,7 @@ function renderSaved(){
   $$('#lTable button').forEach(b=>b.onclick=()=>{
     const x=db.sessions.find(y=>y.id===b.dataset.id);
     if(b.dataset.a==='op'){$('nav.tabs button[data-v=nhap]').click();writeForm(x);setEditing(x.id);updatePreview();window.scrollTo({top:0});}
-    if(b.dataset.a==='del'&&confirm('Xóa phiếu này?')){db.sessions=db.sessions.filter(y=>y.id!==x.id);persist();if(editingId===x.id)setEditing(null);renderSaved();}
+    if(b.dataset.a==='del'&&confirm('Xóa phiếu này?')){SYNC.remove('sessions',x.id);db.sessions=db.sessions.filter(y=>y.id!==x.id);persist();if(editingId===x.id)setEditing(null);renderSaved();}
   });
 }
 $('#lStudent').onchange=renderSaved; $('#lMonth').onchange=renderSaved;
@@ -565,12 +569,21 @@ $('#fImport').onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new F
     if(o.kind==='danh-sach-hs'){ // file danh sách HS: gộp thêm, không xoá dữ liệu cũ
       const key=n=>n.normalize('NFC').toLowerCase().replace(/\s+/g,' ').trim();let add=0,upd=0;
       o.students.forEach(n=>{const s=db.students.find(x=>key(x.name)===key(n.name));
-        if(s){if(n.cls)s.cls=n.cls;if(n.total)s.total=n.total;if(n.done!=null&&!sessOf(s.id).length)s.done=n.done;upd++;}
-        else{db.students.push({id:uid(),name:n.name,cls:n.cls||'',total:n.total||12,done:n.done||0,parent:'',note:n.note||''});add++;}});
+        if(s){if(n.cls)s.cls=n.cls;if(n.total)s.total=n.total;if(n.done!=null&&!sessOf(s.id).length)s.done=n.done;SYNC.touch('students',s);upd++;}
+        else{const s1={id:uid(),name:n.name,cls:n.cls||'',total:n.total||12,done:n.done||0,parent:'',note:n.note||''};db.students.push(s1);SYNC.touch('students',s1);add++;}});
       persist();init();toast(`Đã thêm ${add} HS, cập nhật ${upd} HS`);return;}
     if(!confirm(`Khôi phục ${o.students.length} học sinh, ${o.sessions.length} phiếu? Dữ liệu hiện tại trên máy sẽ bị thay thế.`))return;
     db={...db,...o,cfg:{...DEF_CFG,...(o.cfg||{})}};persist();init();toast('Đã khôi phục dữ liệu');}catch(_){toast('File không đúng định dạng sao lưu');}};
   rd.readAsText(f);e.target.value='';};
+
+/* ---------- Đồng bộ Sheet chung (sync.js) ---------- */
+const SYNC=createSync({app:'phieu',cols:['students','sessions'],get:c=>db[c],set:(c,a)=>db[c]=a,save:persist,
+  // HS trùng tên được gộp vào id trên Sheet: đổi luôn HS đang chọn trong ô nhập
+  remap:(o,n)=>{$$('#fStudent option, #lStudent option').forEach(x=>{if(x.value===o)x.value=n;});},
+  onChange:()=>{const fresh=!$('#fStudent').value;fillStudentSelects();const v=($('nav.tabs button.on')||{}).dataset;
+    if(v&&v.v==='hs')renderStudents(); if(v&&v.v==='luu')renderSaved();
+    // máy mới chưa có HS: kéo danh sách về xong thì điền sẵn phiếu cho HS đầu tiên
+    if(fresh&&$('#fStudent').value)prefillFor($('#fStudent').value,false);}});
 
 /* ---------- Khởi động ---------- */
 function init(){
