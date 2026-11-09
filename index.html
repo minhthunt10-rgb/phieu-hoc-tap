@@ -115,7 +115,7 @@
       <button class="btn g" id="bDown">⬇️ Tải ảnh</button>
       <button class="btn g" id="bMsg">💬 Sao chép lời nhắn</button>
     </div>
-    <p class="hint">Trên điện thoại: bấm <b>Gửi Zalo</b> → chọn Zalo → chọn phụ huynh. Trên máy tính: bấm <b>Sao chép ảnh</b> rồi Ctrl+V vào khung chat Zalo.</p>
+    <p class="hint" id="saveNote" style="color:#2f7a26;font-weight:600;display:none"></p>    <p class="hint">Trên điện thoại: bấm <b>Gửi Zalo</b> → chọn Zalo → chọn phụ huynh. Trên máy tính: bấm <b>Sao chép ảnh</b> rồi Ctrl+V vào khung chat Zalo.</p>
    </div>
   </div>
  </div>
@@ -228,7 +228,7 @@ $$('nav.tabs button').forEach(b=>b.onclick=()=>{
 });
 
 /* ---------- Form ---------- */
-let editingId=null;
+let editingId=null, lastSaved='';
 const FIELDS=['fDate','fNo','fTotal','fPct','fHwCmt','fGram','fVUnit','fVNum','fVScore','fAttCmt','fNext','fNVNum','fNVUnit','fPrep'];
 function readForm(){
   const r={studentId:$('#fStudent').value};
@@ -311,7 +311,7 @@ function saveCurrent(){
   let rec; const i=editingId?db.sessions.findIndex(x=>x.id===editingId):-1;
   if(i>=0){rec=db.sessions[i]={...db.sessions[i],...r};}
   else{rec={id:uid(),created:String(Date.now()),...r};db.sessions.push(rec);setEditing(rec.id);}
-  SYNC.touch('sessions',rec); persist();toast('Đã lưu phiếu của '+stu(r.studentId).name);return r;
+  SYNC.touch('sessions',rec); persist();lastSaved=stu(r.studentId).name;const[sd,sm]=dmy(r.fDate);const n=$('#saveNote');n.textContent='✓ Đã lưu phiếu ngày '+sd+'/'+sm+' của '+lastSaved+' lúc '+new Date().toTimeString().slice(0,5);n.style.display='block';toast('Đã lưu phiếu của '+lastSaved);return r;
 }
 $('#bSave').onclick=saveCurrent;
 $('#bSaveNext').onclick=()=>{
@@ -465,7 +465,7 @@ $('#bDown').onclick=async()=>{if(!saveCurrent())return;try{download(await makePN
 $('#bCopy').onclick=async()=>{if(!saveCurrent())return;try{
   // đưa "lời hứa" ảnh vào clipboard ngay trong cú bấm, không phải chờ ảnh xong mới gọi
   await navigator.clipboard.write([new ClipboardItem({'image/png':makePNG()})]);
-  toast('Đã sao chép ảnh – vào nhóm Zalo bấm Ctrl+V'); openZalo();
+  toast('✓ Đã lưu phiếu '+lastSaved+' + sao chép ảnh – vào nhóm Zalo bấm Ctrl+V'); openZalo();
 }catch(e){console.error(e);toast('Trình duyệt không cho sao chép ảnh – đã tải ảnh về máy, kéo ảnh vào nhóm Zalo');try{download(await makePNG(),fileName());openZalo();}catch(_){}}};
 $('#bZalo').onclick=openZalo;
 $('#bShare').onclick=async()=>{if(!saveCurrent())return;try{
