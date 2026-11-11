@@ -42,6 +42,8 @@ function summary(s,mon){
   const rep=db.reports.find(x=>x.id===s.id+'_'+mon);
   return {sess,days,hwS,hwAvg,words,asked,nTests,att,checks,cmt:rep?rep.cmt:'',total:+s.total||12};
 }
+// trung bình mỗi lần khảo: "TB 21/30 (70%)"
+const tbTu=m=>{const n=m.nTests||1,r=x=>Math.round(x*10)/10;return `TB ${r(m.words/n)}/${r(m.asked/n)} (${Math.round(m.words/m.asked*100)}%)`;};
 const attTop=a=>{const n=a.tot+a.kha+a.cct;if(!n)return null;return a.cct>=a.tot&&a.cct>=a.kha?'Cần cải thiện':a.kha>a.tot?'Khá':'Tốt';};
 
 /* ---------- Chọn tháng / lớp ---------- */
@@ -83,7 +85,7 @@ function renderGS(){
     return `<tr class="st" data-id="${s.id}"><td>${i+1}</td><td><b>${esc(s.name)}</b><div class="hint">${esc(s.cls)}</div>${f.map(x=>`<span class="flag">${x}</span>`).join('')}</td>
       <td class="num"><b>${m.sess.length}</b>/${m.total}</td>
       <td class="num ${m.hwAvg!=null&&m.hwAvg<80?'warn':''}">${m.hwAvg==null?'—':m.hwAvg+'%'}</td>
-      <td class="num ${m.asked&&m.words/m.asked<.7?'warn':''}">${m.asked?`${m.words}/${m.asked}`:'—'}</td>
+      <td class="num ${m.asked&&m.words/m.asked<.7?'warn':''}">${m.asked?`${m.words}/${m.asked}<div class="hint">${tbTu(m)}</div>`:'—'}</td>
       <td class="num">${ck?`${esc(ck.score)}/${esc(ck.max)}`:'—'}${m.checks.length>1?`<div class="hint">${m.checks.length} bài</div>`:''}</td>
       <td class="num">${m.cmt?'<span class="good">✓</span>':'—'}</td></tr>`;}).join('');
   $('#gsCount').textContent=`${list.length} HS · ${warnN} em cần chú ý`;
@@ -189,7 +191,7 @@ function sheetHTML(){
     <div class="bc-sum">Con đã học <span class="hw">${M.sess.length}</span> / ${M.total} buổi trong tháng ${+m}</div>
     <div class="sh-h purple">KẾT QUẢ HỌC TẬP</div>
     <div class="bc-stats">
-      <div class="sw p"><div class="bc-st"><div class="t">TỪ VỰNG ĐÃ THUỘC</div><div class="big">${M.asked?M.words:'—'}${M.asked?' <small>từ</small>':''}</div><div class="s">${M.asked?`/ ${M.asked} từ khảo · ${M.nTests} lần khảo`:'Chưa khảo từ'}</div></div></div>
+      <div class="sw p"><div class="bc-st"><div class="t">TỪ VỰNG ĐÃ THUỘC</div><div class="big">${M.asked?M.words:'—'}${M.asked?' <small>từ</small>':''}</div><div class="s">${M.asked?`/ ${M.asked} từ · ${M.nTests} lần khảo<br>${tbTu(M)}`:'Chưa khảo từ'}</div></div></div>
       <div class="sw p"><div class="bc-st"><div class="t">HOÀN THÀNH BTVN</div><div class="big">${M.hwAvg==null?'—':M.hwAvg+'<small>%</small>'}</div><div class="s">${M.hwS.length?`trung bình ${M.hwS.length} buổi`:'Chưa có BTVN'}</div></div></div>
       <div class="sw p"><div class="bc-st"><div class="t">TINH THẦN HỌC TẬP</div><div class="big" style="font-size:${att&&att.length>4?24:30}px">${att||'—'}</div><div class="s">${att?[['tot','tốt'],['kha','khá'],['cct','cần cố gắng']].filter(([k])=>M.att[k]).map(([k,t])=>`${M.att[k]} buổi ${t}`).join(' · '):''}</div></div></div>
     </div>
