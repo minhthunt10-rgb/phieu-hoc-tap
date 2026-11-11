@@ -151,3 +151,7 @@ table.list th{color:var(--muted);font-size:12.5px}
 .sync-btn[data-s=err],.sync-btn[data-s=badcode],.sync-btn[data-s=nocode]{color:#c62828;border-color:#f0c4c4;background:#FFF5F5}
 @media (max-width:520px){.sync-btn{padding:5px 9px;font-size:11.5px}header.app small{display:none}}
 nav.tabs a{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 14px;font-weight:600;color:var(--orange);text-decoration:none}
+
+/* Bỏ nút tăng/giảm ▲▼ trong ô số (cô yêu cầu 2026-11-11) */
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+input[type=number]{-moz-appearance:textfield;appearance:textfield}
