@@ -153,6 +153,38 @@ $('#kStuExit').onclick=()=>{
   ktStuClose();ktTable();ktKeep();
 };
 
+/* ---------- Gửi link cho HS làm trên máy của con (lam-khao-tu.html) ---------- */
+$('#kLink').onclick=async()=>{
+  if(!kt.studentId){toast('Chọn học sinh trước đã ạ');return;}
+  if(!kt.items.length){toast('Tạo bài khảo trước đã ạ');return;}
+  const miss=kt.items.filter(x=>!x.vi||!x.en).length;
+  if(miss&&!confirm(`${miss} từ còn thiếu nghĩa hoặc đáp án. Vẫn gửi link?`))return;
+  const s=stu(kt.studentId);
+  const url=klUrl('lam-khao-tu.html','de='+klEncode({v:1,id:uid(),s:s.id,nm:s.name,c:s.cls||'',d:kt.date,no:kt.no,u:(kt.unit||'').trim(),
+    w:kt.items.map(x=>[x.vi,x.en])}));
+  const unit=(kt.unit||'').trim(), text=`Bài khảo từ vựng${unit&&unit!=='Unit'?' '+unit:''} của con ${tenRieng(s.name)} (${kt.items.length} từ). Con bấm link để làm bài, làm xong bấm "Gửi kết quả cho cô" nhé:`;
+  try{
+    if(navigator.share&&/Android|iPhone|iPad|Mobi/i.test(navigator.userAgent)){await navigator.share({text:text+'\n'+url});return;}
+    await navigator.clipboard.writeText(text+'\n'+url);toast(`Đã sao chép link bài của ${tenRieng(s.name)} – dán vào Zalo gửi con`);
+  }catch(e){if(e.name!=='AbortError')prompt('Sao chép link gửi HS:',url);}
+};
+// cô bấm link kết quả HS gửi về: khao-tu.html#kq=…
+function ktReceive(){
+  const m=location.hash.match(/kq=([^&]+)/); if(!m)return;
+  history.replaceState(null,'',location.pathname+location.search);
+  const P=klDecode(m[1]);
+  if(!P||!Array.isArray(P.w)||!Array.isArray(P.a)){toast('Link kết quả bị lỗi (có thể bị cắt bớt) – nhờ HS gửi lại');return;}
+  const key=n=>String(n||'').normalize('NFC').toLowerCase().replace(/\s+/g,' ').trim();
+  let s=stu(P.s)||db.students.find(x=>key(x.name)===key(P.nm));
+  const items=P.w.map((w,i)=>({vi:w[0],en:w[1],ans:P.a[i]||'',ok:klCheck(P.a[i],w[1])})), n=items.filter(x=>x.ok).length;
+  const tid='L'+P.id, old=db.tests.find(x=>x.id===tid);
+  const open=()=>{$('#kFind').value='';Object.assign(kt,{studentId:s.id,date:P.d,no:P.no,unit:P.u,n:items.length,items,testId:tid});ktOpen();};
+  if(old&&s){open();toast(`Bài này đã lưu rồi: ${s.name} đúng ${old.score}/${old.n}`);return;}
+  if(!confirm(`Nhận bài khảo từ của ${P.nm}${P.u&&P.u!=='Unit'?' – '+P.u:''} (ngày ${dmy(P.d)[0]}/${dmy(P.d)[1]}): đúng ${n}/${items.length} từ.\n\nLưu điểm này?`))return;
+  if(!s){s={id:uid(),name:P.nm,cls:P.c||'',total:12,done:0};db.students.push(s);SYNC.touch('students',s);}
+  open(); if(ktSave())window.scrollTo({top:$('#kTable').getBoundingClientRect().top+scrollY-90,behavior:'smooth'});
+}
+
 /* ---------- Lưu: kết quả + từ chưa thuộc ---------- */
 function ktSave(){
   if(!kt.studentId||!kt.items.length){toast('Chưa có bài khảo để lưu');return null;}
@@ -314,4 +346,5 @@ const SYNC=createSync({app:'khao-tu',cols:['students','tests'],get:c=>db[c],set:
   onChange:()=>{ktFill();if(!stu(kt.studentId)){kt.studentId=$('#kStudent').value;ktDefaults();}ktHist();ktPool();ktRender();}});
 
 ktOpen();
+ktReceive(); addEventListener('hashchange',ktReceive);
 document.fonts&&document.fonts.ready.then(()=>ktRender());
