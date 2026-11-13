@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lora:ital,wght@0,700;1,600&display=swap" rel="stylesheet">
 <script src="logo.js?v=202611111700"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<link rel="stylesheet" href="style.css?v=202611140900">
+<link rel="stylesheet" href="style.css?v=202611141000">
 </head>
 <body>
 <header class="app">
@@ -95,6 +95,16 @@
     <label class="f">Ngữ pháp</label>
     <textarea id="fGram" placeholder="VD: Sửa BTVN + Tổng ôn kiến thức GHK1 (U1+2+3)"></textarea>
     <div class="chips" data-for="fGram" data-list="gram" data-sep="&#10;"></div>
+    <label class="sc-on"><input type="checkbox" id="fScOn"> ✍️ <b>Nhập điểm</b> <span class="hint">(dòng điểm hiện chữ đỏ, nền vàng trên phiếu và tự vào điểm tháng)</span></label>
+    <div id="scBox" class="sc-box" style="display:none">
+     <div class="row">
+      <div style="grid-column:1/-1"><label class="f">Nội dung điểm (cô tự ghi)</label><input type="text" id="fScName" placeholder="Điểm ngữ pháp lần 1 của tháng">
+       <div class="chips" id="scChips"><button type="button">Điểm ngữ pháp lần 1 của tháng</button><button type="button">Điểm từ vựng lần 1 của tháng</button><button type="button">Điểm kiểm tra lần 1 của tháng</button><button type="button">Điểm ngữ pháp lần 2 của tháng</button><button type="button">Điểm từ vựng lần 2 của tháng</button><button type="button">Điểm kiểm tra lần 2 của tháng</button></div></div>
+      <div><label class="f">Điểm</label><input type="text" inputmode="decimal" id="fScVal" placeholder="7"></div>
+      <div><label class="f">Thang điểm</label><input type="text" inputmode="decimal" id="fScMax" placeholder="10"></div>
+      <div><label class="f">Ghi thêm (nếu có)</label><input type="text" id="fScNote" placeholder="25/30"></div>
+     </div>
+    </div>
     <div class="row">
       <div><label class="f">Khảo từ vựng (bài)</label><input type="text" id="fVUnit" placeholder="Unit 2+3 / C17-T1-P1"><div class="unit-warn hint" data-for="fVUnit">Ghi số Unit (VD Unit 5) hoặc mã đề (C17-T1-P1)</div></div>
       <div><label class="f">Số từ</label><input type="number" id="fVNum" placeholder="30"></div>
@@ -271,17 +281,19 @@ $$('nav.tabs button').forEach(b=>b.onclick=()=>{
 
 /* ---------- Form ---------- */
 let editingId=null, lastSaved='';
-const FIELDS=['fDate','fNo','fTotal','fPct','fHwCmt','fGram','fVUnit','fVNum','fVScore','fAttCmt','fNext','fNVNum','fNVUnit','fPrep','fKtScore','fKtMax','fKtCmt','fKtName','fMakeup'];
+const FIELDS=['fDate','fNo','fTotal','fPct','fHwCmt','fGram','fVUnit','fVNum','fVScore','fAttCmt','fNext','fNVNum','fNVUnit','fPrep','fKtScore','fKtMax','fKtCmt','fKtName','fMakeup','fScName','fScVal','fScMax','fScNote'];
 function readForm(){
   const r={studentId:$('#fStudent').value};
   FIELDS.forEach(f=>r[f]=$('#'+f).value.trim?$('#'+f).value.trim():$('#'+f).value);
   r.hw=($('input[name=fHw]:checked')||{}).value; r.att=($('input[name=fAtt]:checked')||{}).value;
+  r.scOn=$('#fScOn').checked;
   r.abs=($('input[name=fAbs]:checked')||{}).value||''; // '' đi học · cp nghỉ có phép · kp nghỉ không phép
   return r;
 }
 function writeForm(r){
   FIELDS.forEach(f=>$('#'+f).value=r[f]??'');
   if(r.studentId)$('#fStudent').value=r.studentId;
+  $('#fScOn').checked=!!r.scOn;$('#scBox').style.display=r.scOn?'block':'none';
   ($(`input[name=fHw][value=${r.hw||'done'}]`)).checked=true;
   ($(`input[name=fAtt][value=${r.att||'tot'}]`)).checked=true;
   ($(`input[name=fAbs][value="${r.abs||''}"]`)).checked=true; $('#absMore').style.display=r.abs?'block':'none';
@@ -411,7 +423,7 @@ function sheetHTML(r){
     </div>
     <div class="sh-h purple">MỤC TIÊU/NỘI DUNG BUỔI HỌC</div>
     <div class="sh-2">
-      <div class="sw p"><div class="sh-sbox purple" data-ocr="gram"><div class="t">Ngữ pháp</div><div class="fit" data-max="15" data-force="1"><div class="hw">${r.abs?`${r.abs==='cp'?'Con nghỉ có phép':'Con nghỉ không phép'}${r.fMakeup?' – đã học bù: '+esc(r.fMakeup):''}${r.fGram?'\n':''}`:''}${esc(r.fGram)}${hasKt(r)?`${r.fGram?'\n':''}${/(giữa|cuối) khóa/i.test(r.fKtName||"")?"Kiểm tra "+r.fKtName.match(/(giữa|cuối) khóa/i)[0]:"Kiểm tra định kỳ"}: ${esc(r.fKtScore)}/${esc(r.fKtMax||10)} điểm`:''}</div></div></div></div>
+      <div class="sw p"><div class="sh-sbox purple" data-ocr="gram"><div class="t">Ngữ pháp</div><div class="fit" data-max="15" data-force="1"><div class="hw">${r.abs?`${r.abs==='cp'?'Con nghỉ có phép':'Con nghỉ không phép'}${r.fMakeup?' – đã học bù: '+esc(r.fMakeup):''}${r.fGram?'\n':''}`:''}${esc(r.fGram)}${hasKt(r)?`${r.fGram?'\n':''}${/(giữa|cuối) khóa/i.test(r.fKtName||"")?"Kiểm tra "+r.fKtName.match(/(giữa|cuối) khóa/i)[0]:"Kiểm tra định kỳ"}: ${esc(r.fKtScore)}/${esc(r.fKtMax||10)} điểm`:''}${hasSc(r)?(r.abs||r.fGram||hasKt(r)?'\n':'')+scLine(r):''}</div></div></div></div>
       <div class="sw p"><div class="sh-sbox purple" data-ocr="vocab"><div class="t">Từ vựng</div><div class="fit" data-max="15">${vocab}</div></div></div>
     </div>
     <div class="sh-h navy">Tinh thần học tập của học viên</div>
@@ -436,6 +448,12 @@ function sheetHTML(r){
    Phiếu nào có dòng "ôn tập kiểm tra" thì buổi sau hiện ô nhập điểm + nhận xét. */
 const KT_RE=/kiểm tra định kỳ|ôn tập kiểm tra|ôn kiểm tra|kiểm tra (giữa|cuối) khóa/i;
 const hasKt=x=>x&&x.fKtScore!==''&&x.fKtScore!=null;
+// dòng điểm cô tự ghi trong ô Ngữ pháp: "Điểm ngữ pháp lần 1 của tháng: 7đ (25/30)" – chữ đỏ nền vàng, tự vào điểm tháng
+const hasSc=x=>!!(x&&x.scOn&&String(x.fScVal??'').trim()!=='');
+const scText=x=>`${String(x.fScName||'Điểm kiểm tra').replace(/[:\s]+$/,'')}: ${String(x.fScVal).replace('.',',')}đ${x.fScMax&&+x.fScMax!==10?'/'+x.fScMax:''}${x.fScNote?' ('+x.fScNote+')':''}`;
+const scLine=x=>hasSc(x)?`<span class="sc-hl">${esc(scText(x))}</span>`:'';
+$('#fScOn').onchange=()=>{const on=$('#fScOn').checked;$('#scBox').style.display=on?'block':'none';if(on)$('#fScName').focus();updatePreview();};
+$$('#scChips button').forEach(b=>b.onclick=()=>{$('#fScName').value=b.textContent;updatePreview();$('#fScVal').focus();});
 const ktKind=s=>/cuối/i.test(s||'')?'cuối':'giữa';
 // dòng giao ôn nằm ở ô "Lý thuyết và bài tập cần chuẩn bị" (fPrep); phiếu cũ có thể ở ô BTVN (fNext)
 const ktTxt=x=>(x?(x.fPrep||'')+'\n'+(x.fNext||''):'');
@@ -557,6 +575,8 @@ function ocrToForm({T,ck}){
   gl.forEach(l=>{const a=l.match(/ngh\S*\s*(c\S|kh\S*ng)\s*ph\S*p(?:.*?b\S[:\s]*(.*))?/i),k=l.match(/Kiểm tra\s*(giữa|cuối)\s*khóa\s*:?\s*([\d.,]+)\s*\/\s*([\d.,]+)/i);
     if(a){r.abs=/^c/i.test(a[1])?'cp':'kp';r.fMakeup=(a[2]||'').trim();if(r.fMakeup&&/^\d+$/.test(r.fMakeup))warn.push('Ô "học bù vào buổi" đọc chưa rõ – cô sửa lại giúp.');}
     else if(k){r.fKtScore=k[2].replace(',','.');r.fKtMax=k[3];r.fKtName=`Kiểm tra ${k[1].toLowerCase()} khóa`;}
+    else if(/^\s*Đi\S*m\b.*:\s*[\d.,]+\s*đ/i.test(l)){const m=l.match(/^(.*?):\s*([\d.,]+)\s*đ(?:\s*\/\s*([\d.,]+))?(?:\s*\((.*)\))?/i);
+      r.scOn=true;r.fScName=m[1].trim();r.fScVal=m[2];r.fScMax=m[3]||'';r.fScNote=(m[4]||'').trim();}
     else rest.push(l);});
   r.fGram=rest.join('\n');
   // "Khảo từ vựng Unit 4 (30 từ)" – 3 chữ đầu là nhãn, phần còn lại trước "(" là bài

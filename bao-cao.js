@@ -43,6 +43,10 @@ function summary(s,mon){
   ss.forEach(x=>{if(x.fKtScore===''||x.fKtScore==null)return;const name=x.fKtName||'Kiểm tra định kỳ';
     if(checks.some(c=>c.date===x.fDate&&String(c.name).trim().toLowerCase()===name.toLowerCase()))return;
     checks.push({date:x.fDate,name,score:x.fKtScore,max:x.fKtMax||10,note:x.fKtCmt||''});});
+  // điểm cô tích "Nhập điểm" trong ô Ngữ pháp của phiếu buổi (VD "Điểm ngữ pháp lần 1 của tháng: 7đ (25/30)")
+  ss.forEach(x=>{if(!x.scOn||x.fScVal===''||x.fScVal==null)return;const name=String(x.fScName||'Điểm kiểm tra').replace(/[:\s]+$/,'');
+    if(checks.some(c=>c.date===x.fDate&&String(c.name).trim().toLowerCase()===name.toLowerCase()))return;
+    checks.push({date:x.fDate,name,score:String(x.fScVal).replace(',','.'),max:x.fScMax||10,note:x.fScNote||''});});
   checks.sort((a,b)=>a.date.localeCompare(b.date));
   const rep=db.reports.find(x=>x.id===s.id+'_'+mon);
   // buổi ghi "5+6" = học 2 ca trong 1 buổi → tính 2 buổi
