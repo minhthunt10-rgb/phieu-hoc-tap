@@ -38,7 +38,12 @@ function summary(s,mon){
   if(ts.length){ts.forEach(t=>{words+=+t.score||0;asked+=+t.n||0;});}
   else sess.forEach(x=>{if(x.fVScore!==''&&x.fVScore!=null&&!isNaN(+x.fVScore)){words+=+x.fVScore;asked+=+x.fVNum||0;nTests++;}});
   const att={tot:0,kha:0,cct:0};sess.forEach(x=>{if(att[x.att]!=null)att[x.att]++;});
-  const checks=db.checks.filter(x=>x.studentId===s.id&&String(x.date||'').startsWith(mon)).sort((a,b)=>a.date.localeCompare(b.date));
+  const checks=db.checks.filter(x=>x.studentId===s.id&&String(x.date||'').startsWith(mon));
+  // điểm kiểm tra định kỳ cô nhập ngay trên phiếu buổi học (trang Phiếu học tập)
+  ss.forEach(x=>{if(x.fKtScore===''||x.fKtScore==null)return;const name=x.fKtName||'Kiểm tra định kỳ';
+    if(checks.some(c=>c.date===x.fDate&&String(c.name).trim().toLowerCase()===name.toLowerCase()))return;
+    checks.push({date:x.fDate,name,score:x.fKtScore,max:x.fKtMax||10,note:x.fKtCmt||''});});
+  checks.sort((a,b)=>a.date.localeCompare(b.date));
   const rep=db.reports.find(x=>x.id===s.id+'_'+mon);
   return {sess,days,hwS,hwAvg,words,asked,nTests,att,checks,cmt:rep?rep.cmt:'',total:+s.total||12};
 }

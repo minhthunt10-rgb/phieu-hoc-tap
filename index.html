@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lora:ital,wght@0,700;1,600&display=swap" rel="stylesheet">
 <script src="logo.js?v=202611111700"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<link rel="stylesheet" href="style.css?v=202611111600">
+<link rel="stylesheet" href="style.css?v=202611131200">
 </head>
 <body>
 <header class="app">
@@ -38,6 +38,20 @@
       <div><label class="f">Buổi số</label><input type="number" id="fNo" min="1"></div>
       <div><label class="f">/ Số buổi 1 khóa</label><input type="number" id="fTotal" min="1"></div>
     </div>
+   </div>
+
+   <!-- Kiểm tra định kỳ giữa khóa: hiện khi buổi trước đã giao ôn kiểm tra -->
+   <div class="card kt-card" id="ktScore" style="display:none">
+    <h3>📝 Kiểm tra định kỳ hôm nay</h3>
+    <div class="kt-remind" id="ktScoreHint"></div>
+    <input type="hidden" id="fKtName">
+    <div class="row">
+      <div><label class="f">Điểm</label><input type="number" id="fKtScore" min="0" step="0.25" placeholder="để trống nếu chưa kiểm tra"></div>
+      <div><label class="f">/ Thang điểm</label><input type="number" id="fKtMax" min="1"></div>
+    </div>
+    <label class="f">Nhận xét bài kiểm tra</label>
+    <textarea id="fKtCmt" placeholder="VD: Con làm tốt phần từ vựng, phần ngữ pháp còn sai thì quá khứ đơn"></textarea>
+    <div class="chips" id="ktChips"></div>
    </div>
 
    <div class="card sec1">
@@ -81,6 +95,7 @@
 
    <div class="card sec4">
     <h3>BTVN buổi kế tiếp <span class="pill">nội dung chung</span></h3>
+    <div class="kt-remind" id="ktRemind" style="display:none"></div>
     <label class="f">Nội dung và vị trí trang tài liệu</label>
     <textarea id="fNext" placeholder="VD: Làm BT tổng ôn (tr4, 5, 20)&#10;Làm BT đề (c39→56, 99→107)"></textarea>
     <div class="chips" data-for="fNext" data-list="next" data-sep="&#10;"></div>
@@ -229,7 +244,7 @@ $$('nav.tabs button').forEach(b=>b.onclick=()=>{
 
 /* ---------- Form ---------- */
 let editingId=null, lastSaved='';
-const FIELDS=['fDate','fNo','fTotal','fPct','fHwCmt','fGram','fVUnit','fVNum','fVScore','fAttCmt','fNext','fNVNum','fNVUnit','fPrep'];
+const FIELDS=['fDate','fNo','fTotal','fPct','fHwCmt','fGram','fVUnit','fVNum','fVScore','fAttCmt','fNext','fNVNum','fNVUnit','fPrep','fKtScore','fKtMax','fKtCmt','fKtName'];
 function readForm(){
   const r={studentId:$('#fStudent').value};
   FIELDS.forEach(f=>r[f]=$('#'+f).value.trim?$('#'+f).value.trim():$('#'+f).value);
@@ -246,7 +261,7 @@ function nextNo(s){const ss=sessOf(s.id);const last=ss.length?+ss[ss.length-1].f
 function prefillFor(id,keepShared){
   const s=stu(id); if(!s)return;
   const cur=readForm(); const ss=sessOf(id); const last=ss[ss.length-1];
-  const r={studentId:id,fDate:keepShared?cur.fDate:today(),fNo:nextNo(s),fTotal:s.total||12,hw:'done',fPct:100,fHwCmt:'',att:'tot',fAttCmt:'',fVScore:''};
+  const r={studentId:id,fDate:keepShared?cur.fDate:today(),fNo:nextNo(s),fTotal:s.total||12,hw:'done',fPct:100,fHwCmt:'',att:'tot',fAttCmt:'',fVScore:'',fKtScore:'',fKtMax:10,fKtCmt:''};
   if(keepShared){['fGram','fVUnit','fVNum','fNext','fNVNum','fNVUnit','fPrep'].forEach(k=>r[k]=cur[k]);}
   else if(last){ // gợi ý: nội dung hôm nay = phần "cần chuẩn bị" của buổi trước
     r.fGram=last.fPrep||''; r.fVUnit=last.fNVUnit||''; r.fVNum=last.fNVNum||'';
@@ -361,7 +376,7 @@ function sheetHTML(r){
     </div>
     <div class="sh-h purple">MỤC TIÊU/NỘI DUNG BUỔI HỌC</div>
     <div class="sh-2">
-      <div class="sw p"><div class="sh-sbox purple"><div class="t">Ngữ pháp</div><div class="fit" data-max="15" data-force="1"><div class="hw">${esc(r.fGram)}</div></div></div></div>
+      <div class="sw p"><div class="sh-sbox purple"><div class="t">Ngữ pháp</div><div class="fit" data-max="15" data-force="1"><div class="hw">${esc(r.fGram)}${hasKt(r)?`${r.fGram?'\n':''}Kiểm tra định kỳ: ${esc(r.fKtScore)}/${esc(r.fKtMax||10)} điểm`:''}</div></div></div></div>
       <div class="sw p"><div class="sh-sbox purple"><div class="t">Từ vựng</div><div class="fit" data-max="15">${vocab}</div></div></div>
     </div>
     <div class="sh-h navy">Tinh thần học tập của học viên</div>
@@ -380,7 +395,53 @@ function sheetHTML(r){
    <div class="sh-foot"><div><span>THÔNG TIN LIÊN HỆ</span><span>SĐT: 0966.101.957 (Ms. Minh Thư)</span><span>GROW WITH ENGLISH</span></div></div>
   </div>`;
 }
-function updatePreview(){const h=sheetHTML(readForm());$('#preview').innerHTML=h;$('#exportHolder').innerHTML=h;fitText();fitPreview();preRender();}
+/* ---------- Nhắc kiểm tra định kỳ giữa khóa (cô yêu cầu 2026-11-13) ----------
+   Buổi kiểm tra K = nửa khóa (12 buổi → 6, 8 buổi → 4). Từ buổi K-1 web nhắc giao ôn kiểm tra ở ô BTVN
+   (quên thì các buổi sau vẫn nhắc). Phiếu nào có dòng "ôn tập kiểm tra" thì buổi sau hiện ô nhập điểm + nhận xét. */
+const KT_RE=/kiểm tra định kỳ|ôn tập kiểm tra|ôn kiểm tra/i;
+const hasKt=x=>x&&x.fKtScore!==''&&x.fKtScore!=null;
+function khoaSess(sid,no,date){ // các buổi trước của khóa đang học (buổi số giảm dần liên tục)
+  const ss=sessOf(sid).filter(x=>x.id!==editingId&&(x.fDate||'')<=(date||'9'))
+    .sort((a,b)=>((b.fDate||'')+b.created).localeCompare((a.fDate||'')+a.created));
+  const out=[];let lim=+no;
+  for(const x of ss){const n=+x.fNo;if(!n||n>lim)break;if(n===lim)continue;out.unshift(x);lim=n;}
+  return out;
+}
+function ktCheck(){
+  const r=readForm(),box=$('#ktRemind'),sc=$('#ktScore');
+  const N=+r.fNo,T=+r.fTotal;
+  if(!r.studentId||!N||!T||T<4){box.style.display='none';sc.style.display=hasKt(r)?'block':'none';return;}
+  const K=Math.ceil(T/2),prev=khoaSess(r.studentId,N,r.fDate);
+  const done=prev.find(hasKt), giao=[...prev].reverse().find(x=>KT_RE.test(x.fNext||''));
+  // 1) buổi trước đã giao ôn → hôm nay nhập điểm
+  if(!done&&(giao||hasKt(r))){
+    const g=giao||{fNo:N-1};const [gd,gm]=dmy(giao?giao.fDate:r.fDate);
+    $('#fKtName').value=`Kiểm tra định kỳ (buổi 1–${g.fNo})`;
+    $('#ktScoreHint').innerHTML=hasKt(r)?`✓ Đã nhập điểm. Điểm hiện trên phiếu (ô Ngữ pháp) và tự vào <b>Báo cáo tháng</b>.`
+      :`Buổi ${g.fNo}${giao?` (${gd}/${gm})`:''} cô đã giao ôn kiểm tra nội dung <b>buổi 1–${g.fNo}</b>. Hôm nay nhập <b>điểm + nhận xét</b> để báo phụ huynh.`;
+    sc.style.display='block';
+  } else sc.style.display=hasKt(r)?'block':'none';
+  // 2) nhắc giao ôn kiểm tra ở ô BTVN kế tiếp
+  if(done||giao||N<K-1||N>=T){box.style.display='none';return;}
+  if(KT_RE.test(r.fNext)){box.className='kt-remind ok';box.innerHTML=`✓ Đã giao ôn kiểm tra. Buổi sau web sẽ nhắc cô nhập <b>điểm + nhận xét</b>.`;box.style.display='block';return;}
+  const all=[...prev,r];
+  const items=all.map(x=>{const [d,m]=dmy(x.fDate);const g=String(x.fGram||'').split('\n').map(s=>s.trim()).filter(Boolean).join(' · ');
+    const v=String(x.fVUnit||'').trim();return `<li><b>Buổi ${esc(x.fNo)}</b> (${d}/${m}): ${esc(g)||'<i>chưa ghi nội dung</i>'}${v&&v!=='Unit'?` · từ vựng ${esc(v)}`:''}</li>`;}).join('');
+  const late=N>K;
+  box.className='kt-remind'+(late?' late':'');
+  box.innerHTML=`${late?'⚠️ <b>Đã qua giữa khóa mà chưa giao ôn kiểm tra!</b>':`🔔 <b>Sắp kiểm tra định kỳ</b> (giữa khóa ${T} buổi).`}
+    Giao HS ôn tập để <b>buổi ${N+1}</b> kiểm tra nội dung buổi ${all[0].fNo}–${N}:
+    <ul>${items}</ul><button type="button" class="btn" id="ktAdd">➕ Thêm dòng ôn kiểm tra vào BTVN</button>`;
+  box.style.display='block';
+  $('#ktAdd').onclick=()=>{const t=$('#fNext');const line=`Ôn tập kiểm tra định kỳ buổi ${N+1} (nội dung buổi ${all[0].fNo}–${N})`;
+    t.value=t.value.trim()?t.value.trim()+'\n'+line:line;updatePreview();};
+}
+const KT_CHIPS=['Con làm bài tốt, nắm chắc kiến thức đã học.','Con làm bài cẩn thận, tiến bộ hơn trước.','Con cần ôn lại từ vựng các Unit đã học.','Con còn sai phần ngữ pháp …, cô sẽ ôn lại cho con.','PH nhắc con ôn bài thêm ở nhà giúp cô ạ.'];
+$('#ktChips').innerHTML=KT_CHIPS.map(t=>`<button type="button">${esc(t)}</button>`).join('');
+$$('#ktChips button').forEach(b=>b.onclick=()=>{const t=$('#fKtCmt');const st=t.value?t.value.length+1:0;t.value=t.value?t.value+' '+b.textContent:b.textContent;
+  const i=t.value.indexOf('…',st);t.focus();if(i>=0)t.setSelectionRange(i,i+1);updatePreview();});
+
+function updatePreview(){ktCheck();const h=sheetHTML(readForm());$('#preview').innerHTML=h;$('#exportHolder').innerHTML=h;fitText();fitPreview();preRender();}
 // chữ ít thì phóng to cho vừa ô, chữ nhiều thì thu nhỏ để không tràn
 function fitText(){$$(".sheet .fit").forEach(el=>{
   if(!el.clientWidth)return; // ô đang ẩn (tab khác) – đo sẽ sai
