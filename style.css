@@ -65,6 +65,7 @@ table.list th{color:var(--muted);font-size:12.5px}
 .sh-h{text-align:center;font-family:'Lora',serif;font-weight:700;font-size:20px;margin:22px 0 12px}
 .sh-h.green{color:#3E9B4F}.sh-h.purple{color:#8E3FB0}.sh-h.navy{color:#2E4A7D}
 .sh-2{display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start}
+.sh-2.gv{grid-template-columns:1.36fr 1fr} /* ô Ngữ pháp rộng hơn ô Từ vựng (cô chỉnh 2026-11-14) */
 /* ô BTVN kế tiếp (xanh lá) cùng cỡ với ô Mục tiêu/Nội dung (tím) – cô chốt */
 .sh-sbox.purple,.sh-sbox.green{height:100px}
 .sh-colh{text-align:center;font-weight:800;font-size:13.5px;color:#222;margin-bottom:8px}
@@ -178,7 +179,7 @@ button.kt-tag{cursor:pointer}
 .sc-on{display:flex;align-items:center;gap:6px;margin:10px 0 4px;font-size:14px;cursor:pointer;flex-wrap:wrap}
 .sc-on input{width:18px;height:18px;margin:0;accent-color:#D32F2F}
 .sc-box{border:1.5px dashed #F2B84B;background:#FFFBEA;border-radius:10px;padding:8px 10px;margin-bottom:8px}
-.sc-hl{color:#D32F2F;background:#FFF176;padding:0 3px;border-radius:3px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.sc-hl{color:#D32F2F;background:#FFF6B3;padding:0 3px;border-radius:3px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
 .ocr-paste{border:2px dashed #B98AD9;background:#FAF5FE;border-radius:10px;padding:14px 10px;text-align:center;color:#6B2E8E;margin-bottom:8px;cursor:pointer;caret-color:transparent;outline:none;font-size:14px}
 .ocr-paste small{color:#8a6aa0;font-size:12px}
 .ocr-paste:focus{border-color:#8E3FB0;background:#F3EAFB;box-shadow:0 0 0 3px rgba(142,63,176,.15)}

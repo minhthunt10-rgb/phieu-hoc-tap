@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lora:ital,wght@0,700;1,600&display=swap" rel="stylesheet">
 <script src="logo.js?v=202611111700"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<link rel="stylesheet" href="style.css?v=202611141000">
+<link rel="stylesheet" href="style.css?v=202611141100">
 </head>
 <body>
 <header class="app">
@@ -422,7 +422,7 @@ function sheetHTML(r){
       <div><div class="sh-colh">NHẬN XÉT BÀI TẬP VỀ NHÀ</div><div data-ocr="hwcmt" class="sh-rbox cmt${stamp?' st':''}"><div class="fit" data-max="19" data-lines="2"><div class="hw">${esc(r.fHwCmt)}</div></div>${stamp?'<img class="stamp" src="stamp.png" alt="">':''}</div></div>
     </div>
     <div class="sh-h purple">MỤC TIÊU/NỘI DUNG BUỔI HỌC</div>
-    <div class="sh-2">
+    <div class="sh-2 gv">
       <div class="sw p"><div class="sh-sbox purple" data-ocr="gram"><div class="t">Ngữ pháp</div><div class="fit" data-max="15" data-force="1"><div class="hw">${r.abs?`${r.abs==='cp'?'Con nghỉ có phép':'Con nghỉ không phép'}${r.fMakeup?' – đã học bù: '+esc(r.fMakeup):''}${r.fGram?'\n':''}`:''}${esc(r.fGram)}${hasKt(r)?`${r.fGram?'\n':''}${/(giữa|cuối) khóa/i.test(r.fKtName||"")?"Kiểm tra "+r.fKtName.match(/(giữa|cuối) khóa/i)[0]:"Kiểm tra định kỳ"}: ${esc(r.fKtScore)}/${esc(r.fKtMax||10)} điểm`:''}${hasSc(r)?(r.abs||r.fGram||hasKt(r)?'\n':'')+scLine(r):''}</div></div></div></div>
       <div class="sw p"><div class="sh-sbox purple" data-ocr="vocab"><div class="t">Từ vựng</div><div class="fit" data-max="15">${vocab}</div></div></div>
     </div>
