@@ -403,7 +403,7 @@ function sheetHTML(r){
    Giữa khóa: kiểm tra buổi ceil(T/2) (12 buổi → 6, 8 buổi → 4), nhắc giao ôn từ buổi trước đó.
    Cuối khóa: kiểm tra buổi T, nhắc giao ôn từ buổi T-1. Quên thì các buổi sau vẫn nhắc (khung đỏ).
    Phiếu nào có dòng "ôn tập kiểm tra" thì buổi sau hiện ô nhập điểm + nhận xét. */
-const KT_RE=/kiểm tra định kỳ|ôn tập kiểm tra|ôn kiểm tra/i;
+const KT_RE=/kiểm tra định kỳ|ôn tập kiểm tra|ôn kiểm tra|kiểm tra (giữa|cuối) khóa/i;
 const hasKt=x=>x&&x.fKtScore!==''&&x.fKtScore!=null;
 const ktKind=s=>/cuối/i.test(s||'')?'cuối':'giữa';
 // dòng giao ôn nằm ở ô "Lý thuyết và bài tập cần chuẩn bị" (fPrep); phiếu cũ có thể ở ô BTVN (fNext)
@@ -448,11 +448,13 @@ function ktCheck(){
   box.innerHTML=`${late?`⚠️ <b>Chưa giao ôn kiểm tra ${tg.k} khóa!</b>`:`🔔 <b>Sắp kiểm tra ${tg.k} khóa</b> (khóa ${T} buổi).`}
     Giao HS ôn tập để <b>${nxt}</b> kiểm tra nội dung buổi ${rg}:
     <ul>${items}${all.length<N-from+1?`<li class="hint">Các buổi khác chưa có phiếu trên web.</li>`:''}</ul>
-    <button type="button" class="btn" id="ktAdd">➕ Ghi "Ôn tập kiểm tra" vào ô Lý thuyết cần chuẩn bị</button>
+    <button type="button" class="btn" id="ktAdd">➕ Ghi BTVN ôn tập + buổi sau kiểm tra</button>
     ${N>=T?`<p class="hint" style="margin:8px 0 0">Nếu hôm nay đã cho con kiểm tra luôn thì nhập điểm ở thẻ <b>📝 Kiểm tra</b> phía trên.</p>`:''}`;
   box.style.display='block';
-  $('#ktAdd').onclick=()=>{const t=$('#fPrep');const line=`Ôn tập kiểm tra ${tg.k} khóa (nội dung buổi ${rg})`;
-    t.value=t.value.trim()?t.value.trim()+'\n'+line:line;updatePreview();};
+  // buổi này: BTVN = ôn tập; buổi sau (ô Lý thuyết cần chuẩn bị) = kiểm tra (cô chốt 2026-11-13)
+  $('#ktAdd').onclick=()=>{const add=(id,line)=>{const t=$('#'+id);t.value=t.value.trim()?t.value.trim()+'\n'+line:line;};
+    add('fNext',`Ôn tập nội dung buổi ${rg} để kiểm tra ${tg.k} khóa`);
+    add('fPrep',`Kiểm tra ${tg.k} khóa (nội dung buổi ${rg})`);updatePreview();};
   if(N>=T)showSc(`Kiểm tra cuối khóa (buổi ${rg})`,`Hôm nay là buổi cuối khóa. Nếu đã cho con <b>kiểm tra cuối khóa</b> thì nhập điểm + nhận xét ở đây.`);
 }
 const KT_CHIPS=['Con làm bài tốt, nắm chắc kiến thức đã học.','Con làm bài cẩn thận, tiến bộ hơn trước.','Con cần ôn lại từ vựng các Unit đã học.','Con còn sai phần ngữ pháp …, cô sẽ ôn lại cho con.','PH nhắc con ôn bài thêm ở nhà giúp cô ạ.'];
