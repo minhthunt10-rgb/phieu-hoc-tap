@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lora:ital,wght@0,700;1,600&display=swap" rel="stylesheet">
 <script src="logo.js?v=202611111700"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<link rel="stylesheet" href="style.css?v=202611132200">
+<link rel="stylesheet" href="style.css?v=202611140900">
 </head>
 <body>
 <header class="app">
@@ -55,6 +55,7 @@
    <div class="card" id="ocrCard">
     <h3>📷 Bổ sung phiếu từ ảnh</h3>
     <p class="hint" id="ocrTarget">Phiếu làm trên máy khác chưa có ở đây? Tải ảnh phiếu lên – web đọc và điền sẵn vào các ô bên dưới, cô xem lại rồi bấm <b>Lưu phiếu</b>.</p>
+    <div id="ocrPaste" class="ocr-paste" tabindex="0" contenteditable="true" inputmode="none" spellcheck="false" aria-label="Dán ảnh phiếu vào đây">📋 Bấm vào đây rồi <b>Ctrl+V</b> để dán ảnh phiếu<br><small>(sao chép ảnh từ Zalo: chuột phải vào ảnh → Sao chép ảnh)</small></div>
     <input type="file" id="ocrFile" accept="image/*">
     <div id="ocrStatus" class="hint" style="margin-top:6px"></div>
     <img id="ocrImg" alt="" style="display:none;max-width:100%;margin-top:8px;border:1px solid #ddd;border-radius:8px">
@@ -572,12 +573,21 @@ function ocrToForm({T,ck}){
   writeForm(r);setEditing(null);updatePreview();
   return warn;
 }
-$('#ocrFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;const st=$('#ocrStatus');
+let ocrBusy=false;
+$('#ocrFile').onchange=e=>{const f=e.target.files[0];e.target.value='';if(f)ocrFile(f);};
+// dán ảnh (Ctrl+V): bấm vào ô dán, hoặc dán ở bất cứ đâu trong trang Nhập phiếu (trừ khi đang gõ trong ô chữ)
+const pastedImg=e=>{const it=[...((e.clipboardData||{}).items||[])].find(i=>i.type.startsWith('image/'));return it&&it.getAsFile();};
+$('#ocrPaste').addEventListener('paste',e=>{e.preventDefault();e.stopPropagation();const f=pastedImg(e);
+  if(f)ocrFile(f);else $('#ocrStatus').textContent='⚠️ Trong bộ nhớ chưa có ảnh – cô sao chép ảnh phiếu trước (chuột phải vào ảnh → Sao chép ảnh) rồi Ctrl+V lại.';});
+$('#ocrPaste').addEventListener('beforeinput',e=>e.preventDefault()); // ô dán không cho gõ chữ
+document.addEventListener('paste',e=>{if(!$('#v-nhap').classList.contains('on'))return;const a=document.activeElement;
+  if(a&&a!==$('#ocrPaste')&&(a.matches('input,textarea,select')||a.isContentEditable))return;const f=pastedImg(e);if(f){e.preventDefault();ocrFile(f);}});
+async function ocrFile(f){if(ocrBusy)return;ocrBusy=true;const st=$('#ocrStatus');$('#ocrPaste').classList.add('busy');
   try{const res=await ocrRead(f);const warn=ocrToForm(res);
     if(res.odd)warn.unshift('Ảnh không giống khung phiếu xuất từ web (bị cắt hoặc chụp màn hình?) nên dễ đọc sai – cô kiểm tra kỹ từng ô.');
     st.innerHTML=`✅ Đã đọc xong và điền vào các ô bên dưới. <b>Cô so với ảnh, sửa chỗ đọc sai</b> rồi bấm <b>💾 Lưu phiếu</b>.`+(warn.length?'<br>⚠️ '+warn.join('<br>⚠️ '):'');}
   catch(err){console.error(err);st.textContent='❌ '+(err.message||'Đọc ảnh bị lỗi')+' – cô thử lại hoặc nhập tay.';}
-  e.target.value='';};
+  finally{ocrBusy=false;$('#ocrPaste').classList.remove('busy');}}
 // các buổi còn thiếu phiếu trong khóa đang học
 function missingNos(s){
   const l=latestSess(s.id);if(!l)return [];const top=noMax(l.fNo);if(top<2)return [];

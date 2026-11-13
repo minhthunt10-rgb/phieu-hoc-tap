@@ -175,5 +175,9 @@ button.kt-tag{cursor:pointer}
 .kt-tag.late{background:#FFE9E2;border-color:#E5774F;color:#B23A12}
 .kt-tag.in{background:#E8F1FD;border-color:#7FA8E0;color:#1E4E8C}
 .kt-tag.diem{background:#E9F6EA;border-color:#7BBF7F;color:#2E6B32}
+.ocr-paste{border:2px dashed #B98AD9;background:#FAF5FE;border-radius:10px;padding:14px 10px;text-align:center;color:#6B2E8E;margin-bottom:8px;cursor:pointer;caret-color:transparent;outline:none;font-size:14px}
+.ocr-paste small{color:#8a6aa0;font-size:12px}
+.ocr-paste:focus{border-color:#8E3FB0;background:#F3EAFB;box-shadow:0 0 0 3px rgba(142,63,176,.15)}
+.ocr-paste.busy{opacity:.6;pointer-events:none}
 .kt-tag.miss{background:#F3EAFB;border-color:#B98AD9;color:#6B2E8E}
 #ocrImg{max-width:100%;max-height:260px;margin-top:8px;border:1px solid var(--line);border-radius:6px;display:none}
