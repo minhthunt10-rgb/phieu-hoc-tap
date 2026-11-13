@@ -35,7 +35,7 @@
     <select id="fStudent"></select>
     <div class="row">
       <div><label class="f">Ngày học</label><input type="date" id="fDate"></div>
-      <div><label class="f">Buổi số</label><input type="number" id="fNo" min="1"></div>
+      <div><label class="f">Buổi số</label><input type="text" id="fNo" inputmode="tel" autocomplete="off" placeholder="VD: 5 hoặc 5+6"></div>
       <div><label class="f">/ Số buổi 1 khóa</label><input type="number" id="fTotal" min="1"></div>
     </div>
    </div>
@@ -229,7 +229,10 @@ const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
 const dmy=iso=>{if(!iso)return['','',''];const[y,m,d]=iso.split('-');return[d,m,y];};
-const two=n=>n===''||n==null?'':String(n).padStart(2,'0');
+const two=n=>n===""||n==null?"":String(n).split("+").map(x=>x.trim().padStart(2,"0")).join("+");
+// buổi số có thể ghi "5+6" (học 2 ca trong 1 buổi): lấy số lớn nhất / nhỏ nhất
+const noNums=v=>(String(v??"").match(/\d+/g)||[]).map(Number);
+const noMax=v=>{const a=noNums(v);return a.length?Math.max(...a):0;}, noMin=v=>{const a=noNums(v);return a.length?Math.min(...a):0;};
 function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('on'),2600);}
 const stu=id=>db.students.find(s=>s.id===id);
 const sessOf=id=>db.sessions.filter(x=>x.studentId===id).sort((a,b)=>(a.date+a.created).localeCompare(b.date+b.created));
@@ -257,7 +260,7 @@ function writeForm(r){
   ($(`input[name=fHw][value=${r.hw||'done'}]`)).checked=true;
   ($(`input[name=fAtt][value=${r.att||'tot'}]`)).checked=true;
 }
-function nextNo(s){const ss=sessOf(s.id);const last=ss.length?+ss[ss.length-1].fNo:+(s.done||0);const total=+s.total||12;return last>=total?1:last+1;}
+function nextNo(s){const ss=sessOf(s.id);const last=ss.length?noMax(ss[ss.length-1].fNo):+(s.done||0);const total=+s.total||12;return last>=total?1:last+1;}
 function prefillFor(id,keepShared){
   const s=stu(id); if(!s)return;
   const cur=readForm(); const ss=sessOf(id); const last=ss[ss.length-1];
@@ -407,13 +410,13 @@ const ktTxt=x=>(x?(x.fPrep||'')+'\n'+(x.fNext||''):'');
 function khoaSess(sid,no,date){ // các buổi trước của khóa đang học (buổi số giảm dần liên tục)
   const ss=sessOf(sid).filter(x=>x.id!==editingId&&(x.fDate||'')<=(date||'9'))
     .sort((a,b)=>((b.fDate||'')+b.created).localeCompare((a.fDate||'')+a.created));
-  const out=[];let lim=+no;
-  for(const x of ss){const n=+x.fNo;if(!n||n>lim)break;if(n===lim)continue;out.unshift(x);lim=n;}
+  const out=[];let lim=noMin(no);
+  for(const x of ss){const n=noMax(x.fNo);if(!n||n>lim)break;if(n===lim&&noMin(x.fNo)===lim)continue;if(n===lim)break;out.unshift(x);lim=noMin(x.fNo);}
   return {prev:out,before:ss[0]};
 }
 function ktCheck(){
   const r=readForm(),box=$('#ktRemind'),sc=$('#ktScore'),hint=$('#ktScoreHint');
-  const N=+r.fNo,T=+r.fTotal;
+  const N=noMax(r.fNo),T=+r.fTotal;
   const showSc=(name,html)=>{if(name&&!(hasKt(r)&&$('#fKtName').value))$('#fKtName').value=name;
     hint.innerHTML=hasKt(r)?`✓ Đã nhập điểm <b>${esc($('#fKtName').value||'kiểm tra')}</b>. Điểm hiện trên phiếu (ô Ngữ pháp) và tự vào <b>Báo cáo tháng</b>.`:html;sc.style.display='block';};
   box.style.display='none';sc.style.display=hasKt(r)?'block':'none';
@@ -435,11 +438,11 @@ function ktCheck(){
   if(hasKt(r))showSc(`Kiểm tra ${tg?tg.k:'cuối'} khóa`,''); // cô tự nhập điểm dù chưa được nhắc
   if(!tg||N<tg.at-1)return;
   if(KT_RE.test(ktTxt(r))){box.className='kt-remind ok';box.innerHTML=`✓ Đã giao ôn kiểm tra ${tg.k} khóa. Buổi sau web sẽ nhắc cô nhập <b>điểm + nhận xét</b>.`;box.style.display='block';return;}
-  const lastSc=[...prev].reverse().find(hasKt), from=lastSc?+lastSc.fNo+1:(tg.k==='giữa'?1:K+1); // chưa ghi đủ phiếu trên web vẫn tính từ đầu khóa / sau giữa khóa
-  const all=[...prev,r].filter(x=>+x.fNo>=from);
+  const lastSc=[...prev].reverse().find(hasKt), from=lastSc?noMax(lastSc.fNo)+1:(tg.k==='giữa'?1:K+1); // chưa ghi đủ phiếu trên web vẫn tính từ đầu khóa / sau giữa khóa
+  const all=[...prev,r].filter(x=>noMax(x.fNo)>=from);
   const items=all.map(x=>{const [d,m]=dmy(x.fDate);const g=String(x.fGram||'').split('\n').map(s=>s.trim()).filter(Boolean).join(' · ');
     const v=String(x.fVUnit||'').trim();return `<li><b>Buổi ${esc(x.fNo)}</b> (${d}/${m}): ${esc(g)||'<i>chưa ghi nội dung</i>'}${v&&v!=='Unit'?` · từ vựng ${esc(v)}`:''}</li>`;}).join('');
-  const late=N>=tg.at, nxt=N+1>T?'buổi 1 khóa sau':'buổi '+(N+1), rg=`${from}–${N}`;
+  const late=noMin(r.fNo)>=tg.at, nxt=N+1>T?'buổi 1 khóa sau':'buổi '+(N+1), rg=`${from}–${N}`;
   box.className='kt-remind'+(late?' late':'');
   box.innerHTML=`${late?`⚠️ <b>Chưa giao ôn kiểm tra ${tg.k} khóa!</b>`:`🔔 <b>Sắp kiểm tra ${tg.k} khóa</b> (khóa ${T} buổi).`}
     Giao HS ôn tập để <b>${nxt}</b> kiểm tra nội dung buổi ${rg}:

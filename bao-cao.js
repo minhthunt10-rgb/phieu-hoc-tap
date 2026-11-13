@@ -45,7 +45,9 @@ function summary(s,mon){
     checks.push({date:x.fDate,name,score:x.fKtScore,max:x.fKtMax||10,note:x.fKtCmt||''});});
   checks.sort((a,b)=>a.date.localeCompare(b.date));
   const rep=db.reports.find(x=>x.id===s.id+'_'+mon);
-  return {sess,days,hwS,hwAvg,words,asked,nTests,att,checks,cmt:rep?rep.cmt:'',total:+s.total||12};
+  // buổi ghi "5+6" = học 2 ca trong 1 buổi → tính 2 buổi
+  const caList=sess.flatMap(x=>Array(Math.max(1,String(x.fNo||"").split("+").filter(p=>/\d/.test(p)).length)).fill(x));
+  return {sess,caList,nCa:caList.length,days,hwS,hwAvg,words,asked,nTests,att,checks,cmt:rep?rep.cmt:'',total:+s.total||12};
 }
 // trung bình mỗi lần khảo: "TB 21/30 (70%)"
 const tbTu=m=>{const n=m.nTests||1,r=x=>Math.round(x*10)/10;return `TB ${r(m.words/n)}/${r(m.asked/n)} (${Math.round(m.words/m.asked*100)}%)`;};
@@ -88,7 +90,7 @@ function renderGS(){
     if(f.length)warnN++;
     const ck=m.checks[m.checks.length-1];
     return `<tr class="st" data-id="${s.id}"><td>${i+1}</td><td><b>${esc(s.name)}</b><div class="hint">${esc(s.cls)}</div>${f.map(x=>`<span class="flag">${x}</span>`).join('')}</td>
-      <td class="num"><b>${m.sess.length}</b>/${m.total}</td>
+      <td class="num"><b>${m.nCa}</b>/${m.total}</td>
       <td class="num ${m.hwAvg!=null&&m.hwAvg<80?'warn':''}">${m.hwAvg==null?'—':m.hwAvg+'%'}</td>
       <td class="num ${m.asked&&m.words/m.asked<.7?'warn':''}">${m.asked?`${m.words}/${m.asked}<div class="hint">${tbTu(m)}</div>`:'—'}</td>
       <td class="num">${ck?`${esc(ck.score)}/${esc(ck.max)}`:'—'}${m.checks.length>1?`<div class="hint">${m.checks.length} bài</div>`:''}</td>
@@ -170,8 +172,8 @@ function sheetHTML(){
   const mon=month(),[y,m]=mon.split('-'),M=summary(s,mon),L=window.LOGO||'';
   const cmt=$('#pCmt').value.trim();
   // ô ngày học: đủ số buổi của gói (8/12), buổi chưa học để ô nét đứt
-  const slots=Math.max(M.total,M.sess.length);
-  const days=Array.from({length:slots},(_,i)=>{const x=M.sess[i];if(!x)return `<div class="bc-day off"><span class="n">BUỔI ${i+1}</span></div>`;
+  const slots=Math.max(M.total,M.nCa);
+  const days=Array.from({length:slots},(_,i)=>{const x=M.caList[i];if(!x)return `<div class="bc-day off"><span class="n">BUỔI ${i+1}</span></div>`;
     const[d,mm]=dmy(x.fDate);return `<div class="bc-day"><span class="n">BUỔI ${i+1}</span><span class="hw">${d}/${mm}</span><span class="w">${thu(x.fDate)}</span></div>`;}).join('');
   const att=attTop(M.att);
   const bars=M.hwS.length?`<div class="bc-chart"><div class="t">MỨC HOÀN THÀNH BTVN TỪNG BUỔI</div>
@@ -189,11 +191,11 @@ function sheetHTML(){
     <div class="sh-info">
       <div><div class="sh-lab">HỌ TÊN HỌC VIÊN | LỚP</div><div class="sw o"><div class="sh-box"><span class="hw">${esc(s.name)}${s.cls?' | '+esc(s.cls):''}</span></div></div></div>
       <div><div class="sh-lab">THÁNG</div><div class="sw o"><div class="sh-box"><span class="hw">${two(+m)}</span>&nbsp;<b>/ ${y}</b></div></div></div>
-      <div><div class="sh-lab">SỐ BUỔI ĐI HỌC</div><div class="sw o"><div class="sh-box"><span class="hw">${two(M.sess.length)}</span>&nbsp;<b>/</b>&nbsp;<span class="hw">${M.total}</span></div></div></div>
+      <div><div class="sh-lab">SỐ BUỔI ĐI HỌC</div><div class="sw o"><div class="sh-box"><span class="hw">${two(M.nCa)}</span>&nbsp;<b>/</b>&nbsp;<span class="hw">${M.total}</span></div></div></div>
     </div>
     <div class="sh-h green">CHUYÊN CẦN – CÁC BUỔI CON ĐÃ HỌC</div>
     <div class="bc-days">${days}</div>
-    <div class="bc-sum">Con đã học <span class="hw">${M.sess.length}</span> / ${M.total} buổi trong tháng ${+m}</div>
+    <div class="bc-sum">Con đã học <span class="hw">${M.nCa}</span> / ${M.total} buổi trong tháng ${+m}</div>
     <div class="sh-h purple">KẾT QUẢ HỌC TẬP</div>
     <div class="bc-stats">
       <div class="sw p"><div class="bc-st"><div class="t">TỪ VỰNG ĐÃ THUỘC</div><div class="big">${M.asked?M.words:'—'}${M.asked?' <small>từ</small>':''}</div><div class="s">${M.asked?`/ ${M.asked} từ · ${M.nTests} lần khảo<br>${tbTu(M)}`:'Chưa khảo từ'}</div></div></div>
@@ -214,7 +216,7 @@ function fitCmt(root){root.querySelectorAll('.bc-cmt .tx').forEach(el=>{let s=17
   while(s>11&&el.scrollHeight>H){s-=.5;el.style.fontSize=s+'px';}});}
 function drawPT(){
   const s=stu(ptSid),M=s?summary(s,month()):null;
-  $('#pInfo').innerHTML=s?`Tháng ${month().split('-').reverse().join('/')}: ${M.sess.length}/${M.total} buổi · BTVN ${M.hwAvg==null?'—':M.hwAvg+'%'} · ${M.asked?M.words+' từ thuộc':'chưa khảo từ'} · ${M.checks.length} bài KT`:'';
+  $('#pInfo').innerHTML=s?`Tháng ${month().split('-').reverse().join('/')}: ${M.nCa}/${M.total} buổi · BTVN ${M.hwAvg==null?'—':M.hwAvg+'%'} · ${M.asked?M.words+' từ thuộc':'chưa khảo từ'} · ${M.checks.length} bài KT`:'';
   const h=sheetHTML(),ex=$('#bcExport');ex.innerHTML=h;fitCmt(ex);
   $('#bcPrev').innerHTML=ex.innerHTML;fitPrev();
 }
