@@ -1,3 +1,6 @@
+/* ô bài khảo từ thiếu số Unit / mã đề */
+input.bad{border-color:#E5774F!important;background:#FFF3EF}
+.unit-warn{display:none;color:#B23A12;margin-top:3px;font-weight:600}
 :root{
   --green:#5A923F; --orange:#E8742F; --navy:#1F3F7A; --ink:#2b2b2b; --muted:#6b6b6b;
   --bg:#FBF7F0; --card:#fff; --line:#E6DED2; --soft:#FDE5D3;

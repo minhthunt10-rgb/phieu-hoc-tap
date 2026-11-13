@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lora:ital,wght@0,700;1,600&display=swap" rel="stylesheet">
 <script src="logo.js?v=202611111700"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<link rel="stylesheet" href="style.css?v=202611131800">
+<link rel="stylesheet" href="style.css?v=202611132000">
 </head>
 <body>
 <header class="app">
@@ -75,7 +75,7 @@
     <textarea id="fGram" placeholder="VD: Sửa BTVN + Tổng ôn kiến thức GHK1 (U1+2+3)"></textarea>
     <div class="chips" data-for="fGram" data-list="gram" data-sep="&#10;"></div>
     <div class="row">
-      <div><label class="f">Khảo từ vựng (bài)</label><input type="text" id="fVUnit" placeholder="Unit 2+3"></div>
+      <div><label class="f">Khảo từ vựng (bài)</label><input type="text" id="fVUnit" placeholder="Unit 2+3 / C17-T1-P1"><div class="unit-warn hint" data-for="fVUnit">Ghi số Unit (VD Unit 5) hoặc mã đề (C17-T1-P1)</div></div>
       <div><label class="f">Số từ</label><input type="number" id="fVNum" placeholder="30"></div>
       <div><label class="f">Điểm khảo (đúng)</label><input type="number" id="fVScore" placeholder="để trống nếu chưa khảo"></div>
     </div>
@@ -101,7 +101,7 @@
     <div class="chips" data-for="fNext" data-list="next" data-sep="&#10;"></div>
     <div class="row">
       <div><label class="f">Khảo … từ vựng</label><input type="number" id="fNVNum" placeholder="30"></div>
-      <div><label class="f">bài</label><input type="text" id="fNVUnit" placeholder="Unit 3"></div>
+      <div><label class="f">bài</label><input type="text" id="fNVUnit" placeholder="Unit 3 / C17-T1-P1"><div class="unit-warn hint" data-for="fNVUnit">Ghi số Unit (VD Unit 5) hoặc mã đề (C17-T1-P1)</div></div>
     </div>
     <label class="f">Lý thuyết và bài tập cần chuẩn bị (thêm)</label>
     <textarea id="fPrep" placeholder="VD: Sửa BT tổng ôn + ôn tập"></textarea>
@@ -327,6 +327,9 @@ function saveCurrent(){
   const r=readForm();
   if(!r.studentId){toast('Chọn học sinh trước đã ạ');return null;}
   if(!r.fDate){toast('Chưa chọn ngày học');return null;}
+  // ô bài khảo từ: chỉ ghi "Unit" là thiếu – phải có số (Unit 5) hoặc mã đề (C17-T1-P1); không khảo thì để trống (cô yêu cầu 2026-11-13)
+  for(const id of ['fVUnit','fNVUnit'])if(!unitOk(r[id])){checkUnits();const el=$('#'+id);el.scrollIntoView({behavior:'smooth',block:'center'});el.focus();
+    toast(id==='fVUnit'?'Ô Khảo từ vựng (bài) chưa ghi số Unit hoặc mã đề':'Ô Khảo từ vựng bài (buổi sau) chưa ghi số Unit hoặc mã đề');return null;}
   let rec; const i=editingId?db.sessions.findIndex(x=>x.id===editingId):-1;
   if(i>=0){rec=db.sessions[i]={...db.sessions[i],...r};}
   else{rec={id:uid(),created:String(Date.now()),...r};db.sessions.push(rec);setEditing(rec.id);}
@@ -462,7 +465,10 @@ $('#ktChips').innerHTML=KT_CHIPS.map(t=>`<button type="button">${esc(t)}</button
 $$('#ktChips button').forEach(b=>b.onclick=()=>{const t=$('#fKtCmt');const st=t.value?t.value.length+1:0;t.value=t.value?t.value+' '+b.textContent:b.textContent;
   const i=t.value.indexOf('…',st);t.focus();if(i>=0)t.setSelectionRange(i,i+1);updatePreview();});
 
-function updatePreview(){ktCheck();const h=sheetHTML(readForm());$('#preview').innerHTML=h;$('#exportHolder').innerHTML=h;fitText();fitPreview();preRender();}
+// ô bài khảo từ: trống hoặc có số / mã đề (Unit 5, C17-T1-P1); chỉ "Unit" là thiếu
+const unitOk=v=>{v=String(v||'').trim();return !v||/\d/.test(v);};
+function checkUnits(){$$('.unit-warn').forEach(w=>{const el=$('#'+w.dataset.for),bad=!unitOk(el.value);el.classList.toggle('bad',bad);w.style.display=bad?'block':'none';});}
+function updatePreview(){ktCheck();checkUnits();const h=sheetHTML(readForm());$('#preview').innerHTML=h;$('#exportHolder').innerHTML=h;fitText();fitPreview();preRender();}
 // chữ ít thì phóng to cho vừa ô, chữ nhiều thì thu nhỏ để không tràn
 function fitText(){$$(".sheet .fit").forEach(el=>{
   if(!el.clientWidth)return; // ô đang ẩn (tab khác) – đo sẽ sai
