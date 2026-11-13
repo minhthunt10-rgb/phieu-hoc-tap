@@ -160,8 +160,8 @@ $('#kLink').onclick=async()=>{
   const miss=kt.items.filter(x=>!x.vi||!x.en).length;
   if(miss&&!confirm(`${miss} từ còn thiếu nghĩa hoặc đáp án. Vẫn gửi link?`))return;
   const s=stu(kt.studentId);
-  const url=klUrl('lam-khao-tu.html','de='+klEncode({v:1,id:uid(),s:s.id,nm:s.name,c:s.cls||'',d:kt.date,no:kt.no,u:(kt.unit||'').trim(),
-    w:kt.items.map(x=>[x.vi,x.en])}));
+  const url=await klMake('lam-khao-tu.html','de','z',{v:1,id:uid(),s:s.id,nm:s.name,c:s.cls||'',d:kt.date,no:kt.no,u:(kt.unit||'').trim(),
+    w:kt.items.map(x=>[x.vi,x.en])});
   const unit=(kt.unit||'').trim(), text=`Bài khảo từ vựng${unit&&unit!=='Unit'?' '+unit:''} của con ${tenRieng(s.name)} (${kt.items.length} từ). Con bấm link để làm bài, làm xong bấm "Gửi kết quả cho cô" nhé:`;
   try{
     if(navigator.share&&/Android|iPhone|iPad|Mobi/i.test(navigator.userAgent)){await navigator.share({text:text+'\n'+url});return;}
@@ -169,10 +169,10 @@ $('#kLink').onclick=async()=>{
   }catch(e){if(e.name!=='AbortError')prompt('Sao chép link gửi HS:',url);}
 };
 // cô bấm link kết quả HS gửi về: khao-tu.html#kq=…
-function ktReceive(){
-  const m=location.hash.match(/kq=([^&]+)/); if(!m)return;
+async function ktReceive(){
+  const r=await klRead('kq','kz'); if(!r.found)return;
   history.replaceState(null,'',location.pathname+location.search);
-  const P=klDecode(m[1]);
+  const P=r.data;
   if(!P||!Array.isArray(P.w)||!Array.isArray(P.a)){toast('Link kết quả bị lỗi (có thể bị cắt bớt) – nhờ HS gửi lại');return;}
   const key=n=>String(n||'').normalize('NFC').toLowerCase().replace(/\s+/g,' ').trim();
   let s=stu(P.s)||db.students.find(x=>key(x.name)===key(P.nm));

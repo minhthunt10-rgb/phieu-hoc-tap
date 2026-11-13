@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="logo.js?v=202611111700"></script>
-<script src="khao-link.js?v=202611131800"></script>
+<script src="khao-link.js?v=202611131930"></script>
 <link rel="stylesheet" href="style.css?v=202611141100">
 <style>
 main{max-width:640px}
@@ -20,7 +20,7 @@ main{max-width:640px}
 .stu-row.ok .mk{color:var(--green)}.stu-row.no .mk{color:#c62828}
 .stu-row.no b{grid-row:span 3}
 .fix{grid-column:2;font-size:14px;color:#c62828}
-.fix b{color:var(--navy)}
+.fix .ans{color:var(--navy);font-weight:800}
 .score{text-align:center;padding:18px 14px}
 .score .big{font-size:44px;font-weight:800;color:var(--orange);line-height:1.1}
 .score .msg{font-size:15px;margin-top:6px}
@@ -43,10 +43,7 @@ function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');c
 $('#appLogo').src=window.LOGO||'';
 const dm=iso=>{if(!iso)return'';const[y,m,d]=iso.split('-');return d+'/'+m;};
 
-const P=klDecode((location.hash.match(/de=([^&]+)/)||[])[1]);
-const SKEY=P?'gwe-lam-khao-'+P.id:'';
-let st={a:[],done:false,at:0};
-try{const s=localStorage.getItem(SKEY);if(s)st={...st,...JSON.parse(s)};}catch(e){}
+let P=null,SKEY='',st={a:[],done:false,at:0};
 const keep=()=>{try{localStorage.setItem(SKEY,JSON.stringify(st));}catch(e){}};
 
 function head(){
@@ -75,7 +72,8 @@ function renderDo(){
     renderResult();window.scrollTo({top:0});
   };
 }
-function resultLink(){return klUrl('khao-tu.html','kq='+klEncode({...P,a:st.a,at:st.at}));}
+let rl=null; // link kết quả tạo sẵn (nén) để nút Gửi chạy ngay khi bấm
+const resultLink=async()=>rl||(rl=await klMake('khao-tu.html','kq','kz',{...P,a:st.a,at:st.at}));
 function renderResult(){
   const ok=P.w.map((w,i)=>klCheck(st.a[i],w[1])), n=ok.filter(Boolean).length, tot=P.w.length, pct=n/tot;
   const msg=pct===1?'Con thuộc hết các từ. Giỏi lắm! 🎉':pct>=.8?'Con làm tốt lắm! Học lại các từ sai bên dưới nhé.':pct>=.5?'Con cố gắng học lại các từ sai rồi buổi sau cô khảo lại nhé.':'Con cần học kĩ lại bài này nhé, cô tin con làm được!';
@@ -84,18 +82,25 @@ function renderResult(){
      <div class="btns"><button class="btn n big" id="send">📤 Gửi kết quả cho cô</button></div>
      <p class="hint" style="margin:8px 0 0">Bấm nút trên, chọn <b>Zalo</b> rồi gửi cho cô (hoặc dán vào khung chat Zalo của lớp). Cô cần nhận được tin này mới có điểm.</p></div>
    <div id="list">${P.w.map((w,i)=>`<div class="stu-row ${ok[i]?'ok':'no'}"><b>${i+1}</b><div class="vi">${esc(w[0])} <span class="mk">${ok[i]?'✓':'✗'}</span></div>
-     <input type="text" disabled value="${esc(st.a[i]||'(bỏ trống)')}">${ok[i]?'':`<div class="fix">Đáp án: <b>${esc(w[1])}</b></div>`}</div>`).join('')}</div>`;
+     <input type="text" disabled value="${esc(st.a[i]||'(bỏ trống)')}">${ok[i]?'':`<div class="fix">Đáp án: <span class="ans">${esc(w[1])}</span></div>`}</div>`).join('')}</div>`;
+  resultLink();
   $('#send').onclick=async()=>{
-    const url=resultLink(), text=`Con ${P.nm} đã làm xong khảo từ${P.u&&P.u.trim()!=='Unit'?' '+P.u:''}: đúng ${n}/${tot} từ. Cô bấm link để lưu điểm:`;
+    const url=await resultLink(), text=`Con ${P.nm} đã làm xong khảo từ${P.u&&P.u.trim()!=='Unit'?' '+P.u:''}: đúng ${n}/${tot} từ. Cô bấm link để lưu điểm:`;
     try{
       if(navigator.share&&/Android|iPhone|iPad|Mobi/i.test(navigator.userAgent)){await navigator.share({text:text+'\n'+url});return;}
       await navigator.clipboard.writeText(text+'\n'+url);toast('Đã sao chép – mở Zalo, dán (Ctrl+V) và gửi cho cô');
     }catch(e){if(e.name==='AbortError')return;prompt('Con sao chép đoạn này gửi qua Zalo cho cô:',text+' '+url);}
   };
 }
-if(!P||!Array.isArray(P.w)||!P.w.length)
-  $('#app').innerHTML='<div class="card"><p class="err">Link bài khảo bị lỗi hoặc thiếu.</p><p class="hint">Con nhờ cô gửi lại link nhé (bấm giữ link → Sao chép, đừng cắt bớt).</p></div>';
-else if(st.done)renderResult(); else renderDo();
+(async()=>{
+  P=(await klRead('de','z')).data;
+  if(!P||!Array.isArray(P.w)||!P.w.length){
+    $('#app').innerHTML='<div class="card"><p class="err">Link bài khảo bị lỗi hoặc thiếu.</p><p class="hint">Con nhờ cô gửi lại link nhé (bấm giữ link → Sao chép, đừng cắt bớt).'
+      +(window.klZip?'':' Máy con đang dùng trình duyệt cũ – con mở link bằng <b>Chrome</b> hoặc cập nhật trình duyệt nhé.')+'</p></div>';return;}
+  SKEY='gwe-lam-khao-'+P.id;
+  try{const s=localStorage.getItem(SKEY);if(s)st={...st,...JSON.parse(s)};}catch(e){}
+  if(st.done)renderResult(); else renderDo();
+})();
 </script>
 </body>
 </html>
