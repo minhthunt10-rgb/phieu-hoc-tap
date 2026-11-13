@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lora:ital,wght@0,700;1,600&display=swap" rel="stylesheet">
 <script src="logo.js?v=202611111700"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<link rel="stylesheet" href="style.css?v=202611131200">
+<link rel="stylesheet" href="style.css?v=202611131800">
 </head>
 <body>
 <header class="app">
@@ -154,6 +154,7 @@
   <p class="hint">"Đã học xong buổi số" dùng khi HS đang học giữa khóa (VD đã xong 8 buổi → phiếu tiếp theo tự ghi buổi 9).</p>
  </div>
  <div class="card"><h3>Danh sách học sinh (<span id="sCount">0</span>)</h3>
+  <div id="ktSum" class="kt-sum"></div>
   <input type="text" id="sSearch" placeholder="Tìm tên hoặc lớp…">
   <div class="tbl-wrap"><table class="list" id="sTable"></table></div>
  </div>
@@ -407,8 +408,8 @@ const hasKt=x=>x&&x.fKtScore!==''&&x.fKtScore!=null;
 const ktKind=s=>/cuối/i.test(s||'')?'cuối':'giữa';
 // dòng giao ôn nằm ở ô "Lý thuyết và bài tập cần chuẩn bị" (fPrep); phiếu cũ có thể ở ô BTVN (fNext)
 const ktTxt=x=>(x?(x.fPrep||'')+'\n'+(x.fNext||''):'');
-function khoaSess(sid,no,date){ // các buổi trước của khóa đang học (buổi số giảm dần liên tục)
-  const ss=sessOf(sid).filter(x=>x.id!==editingId&&(x.fDate||'')<=(date||'9'))
+function khoaSess(sid,no,date,skip=editingId){ // các buổi trước của khóa đang học (buổi số giảm dần liên tục)
+  const ss=sessOf(sid).filter(x=>x.id!==skip&&(x.fDate||'')<=(date||'9'))
     .sort((a,b)=>((b.fDate||'')+b.created).localeCompare((a.fDate||'')+a.created));
   const out=[];let lim=noMin(no);
   for(const x of ss){const n=noMax(x.fNo);if(!n||n>lim)break;if(n===lim&&noMin(x.fNo)===lim)continue;if(n===lim)break;out.unshift(x);lim=noMin(x.fNo);}
@@ -563,21 +564,56 @@ let editingS=null;
 const khoi=s=>{const m=String(s.cls||'').match(/\d+/);return m?+m[0]:99;};
 const tenRieng=n=>n.trim().split(/\s+/).pop();
 const byKhoi=(a,b)=>khoi(a)-khoi(b)||tenRieng(a.name).localeCompare(tenRieng(b.name),'vi')||a.name.localeCompare(b.name,'vi');
+/* Tình trạng kiểm tra định kỳ của 1 HS (hiện ở tab Học sinh – cô yêu cầu 2026-11-13):
+   dan = buổi tới cần dặn ôn · in = đã dặn, cần in bài kiểm tra · diem = đã ghi phiếu buổi kiểm tra, chưa nhập điểm */
+function ktStatus(s){
+  const T=+s.total||12; if(T<4||!sessOf(s.id).length)return null;
+  const N=nextNo(s),K=Math.ceil(T/2),{prev,before}=khoaSess(s.id,N,'9',null);
+  const line=x=>ktTxt(x).split('\n').find(l=>KT_RE.test(l))||'';
+  let gi=-1,si=-1;prev.forEach((x,i)=>{if(KT_RE.test(ktTxt(x)))gi=i;if(hasKt(x))si=i;});
+  if(gi>=0&&(gi>si||(gi===si&&ktKind(line(prev[gi]))!==ktKind(prev[gi].fKtName)))){
+    const g=prev[gi],test=prev.slice(gi+1).find(x=>!hasKt(x));
+    return {t:test?'diem':'in',k:ktKind(line(g)),ses:test||g,line:line(g)};
+  }
+  if(N===1&&before&&KT_RE.test(ktTxt(before))&&!hasKt(before))return {t:'in',k:ktKind(line(before)),ses:before,line:line(before)};
+  if(prev.length&&noMin(prev[0].fNo)===1&&!prev.some(hasKt)){ // dặn ôn cuối khóa ở buổi cuối khóa trước
+    const all=sessOf(s.id),b=all[all.indexOf(prev[0])-1];
+    if(b&&KT_RE.test(ktTxt(b))&&!hasKt(b))return {t:'diem',k:ktKind(line(b)),ses:prev[0],line:line(b)};
+  }
+  const done=k=>prev.some(x=>hasKt(x)&&ktKind(x.fKtName)===k);
+  const tg=!done('giữa')&&N<T-1?{k:'giữa',at:K}:!done('cuối')?{k:'cuối',at:T}:null;
+  if(tg&&N>=tg.at-1)return {t:'dan',k:tg.k,N,late:N>=tg.at};
+  return null;
+}
+function ktTag(s,st){
+  if(!st)return '';
+  const rg=(st.line&&st.line.match(/buổi (\d+)\s*[–-]\s*(\d+)/))||null, r=rg?` (nội dung buổi ${rg[1]}–${rg[2]})`:'';
+  if(st.t==='dan')return `<button type="button" class="kt-tag ${st.late?'late':'dan'}" data-a="go" data-id="${s.id}">${st.late?'⚠️':'🔔'} Buổi ${st.N}: ${st.late?'chưa dặn':'dặn'} ôn kiểm tra ${st.k} khóa</button>`;
+  if(st.t==='in')return `<span class="kt-tag in">🖨️ In bài kiểm tra ${st.k} khóa${r}</span>`;
+  const [d,m]=dmy(st.ses.fDate);
+  return `<button type="button" class="kt-tag diem" data-a="kt" data-id="${s.id}" data-ses="${st.ses.id}">✏️ Nhập điểm kiểm tra ${st.k} khóa (buổi ${esc(st.ses.fNo)}, ${d}/${m})</button>`;
+}
 function renderStudents(){
   const q=$('#sSearch').value.toLowerCase();
   const list=db.students.filter(s=>(s.name+' '+(s.cls||'')).toLowerCase().includes(q)).sort(byKhoi);
   $('#sCount').textContent=db.students.length;
   let grp=null,stt=0;
+  const sts={};db.students.forEach(s=>{try{sts[s.id]=ktStatus(s);}catch(e){}});
+  const cnt=t=>Object.values(sts).filter(x=>x&&x.t===t).length,nD=cnt('dan'),nI=cnt('in'),nM=cnt('diem');
+  $('#ktSum').innerHTML=nD+nI+nM?`<b>Kiểm tra định kỳ:</b> ${nD?`<span class="kt-tag dan">🔔 ${nD} HS cần dặn ôn</span>`:''} ${nI?`<span class="kt-tag in">🖨️ ${nI} bài cần in</span>`:''} ${nM?`<span class="kt-tag diem">✏️ ${nM} HS cần nhập điểm</span>`:''}`:'';
   $('#sTable').innerHTML='<tr><th>STT</th><th>Họ tên</th><th>Lớp</th><th>Buổi</th><th>Phụ huynh</th><th></th></tr>'+list.map(s=>{
     const ss=sessOf(s.id);const last=ss.length?ss[ss.length-1].fNo:(s.done||0);
     const k=khoi(s), head=k!==grp?`<tr><td colspan="6" class="khoi-h">${k<99?'Khối '+k:'Chưa ghi lớp'}</td></tr>`:'';
     if(k!==grp){grp=k;stt=0;} stt++;
-    return `${head}<tr><td>${stt}</td><td><b>${esc(s.name)}</b>${s.note?`<div class="hint">${esc(s.note)}</div>`:''}</td><td>${esc(s.cls)}</td><td>${last}/${s.total}</td><td>${esc(s.parent)}</td>
+    return `${head}<tr><td>${stt}</td><td><b>${esc(s.name)}</b>${s.note?`<div class="hint">${esc(s.note)}</div>`:''}${sts[s.id]?`<div>${ktTag(s,sts[s.id])}</div>`:''}</td><td>${esc(s.cls)}</td><td>${last}/${s.total}</td><td>${esc(s.parent)}</td>
     <td style="white-space:nowrap"><button class="btn" data-a="go" data-id="${s.id}" style="padding:5px 9px">✏️ Phiếu</button>
     <button class="btn g" data-a="ed" data-id="${s.id}" style="padding:5px 9px">Sửa</button>
     <button class="btn r" data-a="del" data-id="${s.id}" style="padding:5px 9px">Xóa</button></td></tr>`;}).join('');
   $$('#sTable button').forEach(b=>b.onclick=()=>{
     const s=stu(b.dataset.id);
+    if(b.dataset.a==='kt'){const x=db.sessions.find(y=>y.id===b.dataset.ses);if(!x)return; // mở lại phiếu buổi kiểm tra để nhập điểm
+      $('#fFind').value='';fillStudentSelects();$('nav.tabs button[data-v=nhap]').click();writeForm(x);setEditing(x.id);updatePreview();
+      setTimeout(()=>{$('#ktScore').scrollIntoView({behavior:'smooth',block:'center'});$('#fKtScore').focus();},150);}
     if(b.dataset.a==='go'){$('#fFind').value='';fillStudentSelects();$('#fStudent').value=s.id;prefillFor(s.id,false);$('nav.tabs button[data-v=nhap]').click();}
     if(b.dataset.a==='ed'){editingS=s.id;$('#sName').value=s.name;$('#sClass').value=s.cls||'';$('#sTotal').value=s.total;$('#sDone').value=s.done||0;$('#sParent').value=s.parent||'';$('#sNote').value=s.note||'';
       $('#hsFormTitle').textContent='Sửa thông tin: '+s.name;$('#bCancelS').style.display='';window.scrollTo({top:0,behavior:'smooth'});}
