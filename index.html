@@ -52,8 +52,8 @@
    </div>
 
    <!-- Bổ sung phiếu bị thiếu từ ảnh phiếu (ảnh xuất từ web này trên máy khác) -->
-   <div class="card" id="ocrCard">
-    <h3>📷 Bổ sung phiếu từ ảnh</h3>
+   <div class="card" id="ocrCard" style="display:none">
+    <h3>📷 Bổ sung phiếu từ ảnh <button type="button" class="btn g" id="ocrClose" style="float:right;padding:4px 10px;font-size:13px">✕ Đóng</button></h3>
     <p class="hint" id="ocrTarget">Phiếu làm trên máy khác chưa có ở đây? Tải ảnh phiếu lên – web đọc và điền sẵn vào các ô bên dưới, cô xem lại rồi bấm <b>Lưu phiếu</b>.</p>
     <div id="ocrPaste" class="ocr-paste" tabindex="0" contenteditable="true" inputmode="none" spellcheck="false" aria-label="Dán ảnh phiếu vào đây">📋 Bấm vào đây rồi <b>Ctrl+V</b> để dán ảnh phiếu<br><small>(sao chép ảnh từ Zalo: chuột phải vào ảnh → Sao chép ảnh)</small></div>
     <input type="file" id="ocrFile" accept="image/*">
@@ -320,7 +320,7 @@ function fillStudentSelects(){
 }
 // lớp ghép: đã bấm "Lưu & sang HS tiếp" thì chọn HS khác vẫn giữ nội dung chung (tới khi bấm Phiếu mới)
 let keepShared=false;
-$('#fStudent').onchange=()=>{ocrWant=null;prefillFor($('#fStudent').value,keepShared);};
+$('#fStudent').onchange=()=>{ocrHide();prefillFor($('#fStudent').value,keepShared);};
 $('#fFind').addEventListener('input',()=>{const v=$('#fStudent').value;fillStudentSelects();
   if($('#fStudent').value&&$('#fStudent').value!==v)prefillFor($('#fStudent').value,keepShared);});
 function clearFind(){if($('#fFind').value){$('#fFind').value='';fillStudentSelects();}}
@@ -361,7 +361,7 @@ function saveCurrent(){
   let rec; const i=editingId?db.sessions.findIndex(x=>x.id===editingId):-1;
   if(i>=0){rec=db.sessions[i]={...db.sessions[i],...r};}
   else{rec={id:uid(),created:String(Date.now()),...r};db.sessions.push(rec);setEditing(rec.id);}
-  SYNC.touch('sessions',rec); persist();lastSaved=stu(r.studentId).name;const[sd,sm]=dmy(r.fDate);const n=$('#saveNote');n.textContent='✓ Đã lưu phiếu ngày '+sd+'/'+sm+' của '+lastSaved+' lúc '+new Date().toTimeString().slice(0,5);n.style.display='block';toast('Đã lưu phiếu của '+lastSaved);return r;
+  SYNC.touch('sessions',rec); persist();lastSaved=stu(r.studentId).name;const[sd,sm]=dmy(r.fDate);const n=$('#saveNote');n.textContent='✓ Đã lưu phiếu ngày '+sd+'/'+sm+' của '+lastSaved+' lúc '+new Date().toTimeString().slice(0,5);n.style.display='block';toast('Đã lưu phiếu của '+lastSaved);ocrHide();return r;
 }
 $('#bSave').onclick=saveCurrent;
 $('#bSaveNext').onclick=()=>{
@@ -574,13 +574,16 @@ function ocrToForm({T,ck}){
   return warn;
 }
 let ocrBusy=false;
+// thẻ chỉ hiện khi bấm "Thiếu phiếu buổi …" ở tab Học sinh; lưu phiếu / đổi HS / bấm Đóng thì ẩn lại
+function ocrHide(){ocrWant=null;$('#ocrCard').style.display='none';$('#ocrStatus').textContent='';$('#ocrImg').style.display='none';}
+$('#ocrClose').onclick=ocrHide;
 $('#ocrFile').onchange=e=>{const f=e.target.files[0];e.target.value='';if(f)ocrFile(f);};
 // dán ảnh (Ctrl+V): bấm vào ô dán, hoặc dán ở bất cứ đâu trong trang Nhập phiếu (trừ khi đang gõ trong ô chữ)
 const pastedImg=e=>{const it=[...((e.clipboardData||{}).items||[])].find(i=>i.type.startsWith('image/'));return it&&it.getAsFile();};
 $('#ocrPaste').addEventListener('paste',e=>{e.preventDefault();e.stopPropagation();const f=pastedImg(e);
   if(f)ocrFile(f);else $('#ocrStatus').textContent='⚠️ Trong bộ nhớ chưa có ảnh – cô sao chép ảnh phiếu trước (chuột phải vào ảnh → Sao chép ảnh) rồi Ctrl+V lại.';});
 $('#ocrPaste').addEventListener('beforeinput',e=>e.preventDefault()); // ô dán không cho gõ chữ
-document.addEventListener('paste',e=>{if(!$('#v-nhap').classList.contains('on'))return;const a=document.activeElement;
+document.addEventListener('paste',e=>{if(!$('#v-nhap').classList.contains('on')||$('#ocrCard').style.display==='none')return;const a=document.activeElement;
   if(a&&a!==$('#ocrPaste')&&(a.matches('input,textarea,select')||a.isContentEditable))return;const f=pastedImg(e);if(f){e.preventDefault();ocrFile(f);}});
 async function ocrFile(f){if(ocrBusy)return;ocrBusy=true;const st=$('#ocrStatus');$('#ocrPaste').classList.add('busy');
   try{const res=await ocrRead(f);const warn=ocrToForm(res);
@@ -599,7 +602,7 @@ function startFill(sid,no){ // từ tab Học sinh: bổ sung phiếu buổi "no
   const s=stu(sid);ocrWant={sid,no:String(no)};$('#fFind').value='';fillStudentSelects();$('#fStudent').value=sid;prefillFor(sid,false);
   $('#fNo').value=no;$('#fDate').value='';['fGram','fNext','fPrep'].forEach(i=>$('#'+i).value='');updatePreview();
   $('nav.tabs button[data-v=nhap]').click();$('#ocrTarget').innerHTML=`Đang bổ sung <b>buổi ${no}</b> của <b>${esc(s.name)}</b>: tải ảnh phiếu buổi đó lên – web đọc và điền sẵn, cô xem lại rồi bấm <b>Lưu phiếu</b>. Không có ảnh thì nhập tay các ô bên dưới.`;
-  $('#ocrStatus').textContent='';$('#ocrImg').style.display='none';
+  $('#ocrStatus').textContent='';$('#ocrImg').style.display='none';$('#ocrCard').style.display='block';
   setTimeout(()=>$('#ocrCard').scrollIntoView({behavior:'smooth',block:'start'}),150);
 }
 
