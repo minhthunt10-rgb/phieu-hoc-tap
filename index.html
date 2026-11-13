@@ -264,7 +264,7 @@ function prefillFor(id,keepShared){
   const r={studentId:id,fDate:keepShared?cur.fDate:today(),fNo:nextNo(s),fTotal:s.total||12,hw:'done',fPct:100,fHwCmt:'',att:'tot',fAttCmt:'',fVScore:'',fKtScore:'',fKtMax:10,fKtCmt:''};
   if(keepShared){['fGram','fVUnit','fVNum','fNext','fNVNum','fNVUnit','fPrep'].forEach(k=>r[k]=cur[k]);}
   else if(last){ // gợi ý: nội dung hôm nay = phần "cần chuẩn bị" của buổi trước
-    r.fGram=last.fPrep||''; r.fVUnit=last.fNVUnit||''; r.fVNum=last.fNVNum||'';
+    r.fGram=String(last.fPrep||'').replace(/Ôn tập kiểm tra (giữa|cuối) khóa/gi,"Kiểm tra $1 khóa"); r.fVUnit=last.fNVUnit||''; r.fVNum=last.fNVNum||'';
     r.fNVNum=last.fNVNum||''; r.fNext=''; r.fNVUnit=''; r.fPrep='';
   }
   // điền sẵn Unit và 30 từ (cô sửa lại được)
@@ -402,6 +402,8 @@ function sheetHTML(r){
 const KT_RE=/kiểm tra định kỳ|ôn tập kiểm tra|ôn kiểm tra/i;
 const hasKt=x=>x&&x.fKtScore!==''&&x.fKtScore!=null;
 const ktKind=s=>/cuối/i.test(s||'')?'cuối':'giữa';
+// dòng giao ôn nằm ở ô "Lý thuyết và bài tập cần chuẩn bị" (fPrep); phiếu cũ có thể ở ô BTVN (fNext)
+const ktTxt=x=>(x?(x.fPrep||'')+'\n'+(x.fNext||''):'');
 function khoaSess(sid,no,date){ // các buổi trước của khóa đang học (buổi số giảm dần liên tục)
   const ss=sessOf(sid).filter(x=>x.id!==editingId&&(x.fDate||'')<=(date||'9'))
     .sort((a,b)=>((b.fDate||'')+b.created).localeCompare((a.fDate||'')+a.created));
@@ -418,13 +420,13 @@ function ktCheck(){
   if(!r.studentId||!N||!T||T<4){if(hasKt(r))showSc('Kiểm tra định kỳ','');return;}
   const K=Math.ceil(T/2),{prev,before}=khoaSess(r.studentId,N,r.fDate);
   // bài đã giao mà chưa nhập điểm (kể cả giao ở buổi cuối khóa trước)
-  let gi=-1,si=-1;prev.forEach((x,i)=>{if(KT_RE.test(x.fNext||''))gi=i;if(hasKt(x))si=i;});
+  let gi=-1,si=-1;prev.forEach((x,i)=>{if(KT_RE.test(ktTxt(x)))gi=i;if(hasKt(x))si=i;});
   let giao=null;
-  if(gi>=0&&(gi>si||(gi===si&&ktKind(prev[gi].fNext)!==ktKind(prev[gi].fKtName))))giao=prev[gi];
-  if(!prev.length&&N===1&&before&&KT_RE.test(before.fNext||'')&&!hasKt(before))giao=before;
+  if(gi>=0&&(gi>si||(gi===si&&ktKind(ktTxt(prev[gi]).split('\n').find(l=>KT_RE.test(l)))!==ktKind(prev[gi].fKtName))))giao=prev[gi];
+  if(!prev.length&&N===1&&before&&KT_RE.test(ktTxt(before))&&!hasKt(before))giao=before;
   const done=k=>prev.some(x=>hasKt(x)&&ktKind(x.fKtName)===k);
   // 1) buổi trước đã giao ôn → hôm nay nhập điểm
-  if(giao){const line=(String(giao.fNext).split('\n').find(l=>KT_RE.test(l))||''),k=ktKind(line),m=line.match(/buổi (\d+)\s*[–-]\s*(\d+)/);
+  if(giao){const line=(ktTxt(giao).split('\n').find(l=>KT_RE.test(l))||''),k=ktKind(line),m=line.match(/buổi (\d+)\s*[–-]\s*(\d+)/);
     const rg=m?`${m[1]}–${m[2]}`:`1–${giao.fNo}`,[gd,gm]=dmy(giao.fDate);
     showSc(`Kiểm tra ${k} khóa (buổi ${rg})`,`Buổi ${esc(giao.fNo)} (${gd}/${gm}) cô đã giao ôn <b>kiểm tra ${k} khóa</b> (nội dung buổi ${rg}). Hôm nay nhập <b>điểm + nhận xét</b> để báo phụ huynh.`);
     return;}
@@ -432,8 +434,8 @@ function ktCheck(){
   const tg=!done('giữa')&&N<T-1?{k:'giữa',at:K}:!done('cuối')?{k:'cuối',at:T}:null;
   if(hasKt(r))showSc(`Kiểm tra ${tg?tg.k:'cuối'} khóa`,''); // cô tự nhập điểm dù chưa được nhắc
   if(!tg||N<tg.at-1)return;
-  if(KT_RE.test(r.fNext)){box.className='kt-remind ok';box.innerHTML=`✓ Đã giao ôn kiểm tra ${tg.k} khóa. Buổi sau web sẽ nhắc cô nhập <b>điểm + nhận xét</b>.`;box.style.display='block';return;}
-  const lastSc=[...prev].reverse().find(hasKt), from=lastSc?+lastSc.fNo+1:(prev[0]?+prev[0].fNo:N);
+  if(KT_RE.test(ktTxt(r))){box.className='kt-remind ok';box.innerHTML=`✓ Đã giao ôn kiểm tra ${tg.k} khóa. Buổi sau web sẽ nhắc cô nhập <b>điểm + nhận xét</b>.`;box.style.display='block';return;}
+  const lastSc=[...prev].reverse().find(hasKt), from=lastSc?+lastSc.fNo+1:(tg.k==='giữa'?1:K+1); // chưa ghi đủ phiếu trên web vẫn tính từ đầu khóa / sau giữa khóa
   const all=[...prev,r].filter(x=>+x.fNo>=from);
   const items=all.map(x=>{const [d,m]=dmy(x.fDate);const g=String(x.fGram||'').split('\n').map(s=>s.trim()).filter(Boolean).join(' · ');
     const v=String(x.fVUnit||'').trim();return `<li><b>Buổi ${esc(x.fNo)}</b> (${d}/${m}): ${esc(g)||'<i>chưa ghi nội dung</i>'}${v&&v!=='Unit'?` · từ vựng ${esc(v)}`:''}</li>`;}).join('');
@@ -441,10 +443,11 @@ function ktCheck(){
   box.className='kt-remind'+(late?' late':'');
   box.innerHTML=`${late?`⚠️ <b>Chưa giao ôn kiểm tra ${tg.k} khóa!</b>`:`🔔 <b>Sắp kiểm tra ${tg.k} khóa</b> (khóa ${T} buổi).`}
     Giao HS ôn tập để <b>${nxt}</b> kiểm tra nội dung buổi ${rg}:
-    <ul>${items}</ul><button type="button" class="btn" id="ktAdd">➕ Thêm dòng ôn kiểm tra vào BTVN</button>
+    <ul>${items}${all.length<N-from+1?`<li class="hint">Các buổi khác chưa có phiếu trên web.</li>`:''}</ul>
+    <button type="button" class="btn" id="ktAdd">➕ Ghi "Ôn tập kiểm tra" vào ô Lý thuyết cần chuẩn bị</button>
     ${N>=T?`<p class="hint" style="margin:8px 0 0">Nếu hôm nay đã cho con kiểm tra luôn thì nhập điểm ở thẻ <b>📝 Kiểm tra</b> phía trên.</p>`:''}`;
   box.style.display='block';
-  $('#ktAdd').onclick=()=>{const t=$('#fNext');const line=`Ôn tập kiểm tra ${tg.k} khóa ${nxt} (nội dung buổi ${rg})`;
+  $('#ktAdd').onclick=()=>{const t=$('#fPrep');const line=`Ôn tập kiểm tra ${tg.k} khóa (nội dung buổi ${rg})`;
     t.value=t.value.trim()?t.value.trim()+'\n'+line:line;updatePreview();};
   if(N>=T)showSc(`Kiểm tra cuối khóa (buổi ${rg})`,`Hôm nay là buổi cuối khóa. Nếu đã cho con <b>kiểm tra cuối khóa</b> thì nhập điểm + nhận xét ở đây.`);
 }
