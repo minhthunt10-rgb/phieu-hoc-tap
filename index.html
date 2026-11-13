@@ -40,7 +40,7 @@
     </div>
    </div>
 
-   <!-- Kiểm tra định kỳ giữa khóa: hiện khi buổi trước đã giao ôn kiểm tra -->
+   <!-- Kiểm tra định kỳ (giữa + cuối khóa): hiện khi buổi trước đã giao ôn kiểm tra -->
    <div class="card kt-card" id="ktScore" style="display:none">
     <h3>📝 Kiểm tra định kỳ hôm nay</h3>
     <div class="kt-remind" id="ktScoreHint"></div>
@@ -376,7 +376,7 @@ function sheetHTML(r){
     </div>
     <div class="sh-h purple">MỤC TIÊU/NỘI DUNG BUỔI HỌC</div>
     <div class="sh-2">
-      <div class="sw p"><div class="sh-sbox purple"><div class="t">Ngữ pháp</div><div class="fit" data-max="15" data-force="1"><div class="hw">${esc(r.fGram)}${hasKt(r)?`${r.fGram?'\n':''}Kiểm tra định kỳ: ${esc(r.fKtScore)}/${esc(r.fKtMax||10)} điểm`:''}</div></div></div></div>
+      <div class="sw p"><div class="sh-sbox purple"><div class="t">Ngữ pháp</div><div class="fit" data-max="15" data-force="1"><div class="hw">${esc(r.fGram)}${hasKt(r)?`${r.fGram?'\n':''}${/(giữa|cuối) khóa/i.test(r.fKtName||"")?"Kiểm tra "+r.fKtName.match(/(giữa|cuối) khóa/i)[0]:"Kiểm tra định kỳ"}: ${esc(r.fKtScore)}/${esc(r.fKtMax||10)} điểm`:''}</div></div></div></div>
       <div class="sw p"><div class="sh-sbox purple"><div class="t">Từ vựng</div><div class="fit" data-max="15">${vocab}</div></div></div>
     </div>
     <div class="sh-h navy">Tinh thần học tập của học viên</div>
@@ -395,46 +395,58 @@ function sheetHTML(r){
    <div class="sh-foot"><div><span>THÔNG TIN LIÊN HỆ</span><span>SĐT: 0966.101.957 (Ms. Minh Thư)</span><span>GROW WITH ENGLISH</span></div></div>
   </div>`;
 }
-/* ---------- Nhắc kiểm tra định kỳ giữa khóa (cô yêu cầu 2026-11-13) ----------
-   Buổi kiểm tra K = nửa khóa (12 buổi → 6, 8 buổi → 4). Từ buổi K-1 web nhắc giao ôn kiểm tra ở ô BTVN
-   (quên thì các buổi sau vẫn nhắc). Phiếu nào có dòng "ôn tập kiểm tra" thì buổi sau hiện ô nhập điểm + nhận xét. */
+/* ---------- Nhắc kiểm tra định kỳ: 2 lần/khóa – GIỮA khóa + CUỐI khóa (cô chốt 2026-11-13) ----------
+   Giữa khóa: kiểm tra buổi ceil(T/2) (12 buổi → 6, 8 buổi → 4), nhắc giao ôn từ buổi trước đó.
+   Cuối khóa: kiểm tra buổi T, nhắc giao ôn từ buổi T-1. Quên thì các buổi sau vẫn nhắc (khung đỏ).
+   Phiếu nào có dòng "ôn tập kiểm tra" thì buổi sau hiện ô nhập điểm + nhận xét. */
 const KT_RE=/kiểm tra định kỳ|ôn tập kiểm tra|ôn kiểm tra/i;
 const hasKt=x=>x&&x.fKtScore!==''&&x.fKtScore!=null;
+const ktKind=s=>/cuối/i.test(s||'')?'cuối':'giữa';
 function khoaSess(sid,no,date){ // các buổi trước của khóa đang học (buổi số giảm dần liên tục)
   const ss=sessOf(sid).filter(x=>x.id!==editingId&&(x.fDate||'')<=(date||'9'))
     .sort((a,b)=>((b.fDate||'')+b.created).localeCompare((a.fDate||'')+a.created));
   const out=[];let lim=+no;
   for(const x of ss){const n=+x.fNo;if(!n||n>lim)break;if(n===lim)continue;out.unshift(x);lim=n;}
-  return out;
+  return {prev:out,before:ss[0]};
 }
 function ktCheck(){
-  const r=readForm(),box=$('#ktRemind'),sc=$('#ktScore');
+  const r=readForm(),box=$('#ktRemind'),sc=$('#ktScore'),hint=$('#ktScoreHint');
   const N=+r.fNo,T=+r.fTotal;
-  if(!r.studentId||!N||!T||T<4){box.style.display='none';sc.style.display=hasKt(r)?'block':'none';return;}
-  const K=Math.ceil(T/2),prev=khoaSess(r.studentId,N,r.fDate);
-  const done=prev.find(hasKt), giao=[...prev].reverse().find(x=>KT_RE.test(x.fNext||''));
+  const showSc=(name,html)=>{if(name&&!(hasKt(r)&&$('#fKtName').value))$('#fKtName').value=name;
+    hint.innerHTML=hasKt(r)?`✓ Đã nhập điểm <b>${esc($('#fKtName').value||'kiểm tra')}</b>. Điểm hiện trên phiếu (ô Ngữ pháp) và tự vào <b>Báo cáo tháng</b>.`:html;sc.style.display='block';};
+  box.style.display='none';sc.style.display=hasKt(r)?'block':'none';
+  if(!r.studentId||!N||!T||T<4){if(hasKt(r))showSc('Kiểm tra định kỳ','');return;}
+  const K=Math.ceil(T/2),{prev,before}=khoaSess(r.studentId,N,r.fDate);
+  // bài đã giao mà chưa nhập điểm (kể cả giao ở buổi cuối khóa trước)
+  let gi=-1,si=-1;prev.forEach((x,i)=>{if(KT_RE.test(x.fNext||''))gi=i;if(hasKt(x))si=i;});
+  let giao=null;
+  if(gi>=0&&(gi>si||(gi===si&&ktKind(prev[gi].fNext)!==ktKind(prev[gi].fKtName))))giao=prev[gi];
+  if(!prev.length&&N===1&&before&&KT_RE.test(before.fNext||'')&&!hasKt(before))giao=before;
+  const done=k=>prev.some(x=>hasKt(x)&&ktKind(x.fKtName)===k);
   // 1) buổi trước đã giao ôn → hôm nay nhập điểm
-  if(!done&&(giao||hasKt(r))){
-    const g=giao||{fNo:N-1};const [gd,gm]=dmy(giao?giao.fDate:r.fDate);
-    $('#fKtName').value=`Kiểm tra định kỳ (buổi 1–${g.fNo})`;
-    $('#ktScoreHint').innerHTML=hasKt(r)?`✓ Đã nhập điểm. Điểm hiện trên phiếu (ô Ngữ pháp) và tự vào <b>Báo cáo tháng</b>.`
-      :`Buổi ${g.fNo}${giao?` (${gd}/${gm})`:''} cô đã giao ôn kiểm tra nội dung <b>buổi 1–${g.fNo}</b>. Hôm nay nhập <b>điểm + nhận xét</b> để báo phụ huynh.`;
-    sc.style.display='block';
-  } else sc.style.display=hasKt(r)?'block':'none';
-  // 2) nhắc giao ôn kiểm tra ở ô BTVN kế tiếp
-  if(done||giao||N<K-1||N>=T){box.style.display='none';return;}
-  if(KT_RE.test(r.fNext)){box.className='kt-remind ok';box.innerHTML=`✓ Đã giao ôn kiểm tra. Buổi sau web sẽ nhắc cô nhập <b>điểm + nhận xét</b>.`;box.style.display='block';return;}
-  const all=[...prev,r];
+  if(giao){const line=(String(giao.fNext).split('\n').find(l=>KT_RE.test(l))||''),k=ktKind(line),m=line.match(/buổi (\d+)\s*[–-]\s*(\d+)/);
+    const rg=m?`${m[1]}–${m[2]}`:`1–${giao.fNo}`,[gd,gm]=dmy(giao.fDate);
+    showSc(`Kiểm tra ${k} khóa (buổi ${rg})`,`Buổi ${esc(giao.fNo)} (${gd}/${gm}) cô đã giao ôn <b>kiểm tra ${k} khóa</b> (nội dung buổi ${rg}). Hôm nay nhập <b>điểm + nhận xét</b> để báo phụ huynh.`);
+    return;}
+  // 2) bài kiểm tra cần giao tiếp theo
+  const tg=!done('giữa')&&N<T-1?{k:'giữa',at:K}:!done('cuối')?{k:'cuối',at:T}:null;
+  if(hasKt(r))showSc(`Kiểm tra ${tg?tg.k:'cuối'} khóa`,''); // cô tự nhập điểm dù chưa được nhắc
+  if(!tg||N<tg.at-1)return;
+  if(KT_RE.test(r.fNext)){box.className='kt-remind ok';box.innerHTML=`✓ Đã giao ôn kiểm tra ${tg.k} khóa. Buổi sau web sẽ nhắc cô nhập <b>điểm + nhận xét</b>.`;box.style.display='block';return;}
+  const lastSc=[...prev].reverse().find(hasKt), from=lastSc?+lastSc.fNo+1:(prev[0]?+prev[0].fNo:N);
+  const all=[...prev,r].filter(x=>+x.fNo>=from);
   const items=all.map(x=>{const [d,m]=dmy(x.fDate);const g=String(x.fGram||'').split('\n').map(s=>s.trim()).filter(Boolean).join(' · ');
     const v=String(x.fVUnit||'').trim();return `<li><b>Buổi ${esc(x.fNo)}</b> (${d}/${m}): ${esc(g)||'<i>chưa ghi nội dung</i>'}${v&&v!=='Unit'?` · từ vựng ${esc(v)}`:''}</li>`;}).join('');
-  const late=N>K;
+  const late=N>=tg.at, nxt=N+1>T?'buổi 1 khóa sau':'buổi '+(N+1), rg=`${from}–${N}`;
   box.className='kt-remind'+(late?' late':'');
-  box.innerHTML=`${late?'⚠️ <b>Đã qua giữa khóa mà chưa giao ôn kiểm tra!</b>':`🔔 <b>Sắp kiểm tra định kỳ</b> (giữa khóa ${T} buổi).`}
-    Giao HS ôn tập để <b>buổi ${N+1}</b> kiểm tra nội dung buổi ${all[0].fNo}–${N}:
-    <ul>${items}</ul><button type="button" class="btn" id="ktAdd">➕ Thêm dòng ôn kiểm tra vào BTVN</button>`;
+  box.innerHTML=`${late?`⚠️ <b>Chưa giao ôn kiểm tra ${tg.k} khóa!</b>`:`🔔 <b>Sắp kiểm tra ${tg.k} khóa</b> (khóa ${T} buổi).`}
+    Giao HS ôn tập để <b>${nxt}</b> kiểm tra nội dung buổi ${rg}:
+    <ul>${items}</ul><button type="button" class="btn" id="ktAdd">➕ Thêm dòng ôn kiểm tra vào BTVN</button>
+    ${N>=T?`<p class="hint" style="margin:8px 0 0">Nếu hôm nay đã cho con kiểm tra luôn thì nhập điểm ở thẻ <b>📝 Kiểm tra</b> phía trên.</p>`:''}`;
   box.style.display='block';
-  $('#ktAdd').onclick=()=>{const t=$('#fNext');const line=`Ôn tập kiểm tra định kỳ buổi ${N+1} (nội dung buổi ${all[0].fNo}–${N})`;
+  $('#ktAdd').onclick=()=>{const t=$('#fNext');const line=`Ôn tập kiểm tra ${tg.k} khóa ${nxt} (nội dung buổi ${rg})`;
     t.value=t.value.trim()?t.value.trim()+'\n'+line:line;updatePreview();};
+  if(N>=T)showSc(`Kiểm tra cuối khóa (buổi ${rg})`,`Hôm nay là buổi cuối khóa. Nếu đã cho con <b>kiểm tra cuối khóa</b> thì nhập điểm + nhận xét ở đây.`);
 }
 const KT_CHIPS=['Con làm bài tốt, nắm chắc kiến thức đã học.','Con làm bài cẩn thận, tiến bộ hơn trước.','Con cần ôn lại từ vựng các Unit đã học.','Con còn sai phần ngữ pháp …, cô sẽ ôn lại cho con.','PH nhắc con ôn bài thêm ở nhà giúp cô ạ.'];
 $('#ktChips').innerHTML=KT_CHIPS.map(t=>`<button type="button">${esc(t)}</button>`).join('');
