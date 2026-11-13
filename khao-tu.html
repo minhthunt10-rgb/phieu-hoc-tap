@@ -68,7 +68,7 @@
       <button class="btn n" id="kStuMode">🧑‍🎓 HS làm trên máy này</button>
       <button class="btn g" id="kBlank">🖨️ Tải đề trống (làm trên giấy)</button>
     </div>
-    <p class="hint"><b>Gửi link:</b> gửi link qua Zalo, HS làm trên điện thoại/máy của con, nộp bài là web tự chấm. HS bấm <b>Gửi kết quả cho cô</b> → cô bấm link kết quả con gửi về là điểm tự lưu vào đây (trên điện thoại nhớ chọn <b>Mở bằng trình duyệt</b> – Chrome/Safari – đừng mở trong Zalo). <b>Trên giấy:</b> bấm <b>✓ Tích đúng hết</b>, rồi chỉ cần bấm ✗ ở các từ HS viết sai. <b>Trên máy này:</b> đưa máy cho HS, HS gõ rồi bấm Nộp bài – web tự chấm, TG vẫn sửa được ✓/✗.</p>
+    <p class="hint"><b>Gửi link:</b> link ngắn gửi qua Zalo, HS làm trên điện thoại/máy của con, nộp bài là web tự chấm và <b>điểm tự về trang này</b> (mở trang là thấy, khoảng 1 phút cập nhật 1 lần) – con không phải gửi lại gì. <b>Trên giấy:</b> bấm <b>✓ Tích đúng hết</b>, rồi chỉ cần bấm ✗ ở các từ HS viết sai. <b>Trên máy này:</b> đưa máy cho HS, HS gõ rồi bấm Nộp bài – web tự chấm, TG vẫn sửa được ✓/✗.</p>
     <div class="btns" style="margin:0 0 10px"><button class="btn" id="kAllOk">✓ Tích đúng hết</button><button class="btn g" id="kClear">Bỏ chấm</button></div>
     <div id="kTable"></div>
     <div class="btns">
@@ -113,7 +113,7 @@
 </div></div>
 <div class="toast" id="toast"></div>
 
-<script src="sync.js?v=202611051400"></script>
+<script src="sync.js?v=202611132100"></script>
 <script>
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 // trang riêng cho trợ giảng: không nối với phiếu mặt trước; HS + bài khảo đồng bộ qua Sheet chung (sync.js)
@@ -136,6 +136,6 @@ function download(blob,name){const a=document.createElement('a');a.href=URL.crea
 $('#appLogo').src=window.LOGO||'';
 </script>
 <script src="khao-link.js?v=202611131930"></script>
-<script src="khao-tu.js?v=202611131930"></script>
+<script src="khao-tu.js?v=202611132100"></script>
 </body>
 </html>

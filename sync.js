@@ -7,6 +7,7 @@
    SYNC_URL trống = chế độ thử: "máy chủ" giả nằm trong localStorage của trình duyệt. */
 var SYNC_URL = 'https://script.google.com/macros/s/AKfycbyTeTQOBHySLBjd1FTP5st8gnoOdeK92T2gXVAsjWSyVsH4mxZkIDnXtlwO6p6MRQya/exec';
 
+try { if (location.hostname === 'localhost' && localStorage.getItem('gwe-sync-demo')) SYNC_URL = ''; } catch (e) {} // thử trên máy
 (function () {
   const CODE_KEY = 'gwe-sync-code', DEMO_KEY = 'gwe-sync-demo-server';
   const nameKey = n => String(n || '').normalize('NFC').toLowerCase().replace(/\s+/g, ' ').trim();
@@ -16,6 +17,13 @@ var SYNC_URL = 'https://script.google.com/macros/s/AKfycbyTeTQOBHySLBjd1FTP5st8g
   /* ---------- "máy chủ" giả cho chế độ thử (cùng luật với Apps Script) ---------- */
   function demoCall(d) {
     let srv = {}; try { srv = JSON.parse(localStorage.getItem(DEMO_KEY) || '{}'); } catch (e) {}
+    if (/link/i.test(d.action)) { // link khảo từ ngắn (giống Apps Script)
+      const L = srv.__links = srv.__links || {}, x = L[d.id], done = o => { localStorage.setItem(DEMO_KEY, JSON.stringify(srv)); return Promise.resolve(o); };
+      if (d.action === 'putLink') { if (x) return done({ ok: false, code: 'dup' }); L[d.id] = { de: d.de, kq: '' }; return done({ ok: true }); }
+      if (d.action === 'getLink') return done(x ? { ok: true, de: x.de, kq: x.kq || null } : { ok: false, code: 'nolink' });
+      if (d.action === 'submitLink') { if (!x) return done({ ok: false, code: 'nolink' }); if (!x.kq) x.kq = { a: d.a, at: d.at }; return done({ ok: true }); }
+      if (d.action === 'linkResults') return done({ ok: true, items: Object.keys(L).filter(k => L[k].kq).map(k => ({ id: k, de: L[k].de, kq: L[k].kq })) });
+    }
     if (d.action === 'pull') {
       const data = {}; Object.keys(srv).forEach(k => data[k] = Object.values(srv[k]));
       return Promise.resolve({ ok: true, data });
@@ -33,6 +41,7 @@ var SYNC_URL = 'https://script.google.com/macros/s/AKfycbyTeTQOBHySLBjd1FTP5st8g
     if (!SYNC_URL) return demoCall(d);
     return fetch(SYNC_URL, { method: 'POST', body: JSON.stringify({ ...d, code: getCode() }) }).then(r => r.json());
   }
+  window.syncCall = call; // link khảo từ ngắn (khao-tu.js, lam-khao-tu.html)
 
   /* opts: app, cols[], get(col)→mảng, set(col,mảng), save(), onChange(), remap(cũ,mới) */
   window.createSync = function (opts) {

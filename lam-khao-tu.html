@@ -9,6 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="logo.js?v=202611111700"></script>
 <script src="khao-link.js?v=202611131930"></script>
+<script src="sync.js?v=202611132100"></script>
 <link rel="stylesheet" href="style.css?v=202611141100">
 <style>
 main{max-width:640px}
@@ -27,6 +28,7 @@ main{max-width:640px}
 .prog{position:sticky;top:67px;z-index:5;background:var(--bg);padding:6px 0;font-weight:700;color:var(--muted);font-size:13px}
 .btn.big{font-size:16px;padding:13px 18px;flex:1}
 .err{color:#c62828;font-weight:700}
+.sent{color:var(--green);font-weight:800;font-size:16px;margin:12px 0 0}
 </style>
 </head>
 <body>
@@ -72,17 +74,29 @@ function renderDo(){
     renderResult();window.scrollTo({top:0});
   };
 }
+// link ngắn: nộp bài thẳng lên Sheet của cô
+let SHORT=null;
+async function sendSheet(){
+  if(!SHORT||st.sent)return;
+  const n=P.w.filter((w,i)=>klCheck(st.a[i],w[1])).length;
+  try{const r=await syncCall({action:'submitLink',id:SHORT,a:st.a,at:st.at,score:n+'/'+P.w.length});if(r&&r.ok){st.sent=true;keep();}}catch(e){}
+}
 let rl=null; // link kết quả tạo sẵn (nén) để nút Gửi chạy ngay khi bấm
 const resultLink=async()=>rl||(rl=await klMake('khao-tu.html','kq','kz',{...P,a:st.a,at:st.at}));
-function renderResult(){
+async function renderResult(){
+  if(SHORT&&!st.sent){$('#app').innerHTML=head()+'<div class="card score"><div class="msg">⏳ Đang gửi bài cho cô…</div></div>';await sendSheet();}
   const ok=P.w.map((w,i)=>klCheck(st.a[i],w[1])), n=ok.filter(Boolean).length, tot=P.w.length, pct=n/tot;
   const msg=pct===1?'Con thuộc hết các từ. Giỏi lắm! 🎉':pct>=.8?'Con làm tốt lắm! Học lại các từ sai bên dưới nhé.':pct>=.5?'Con cố gắng học lại các từ sai rồi buổi sau cô khảo lại nhé.':'Con cần học kĩ lại bài này nhé, cô tin con làm được!';
   $('#app').innerHTML=head()+`
    <div class="card score"><div class="hint">Kết quả của con</div><div class="big">${n}/${tot}</div><div class="msg">${msg}</div>
-     <div class="btns"><button class="btn n big" id="send">📤 Gửi kết quả cho cô</button></div>
-     <p class="hint" style="margin:8px 0 0">Bấm nút trên, chọn <b>Zalo</b> rồi gửi cho cô (hoặc dán vào khung chat Zalo của lớp). Cô cần nhận được tin này mới có điểm.</p></div>
+     ${SHORT&&st.sent?'<p class="sent">✅ Bài của con đã tự gửi về cho cô.</p>':`
+     ${SHORT?'<p class="err" style="margin:10px 0 0">⚠️ Chưa gửi được bài cho cô (mạng yếu?).</p><div class="btns"><button class="btn o big" id="retry">🔄 Gửi lại</button></div>':''}
+     <div class="btns"><button class="btn n big" id="send">📤 Gửi kết quả cho cô qua Zalo</button></div>
+     <p class="hint" style="margin:8px 0 0">Bấm nút trên, chọn <b>Zalo</b> rồi gửi cho cô (hoặc dán vào khung chat Zalo của lớp). Cô cần nhận được tin này mới có điểm.</p>`}</div>
    <div id="list">${P.w.map((w,i)=>`<div class="stu-row ${ok[i]?'ok':'no'}"><b>${i+1}</b><div class="vi">${esc(w[0])} <span class="mk">${ok[i]?'✓':'✗'}</span></div>
      <input type="text" disabled value="${esc(st.a[i]||'(bỏ trống)')}">${ok[i]?'':`<div class="fix">Đáp án: <span class="ans">${esc(w[1])}</span></div>`}</div>`).join('')}</div>`;
+  if(!$('#send'))return;
+  if($('#retry'))$('#retry').onclick=async()=>{$('#retry').disabled=true;await sendSheet();if(st.sent)renderResult();else{$('#retry').disabled=false;toast('Vẫn chưa gửi được – con kiểm tra mạng, hoặc gửi qua Zalo bên dưới');}};
   resultLink();
   $('#send').onclick=async()=>{
     const url=await resultLink(), text=`Con ${P.nm} đã làm xong khảo từ${P.u&&P.u.trim()!=='Unit'?' '+P.u:''}: đúng ${n}/${tot} từ. Cô bấm link để lưu điểm:`;
@@ -93,12 +107,21 @@ function renderResult(){
   };
 }
 (async()=>{
-  P=(await klRead('de','z')).data;
+  const mk=location.hash.match(/[#&]k=([a-z0-9]{4,12})/);
+  if(mk){ // link ngắn: lấy bài từ Sheet của cô
+    SHORT=mk[1];
+    let r=null; try{r=await syncCall({action:'getLink',id:SHORT});}catch(e){}
+    if(!r||!r.ok){$('#app').innerHTML='<div class="card"><p class="err">'+(r&&r.code==='nolink'?'Không tìm thấy bài khảo này.':'Chưa tải được bài – con kiểm tra mạng rồi tải lại trang nhé.')
+      +'</p><p class="hint">Nếu vẫn lỗi, con nhờ cô gửi lại link.</p><div class="btns"><button class="btn" onclick="location.reload()">🔄 Tải lại</button></div></div>';return;}
+    P=klDecode(r.de); if(P)P.id=SHORT;
+    if(P&&r.kq)P._kq=r.kq; // đã nộp rồi (có thể trên máy khác)
+  } else P=(await klRead('de','z')).data;
   if(!P||!Array.isArray(P.w)||!P.w.length){
     $('#app').innerHTML='<div class="card"><p class="err">Link bài khảo bị lỗi hoặc thiếu.</p><p class="hint">Con nhờ cô gửi lại link nhé (bấm giữ link → Sao chép, đừng cắt bớt).'
       +(window.klZip?'':' Máy con đang dùng trình duyệt cũ – con mở link bằng <b>Chrome</b> hoặc cập nhật trình duyệt nhé.')+'</p></div>';return;}
   SKEY='gwe-lam-khao-'+P.id;
   try{const s=localStorage.getItem(SKEY);if(s)st={...st,...JSON.parse(s)};}catch(e){}
+  if(P._kq){st={a:P._kq.a||[],done:true,at:P._kq.at,sent:true};keep();} // Sheet giữ bài nộp đầu tiên
   if(st.done)renderResult(); else renderDo();
 })();
 </script>

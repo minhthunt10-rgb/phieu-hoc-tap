@@ -159,13 +159,21 @@ $('#kLink').onclick=async()=>{
   if(!kt.items.length){toast('Tạo bài khảo trước đã ạ');return;}
   const miss=kt.items.filter(x=>!x.vi||!x.en).length;
   if(miss&&!confirm(`${miss} từ còn thiếu nghĩa hoặc đáp án. Vẫn gửi link?`))return;
-  const s=stu(kt.studentId);
-  const url=await klMake('lam-khao-tu.html','de','z',{v:1,id:uid(),s:s.id,nm:s.name,c:s.cls||'',d:kt.date,no:kt.no,u:(kt.unit||'').trim(),
-    w:kt.items.map(x=>[x.vi,x.en])});
-  const unit=(kt.unit||'').trim(), text=`Bài khảo từ vựng${unit&&unit!=='Unit'?' '+unit:''} của con ${tenRieng(s.name)} (${kt.items.length} từ). Con bấm link để làm bài, làm xong bấm "Gửi kết quả cho cô" nhé:`;
+  const s=stu(kt.studentId), unit=(kt.unit||'').trim();
+  const mk=()=>{const c='abcdefghijkmnpqrstuvwxyz23456789';let r='';for(let i=0;i<6;i++)r+=c[Math.floor(Math.random()*c.length)];return r;};
+  const pay=id=>({v:1,id,s:s.id,nm:s.name,c:s.cls||'',d:kt.date,no:kt.no,u:unit,w:kt.items.map(x=>[x.vi,x.en])});
+  // LINK NGẮN: bài cất lên Sheet (trang LinkKhao), link chỉ chứa mã 6 kí tự. Sheet chưa cập nhật / mất mạng → link dài như cũ
+  let url='', short=false;
+  toast('⏳ Đang tạo link…');
+  for(let k=0;k<2&&!url;k++){const id=mk();
+    try{const r=await syncCall({action:'putLink',id,de:klEncode(pay(id)),nm:s.name,u:unit,n:kt.items.length});
+      if(r&&r.ok){url=klUrl('lam-khao-tu.html','k='+id);short=true;} else if(!r||r.code!=='dup')break;}catch(e){break;}}
+  if(!url)url=await klMake('lam-khao-tu.html','de','z',pay(uid()));
+  const text=`Bài khảo từ vựng${unit&&unit!=='Unit'?' '+unit:''} của con ${tenRieng(s.name)} (${kt.items.length} từ). Con bấm link để làm bài`+(short?', nộp bài là điểm tự gửi về cô:':', làm xong bấm "Gửi kết quả cho cô" nhé:');
+  if(!short)toast('⚠️ Chưa nối được Sheet (chưa cập nhật mã Apps Script hoặc chưa nhập mã nhóm) – dùng link dài');
   try{
     if(navigator.share&&/Android|iPhone|iPad|Mobi/i.test(navigator.userAgent)){await navigator.share({text:text+'\n'+url});return;}
-    await navigator.clipboard.writeText(text+'\n'+url);toast(`Đã sao chép link bài của ${tenRieng(s.name)} – dán vào Zalo gửi con`);
+    await navigator.clipboard.writeText(text+'\n'+url);toast(short?`Đã sao chép link bài của ${tenRieng(s.name)} – dán vào Zalo gửi con`:`Đã sao chép link (link DÀI vì chưa nối được Sheet – cô kiểm tra mã nhóm / bản Apps Script mới)`);
   }catch(e){if(e.name!=='AbortError')prompt('Sao chép link gửi HS:',url);}
 };
 // cô bấm link kết quả HS gửi về: khao-tu.html#kq=…
@@ -174,15 +182,39 @@ async function ktReceive(){
   history.replaceState(null,'',location.pathname+location.search);
   const P=r.data;
   if(!P||!Array.isArray(P.w)||!Array.isArray(P.a)){toast('Link kết quả bị lỗi (có thể bị cắt bớt) – nhờ HS gửi lại');return;}
+  const tid='L'+P.id, old=db.tests.find(x=>x.id===tid);
+  const open=t=>{$('#kFind').value='';Object.assign(kt,{studentId:t.studentId,date:t.date,no:t.no,unit:t.unit,n:t.n,items:t.items.map(x=>({...x})),testId:t.id});ktOpen();};
+  if(old){open(old);toast(`Bài này đã lưu rồi: đúng ${old.score}/${old.n}`);return;}
+  const n=P.w.filter((w,i)=>klCheck(P.a[i],w[1])).length;
+  if(!confirm(`Nhận bài khảo từ của ${P.nm}${P.u&&P.u!=='Unit'?' – '+P.u:''} (ngày ${dmy(P.d)[0]}/${dmy(P.d)[1]}): đúng ${n}/${P.w.length} từ.\n\nLưu điểm này?`))return;
+  const t=ktStoreResult(P); open(t); toast(`Đã lưu: đúng ${t.score}/${t.n}`);
+}
+// lưu bài HS nộp qua link vào db.tests (không đụng bài cô đang soạn) + cập nhật từ chưa thuộc
+function ktStoreResult(P){
   const key=n=>String(n||'').normalize('NFC').toLowerCase().replace(/\s+/g,' ').trim();
   let s=stu(P.s)||db.students.find(x=>key(x.name)===key(P.nm));
-  const items=P.w.map((w,i)=>({vi:w[0],en:w[1],ans:P.a[i]||'',ok:klCheck(P.a[i],w[1])})), n=items.filter(x=>x.ok).length;
-  const tid='L'+P.id, old=db.tests.find(x=>x.id===tid);
-  const open=()=>{$('#kFind').value='';Object.assign(kt,{studentId:s.id,date:P.d,no:P.no,unit:P.u,n:items.length,items,testId:tid});ktOpen();};
-  if(old&&s){open();toast(`Bài này đã lưu rồi: ${s.name} đúng ${old.score}/${old.n}`);return;}
-  if(!confirm(`Nhận bài khảo từ của ${P.nm}${P.u&&P.u!=='Unit'?' – '+P.u:''} (ngày ${dmy(P.d)[0]}/${dmy(P.d)[1]}): đúng ${n}/${items.length} từ.\n\nLưu điểm này?`))return;
   if(!s){s={id:uid(),name:P.nm,cls:P.c||'',total:12,done:0};db.students.push(s);SYNC.touch('students',s);}
-  open(); if(ktSave())window.scrollTo({top:$('#kTable').getBoundingClientRect().top+scrollY-90,behavior:'smooth'});
+  const items=P.w.map((w,i)=>({vi:w[0],en:w[1],ans:String(P.a[i]||'').trim(),ok:klCheck(P.a[i],w[1])}));
+  const t={id:'L'+P.id,studentId:s.id,date:P.d,no:P.no,unit:P.u||'',n:items.length,items,score:items.filter(x=>x.ok).length,created:P.at||Date.now()};
+  db.tests.push(t); SYNC.touch('tests',t);
+  const p=db.vocab[s.id]||[];
+  items.forEach(x=>{const k=kNorm(x.en);if(!k)return;const j=p.findIndex(w=>kNorm(w.en)===k);
+    if(x.ok){if(j>=0)p.splice(j,1);} else if(j<0)p.push({en:x.en,vi:x.vi,since:t.date});});
+  db.vocab[s.id]=p; persist();
+  if(kt.studentId===s.id){ktHist();ktPool();}
+  return t;
+}
+// tự lấy bài HS đã nộp qua link ngắn (Sheet, trang LinkKhao)
+let linkBusy=false;
+async function ktPullLinks(){
+  if(linkBusy)return; linkBusy=true;
+  try{const r=await syncCall({action:'linkResults'}); if(!r||!r.ok)return;
+    const got=[];
+    (r.items||[]).forEach(it=>{if(db.tests.some(x=>x.id==='L'+it.id))return;
+      const P=klDecode(it.de); if(!P||!Array.isArray(P.w)||!it.kq)return;
+      P.id=it.id; P.a=it.kq.a||[]; P.at=it.kq.at; const t=ktStoreResult(P); got.push(`${tenRieng(P.nm)} ${t.score}/${t.n}`);});
+    if(got.length)toast(`📥 Đã nhận bài qua link: ${got.join(', ')}`);
+  }catch(e){}finally{linkBusy=false;}
 }
 
 /* ---------- Lưu: kết quả + từ chưa thuộc ---------- */
@@ -347,4 +379,6 @@ const SYNC=createSync({app:'khao-tu',cols:['students','tests'],get:c=>db[c],set:
 
 ktOpen();
 ktReceive(); addEventListener('hashchange',ktReceive);
+setTimeout(ktPullLinks,1500); setInterval(()=>{if(document.visibilityState==='visible')ktPullLinks();},60000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')ktPullLinks();});
 document.fonts&&document.fonts.ready.then(()=>ktRender());
