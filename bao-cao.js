@@ -31,13 +31,13 @@ function summary(s,mon){
   const ss=db.sessions.filter(x=>x.studentId===s.id&&String(x.fDate||'').startsWith(mon)).sort((a,b)=>a.fDate.localeCompare(b.fDate)||String(a.created).localeCompare(String(b.created)));
   // 1 ngày tính 1 buổi (lỡ lưu 2 phiếu cùng ngày)
   const byDate={};ss.forEach(x=>byDate[x.fDate]=x);const days=Object.keys(byDate).sort();const sess=days.map(d=>byDate[d]);
-  const hwS=sess.filter(x=>x.hw!=='none'&&x.fPct!==''&&x.fPct!=null&&!isNaN(+x.fPct));
+  const hwS=sess.filter(x=>!x.abs&&x.hw!=='none'&&x.fPct!==''&&x.fPct!=null&&!isNaN(+x.fPct));
   const hwAvg=hwS.length?Math.round(hwS.reduce((a,x)=>a+(+x.fPct),0)/hwS.length):null;
   const ts=db.tests.filter(x=>x.studentId===s.id&&String(x.date||'').startsWith(mon));
   let words=0,asked=0,nTests=ts.length;
   if(ts.length){ts.forEach(t=>{words+=+t.score||0;asked+=+t.n||0;});}
-  else sess.forEach(x=>{if(x.fVScore!==''&&x.fVScore!=null&&!isNaN(+x.fVScore)){words+=+x.fVScore;asked+=+x.fVNum||0;nTests++;}});
-  const att={tot:0,kha:0,cct:0};sess.forEach(x=>{if(att[x.att]!=null)att[x.att]++;});
+  else sess.forEach(x=>{if(!x.abs&&x.fVScore!==''&&x.fVScore!=null&&!isNaN(+x.fVScore)){words+=+x.fVScore;asked+=+x.fVNum||0;nTests++;}});
+  const att={tot:0,kha:0,cct:0};sess.forEach(x=>{if(!x.abs&&att[x.att]!=null)att[x.att]++;});
   const checks=db.checks.filter(x=>x.studentId===s.id&&String(x.date||'').startsWith(mon));
   // điểm kiểm tra định kỳ cô nhập ngay trên phiếu buổi học (trang Phiếu học tập)
   ss.forEach(x=>{if(x.fKtScore===''||x.fKtScore==null)return;const name=x.fKtName||'Kiểm tra định kỳ';
@@ -47,7 +47,9 @@ function summary(s,mon){
   const rep=db.reports.find(x=>x.id===s.id+'_'+mon);
   // buổi ghi "5+6" = học 2 ca trong 1 buổi → tính 2 buổi
   const caList=sess.flatMap(x=>Array(Math.max(1,String(x.fNo||"").split("+").filter(p=>/\d/.test(p)).length)).fill(x));
-  return {sess,caList,nCa:caList.length,days,hwS,hwAvg,words,asked,nTests,att,checks,cmt:rep?rep.cmt:'',total:+s.total||12};
+  // buổi nghỉ (có phép / không phép) vẫn tính buổi của khóa
+  const nCp=caList.filter(x=>x.abs==='cp').length,nKp=caList.filter(x=>x.abs==='kp').length;
+  return {sess,caList,nCa:caList.length,nCp,nKp,days,hwS,hwAvg,words,asked,nTests,att,checks,cmt:rep?rep.cmt:'',total:+s.total||12};
 }
 // trung bình mỗi lần khảo: "TB 21/30 (70%)"
 const tbTu=m=>{const n=m.nTests||1,r=x=>Math.round(x*10)/10;return `TB ${r(m.words/n)}/${r(m.asked/n)} (${Math.round(m.words/m.asked*100)}%)`;};
@@ -174,7 +176,7 @@ function sheetHTML(){
   // ô ngày học: đủ số buổi của gói (8/12), buổi chưa học để ô nét đứt
   const slots=Math.max(M.total,M.nCa);
   const days=Array.from({length:slots},(_,i)=>{const x=M.caList[i];if(!x)return `<div class="bc-day off"><span class="n">BUỔI ${i+1}</span></div>`;
-    const[d,mm]=dmy(x.fDate);return `<div class="bc-day"><span class="n">BUỔI ${i+1}</span><span class="hw">${d}/${mm}</span><span class="w">${thu(x.fDate)}</span></div>`;}).join('');
+    const[d,mm]=dmy(x.fDate);if(x.abs)return `<div class="bc-day nghi"><span class="n">BUỔI ${i+1}</span><span class="hw">${d}/${mm}</span><span class="w">Nghỉ ${x.abs==='cp'?'có phép':'KP'}${x.fMakeup?' · bù '+esc(x.fMakeup):''}</span></div>`;return `<div class="bc-day"><span class="n">BUỔI ${i+1}</span><span class="hw">${d}/${mm}</span><span class="w">${thu(x.fDate)}</span></div>`;}).join('');
   const att=attTop(M.att);
   const bars=M.hwS.length?`<div class="bc-chart"><div class="t">MỨC HOÀN THÀNH BTVN TỪNG BUỔI</div>
     <div class="bc-bars">${M.hwS.map(x=>`<div class="bc-bar"><span class="v">${+x.fPct}%</span><div class="b${+x.fPct<80?' lo':''}" style="height:${Math.max(3,+x.fPct*.72)}px"></div></div>`).join('')}</div>
@@ -195,7 +197,7 @@ function sheetHTML(){
     </div>
     <div class="sh-h green">CHUYÊN CẦN – CÁC BUỔI CON ĐÃ HỌC</div>
     <div class="bc-days">${days}</div>
-    <div class="bc-sum">Con đã học <span class="hw">${M.nCa}</span> / ${M.total} buổi trong tháng ${+m}</div>
+    <div class="bc-sum">Con đã học <span class="hw">${M.nCa}</span> / ${M.total} buổi trong tháng ${+m}${M.nCp+M.nKp?` (trong đó nghỉ ${[M.nCp?M.nCp+' buổi có phép':'',M.nKp?M.nKp+' buổi không phép':''].filter(Boolean).join(', ')})`:''}</div>
     <div class="sh-h purple">KẾT QUẢ HỌC TẬP</div>
     <div class="bc-stats">
       <div class="sw p"><div class="bc-st"><div class="t">TỪ VỰNG ĐÃ THUỘC</div><div class="big">${M.asked?M.words:'—'}${M.asked?' <small>từ</small>':''}</div><div class="s">${M.asked?`/ ${M.asked} từ · ${M.nTests} lần khảo<br>${tbTu(M)}`:'Chưa khảo từ'}</div></div></div>

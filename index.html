@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lora:ital,wght@0,700;1,600&display=swap" rel="stylesheet">
 <script src="logo.js?v=202611111700"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<link rel="stylesheet" href="style.css?v=202611132000">
+<link rel="stylesheet" href="style.css?v=202611132200">
 </head>
 <body>
 <header class="app">
@@ -38,6 +38,26 @@
       <div><label class="f">Buổi số</label><input type="text" id="fNo" inputmode="tel" autocomplete="off" placeholder="VD: 5 hoặc 5+6"></div>
       <div><label class="f">/ Số buổi 1 khóa</label><input type="number" id="fTotal" min="1"></div>
     </div>
+    <label class="f">Chuyên cần</label>
+    <div class="seg">
+      <label><input type="radio" name="fAbs" value="" checked>Có đi học</label>
+      <label><input type="radio" name="fAbs" value="cp">Nghỉ có phép</label>
+      <label><input type="radio" name="fAbs" value="kp">Nghỉ không phép</label>
+    </div>
+    <div id="absMore" style="display:none">
+      <label class="f">Con đã học bù vào buổi</label>
+      <input type="text" id="fMakeup" placeholder="VD: Thứ 7 15/11 – để trống nếu chưa bù">
+      <p class="hint">Buổi nghỉ vẫn tính 1 buổi của khóa và được lưu để cuối tháng tổng hợp báo phụ huynh.</p>
+    </div>
+   </div>
+
+   <!-- Bổ sung phiếu bị thiếu từ ảnh phiếu (ảnh xuất từ web này trên máy khác) -->
+   <div class="card" id="ocrCard">
+    <h3>📷 Bổ sung phiếu từ ảnh</h3>
+    <p class="hint" id="ocrTarget">Phiếu làm trên máy khác chưa có ở đây? Tải ảnh phiếu lên – web đọc và điền sẵn vào các ô bên dưới, cô xem lại rồi bấm <b>Lưu phiếu</b>.</p>
+    <input type="file" id="ocrFile" accept="image/*">
+    <div id="ocrStatus" class="hint" style="margin-top:6px"></div>
+    <img id="ocrImg" alt="" style="display:none;max-width:100%;margin-top:8px;border:1px solid #ddd;border-radius:8px">
    </div>
 
    <!-- Kiểm tra định kỳ (giữa + cuối khóa): hiện khi buổi trước đã giao ôn kiểm tra -->
@@ -250,11 +270,12 @@ $$('nav.tabs button').forEach(b=>b.onclick=()=>{
 
 /* ---------- Form ---------- */
 let editingId=null, lastSaved='';
-const FIELDS=['fDate','fNo','fTotal','fPct','fHwCmt','fGram','fVUnit','fVNum','fVScore','fAttCmt','fNext','fNVNum','fNVUnit','fPrep','fKtScore','fKtMax','fKtCmt','fKtName'];
+const FIELDS=['fDate','fNo','fTotal','fPct','fHwCmt','fGram','fVUnit','fVNum','fVScore','fAttCmt','fNext','fNVNum','fNVUnit','fPrep','fKtScore','fKtMax','fKtCmt','fKtName','fMakeup'];
 function readForm(){
   const r={studentId:$('#fStudent').value};
   FIELDS.forEach(f=>r[f]=$('#'+f).value.trim?$('#'+f).value.trim():$('#'+f).value);
   r.hw=($('input[name=fHw]:checked')||{}).value; r.att=($('input[name=fAtt]:checked')||{}).value;
+  r.abs=($('input[name=fAbs]:checked')||{}).value||''; // '' đi học · cp nghỉ có phép · kp nghỉ không phép
   return r;
 }
 function writeForm(r){
@@ -262,12 +283,15 @@ function writeForm(r){
   if(r.studentId)$('#fStudent').value=r.studentId;
   ($(`input[name=fHw][value=${r.hw||'done'}]`)).checked=true;
   ($(`input[name=fAtt][value=${r.att||'tot'}]`)).checked=true;
+  ($(`input[name=fAbs][value="${r.abs||''}"]`)).checked=true; $('#absMore').style.display=r.abs?'block':'none';
 }
-function nextNo(s){const ss=sessOf(s.id);const last=ss.length?noMax(ss[ss.length-1].fNo):+(s.done||0);const total=+s.total||12;return last>=total?1:last+1;}
+// phiếu mới nhất = ngày học muộn nhất (bổ sung phiếu buổi cũ không làm lệch buổi tiếp theo)
+const latestSess=sid=>sessOf(sid).slice().sort((a,b)=>((a.fDate||'')+a.created).localeCompare((b.fDate||'')+b.created)).pop();
+function nextNo(s){const l=latestSess(s.id);const last=l?noMax(l.fNo):+(s.done||0);const total=+s.total||12;return last>=total?1:last+1;}
 function prefillFor(id,keepShared){
   const s=stu(id); if(!s)return;
-  const cur=readForm(); const ss=sessOf(id); const last=ss[ss.length-1];
-  const r={studentId:id,fDate:keepShared?cur.fDate:today(),fNo:nextNo(s),fTotal:s.total||12,hw:'done',fPct:100,fHwCmt:'',att:'tot',fAttCmt:'',fVScore:'',fKtScore:'',fKtMax:10,fKtCmt:''};
+  const cur=readForm(); const last=latestSess(id);
+  const r={studentId:id,fDate:keepShared?cur.fDate:today(),fNo:nextNo(s),fTotal:s.total||12,hw:'done',fPct:100,fHwCmt:'',att:'tot',fAttCmt:'',fVScore:'',fKtScore:'',fKtMax:10,fKtCmt:'',abs:'',fMakeup:''};
   if(keepShared){['fGram','fVUnit','fVNum','fNext','fNVNum','fNVUnit','fPrep'].forEach(k=>r[k]=cur[k]);}
   else if(last){ // gợi ý: nội dung hôm nay = phần "cần chuẩn bị" của buổi trước
     r.fGram=String(last.fPrep||'').replace(/Ôn tập kiểm tra (giữa|cuối) khóa/gi,"Kiểm tra $1 khóa"); r.fVUnit=last.fNVUnit||''; r.fVNum=last.fNVNum||'';
@@ -295,7 +319,7 @@ function fillStudentSelects(){
 }
 // lớp ghép: đã bấm "Lưu & sang HS tiếp" thì chọn HS khác vẫn giữ nội dung chung (tới khi bấm Phiếu mới)
 let keepShared=false;
-$('#fStudent').onchange=()=>prefillFor($('#fStudent').value,keepShared);
+$('#fStudent').onchange=()=>{ocrWant=null;prefillFor($('#fStudent').value,keepShared);};
 $('#fFind').addEventListener('input',()=>{const v=$('#fStudent').value;fillStudentSelects();
   if($('#fStudent').value&&$('#fStudent').value!==v)prefillFor($('#fStudent').value,keepShared);});
 function clearFind(){if($('#fFind').value){$('#fFind').value='';fillStudentSelects();}}
@@ -307,6 +331,7 @@ $$('#v-nhap input, #v-nhap textarea').forEach(el=>el.addEventListener('input',up
 $$('#pctChips button').forEach(b=>b.onclick=()=>{$('#fPct').value=parseInt(b.textContent);$('#fPct').dispatchEvent(new Event('input'));});
 $$('#v-nhap input[type=radio]').forEach(el=>el.addEventListener('change',()=>{
   if(el.name==='fHw'){ if(el.value==='done'&&!$('#fPct').value)$('#fPct').value=100; }
+  if(el.name==='fAbs')$('#absMore').style.display=el.value?'block':'none';
   updatePreview();
 }));
 
@@ -330,7 +355,7 @@ function saveCurrent(){
   if(!r.studentId){toast('Chọn học sinh trước đã ạ');return null;}
   if(!r.fDate){toast('Chưa chọn ngày học');return null;}
   // ô bài khảo từ: chỉ ghi "Unit" là thiếu – phải có số (Unit 5) hoặc mã đề (C17-T1-P1); không khảo thì để trống (cô yêu cầu 2026-11-13)
-  for(const id of ['fVUnit','fNVUnit'])if(!unitOk(r[id])){checkUnits();const el=$('#'+id);el.scrollIntoView({behavior:'smooth',block:'center'});el.focus();
+  if(!r.abs)for(const id of ['fVUnit','fNVUnit'])if(!unitOk(r[id])){checkUnits();const el=$('#'+id);el.scrollIntoView({behavior:'smooth',block:'center'});el.focus();
     toast(id==='fVUnit'?'Ô Khảo từ vựng (bài) chưa ghi số Unit hoặc mã đề':'Ô Khảo từ vựng bài (buổi sau) chưa ghi số Unit hoặc mã đề');return null;}
   let rec; const i=editingId?db.sessions.findIndex(x=>x.id===editingId):-1;
   if(i>=0){rec=db.sessions[i]={...db.sessions[i],...r};}
@@ -356,7 +381,7 @@ function sheetHTML(r){
   const ck=on=>`<span class="sh-ck">${on?'<span class="hw" style="font-size:20px;line-height:1">✓</span>':''}</span>`;
   const circ=on=>`<span class="sh-circ">${on?'<span class="hw" style="font-size:20px;line-height:1">✓</span>':''}</span>`;
   // hoàn thành BTVN từ 80% trở lên thì đóng dấu của cô
-  const stamp=r.hw!=='none'&&r.fPct!==''&&+r.fPct>=80;
+  const stamp=!r.abs&&r.hw!=='none'&&r.fPct!==''&&+r.fPct>=80;
   const pct=r.hw==='none'?'—':(r.fPct!==''?r.fPct:'....');
   const vocab=`<span class="hw k k2">Khảo từ vựng</span> <span class="hw">${esc(r.fVUnit)||'<span class="hw k">......</span>'}</span> <span class="hw k k2">(<span class="hw">${esc(r.fVNum)||'....'}</span> từ)</span>`
     +(r.fVScore!==''&&r.fVScore!=null?`<div class="hw" style="margin-top:4px">Kết quả: ${esc(r.fVScore)}/${esc(r.fVNum)||'?'} từ</div>`:'');
@@ -370,35 +395,35 @@ function sheetHTML(r){
     <div class="sh-badge">1</div>
     <div class="sh-sub">THEO DÕI TIẾN ĐỘ HỌC TẬP VÀ ĐÁNH GIÁ CỦA HỌC VIÊN</div>
     <div class="sh-info">
-      <div><div class="sh-lab">HỌ TÊN HỌC VIÊN | LỚP</div><div class="sw o"><div class="sh-box"><span class="hw">${esc(s.name)}${s.cls?' | '+esc(s.cls):''}</span></div></div></div>
-      <div><div class="sh-lab">NGÀY HỌC</div><div class="sw o"><div class="sh-box"><span class="hw">${d}</span>&nbsp;<b>/</b>&nbsp;<span class="hw">${m}</span>&nbsp;<b>/ ${y||'2026'}</b></div></div></div>
-      <div><div class="sh-lab">SỐ BUỔI / 1 KHÓA</div><div class="sw o"><div class="sh-box"><span class="hw">${two(r.fNo)}</span>&nbsp;<b>/</b>&nbsp;<span class="hw">${esc(r.fTotal)}</span></div></div></div>
+      <div><div class="sh-lab">HỌ TÊN HỌC VIÊN | LỚP</div><div class="sw o"><div class="sh-box" data-ocr="name"><span class="hw">${esc(s.name)}${s.cls?' | '+esc(s.cls):''}</span></div></div></div>
+      <div><div class="sh-lab">NGÀY HỌC</div><div class="sw o"><div class="sh-box" data-ocr="date"><span class="hw">${d}</span>&nbsp;<b>/</b>&nbsp;<span class="hw">${m}</span>&nbsp;<b>/ ${y||'2026'}</b></div></div></div>
+      <div><div class="sh-lab">SỐ BUỔI / 1 KHÓA</div><div class="sw o"><div class="sh-box" data-ocr="no"><span class="hw">${two(r.fNo)}</span>&nbsp;<b>/</b>&nbsp;<span class="hw">${esc(r.fTotal)}</span></div></div></div>
     </div>
     <div class="sh-h green">KIỂM TRA BÀI TẬP VỀ NHÀ</div>
     <div class="sh-2">
       <div><div class="sh-colh">TÌNH TRẠNG BÀI TẬP VỀ NHÀ</div><div class="sh-rbox">
-        <div class="sh-st">Hoàn Thành ${ck(r.hw==='done')}</div>
-        <div class="sh-st">Chưa hoàn thành ${ck(r.hw==='not')}</div>
-        <div class="sh-st">Mức độ hoàn thành <span>${r.hw!=="none"&&r.fPct!==""?`<span class="hw">${esc(r.fPct)}%</span>/100%`:`<span class="hw">${esc(pct)}</span>/100%`}</span></div>
+        <div class="sh-st">Hoàn Thành <span data-ocr="ckDone">${ck(r.hw==='done')}</span></div>
+        <div class="sh-st">Chưa hoàn thành <span data-ocr="ckNot">${ck(r.hw==='not')}</span></div>
+        <div class="sh-st">Mức độ hoàn thành <span data-ocr="pct">${r.hw!=="none"&&r.fPct!==""?`<span class="hw">${esc(r.fPct)}%</span>/100%`:`<span class="hw">${esc(pct)}</span>/100%`}</span></div>
       </div></div>
-      <div><div class="sh-colh">NHẬN XÉT BÀI TẬP VỀ NHÀ</div><div class="sh-rbox cmt${stamp?' st':''}"><div class="fit" data-max="19" data-lines="2"><div class="hw">${esc(r.fHwCmt)}</div></div>${stamp?'<img class="stamp" src="stamp.png" alt="">':''}</div></div>
+      <div><div class="sh-colh">NHẬN XÉT BÀI TẬP VỀ NHÀ</div><div data-ocr="hwcmt" class="sh-rbox cmt${stamp?' st':''}"><div class="fit" data-max="19" data-lines="2"><div class="hw">${esc(r.fHwCmt)}</div></div>${stamp?'<img class="stamp" src="stamp.png" alt="">':''}</div></div>
     </div>
     <div class="sh-h purple">MỤC TIÊU/NỘI DUNG BUỔI HỌC</div>
     <div class="sh-2">
-      <div class="sw p"><div class="sh-sbox purple"><div class="t">Ngữ pháp</div><div class="fit" data-max="15" data-force="1"><div class="hw">${esc(r.fGram)}${hasKt(r)?`${r.fGram?'\n':''}${/(giữa|cuối) khóa/i.test(r.fKtName||"")?"Kiểm tra "+r.fKtName.match(/(giữa|cuối) khóa/i)[0]:"Kiểm tra định kỳ"}: ${esc(r.fKtScore)}/${esc(r.fKtMax||10)} điểm`:''}</div></div></div></div>
-      <div class="sw p"><div class="sh-sbox purple"><div class="t">Từ vựng</div><div class="fit" data-max="15">${vocab}</div></div></div>
+      <div class="sw p"><div class="sh-sbox purple" data-ocr="gram"><div class="t">Ngữ pháp</div><div class="fit" data-max="15" data-force="1"><div class="hw">${r.abs?`${r.abs==='cp'?'Con nghỉ có phép':'Con nghỉ không phép'}${r.fMakeup?' – đã học bù: '+esc(r.fMakeup):''}${r.fGram?'\n':''}`:''}${esc(r.fGram)}${hasKt(r)?`${r.fGram?'\n':''}${/(giữa|cuối) khóa/i.test(r.fKtName||"")?"Kiểm tra "+r.fKtName.match(/(giữa|cuối) khóa/i)[0]:"Kiểm tra định kỳ"}: ${esc(r.fKtScore)}/${esc(r.fKtMax||10)} điểm`:''}</div></div></div></div>
+      <div class="sw p"><div class="sh-sbox purple" data-ocr="vocab"><div class="t">Từ vựng</div><div class="fit" data-max="15">${vocab}</div></div></div>
     </div>
     <div class="sh-h navy">Tinh thần học tập của học viên</div>
     <div class="sh-att">
-      <div class="sh-note">${r.fAttCmt?`<div class="fit" data-max="15"><span class="hw">${esc(r.fAttCmt)}</span></div>`:'Nhận xét (nếu có)'}</div>
-      <div class="sh-opt">${circ(r.att==='tot')} TỐT</div>
-      <div class="sh-opt">${circ(r.att==='kha')} KHÁ</div>
-      <div class="sh-opt">${circ(r.att==='cct')} CẦN CẢI THIỆN</div>
+      <div class="sh-note" data-ocr="attcmt">${r.fAttCmt?`<div class="fit" data-max="15"><span class="hw">${esc(r.fAttCmt)}</span></div>`:'Nhận xét (nếu có)'}</div>
+      <div class="sh-opt"><span data-ocr="att_tot">${circ(r.att==='tot')}</span> TỐT</div>
+      <div class="sh-opt"><span data-ocr="att_kha">${circ(r.att==='kha')}</span> KHÁ</div>
+      <div class="sh-opt"><span data-ocr="att_cct">${circ(r.att==='cct')}</span> CẦN CẢI THIỆN</div>
     </div>
     <div class="sh-h green">BTVN BUỔI KẾ TIẾP</div>
     <div class="sh-2">
-      <div class="sw g"><div class="sh-sbox green"><div class="t">NỘI DUNG VÀ VỊ TRÍ TRANG TÀI LIỆU</div><div class="fit" data-max="15" data-force="1"><div class="hw">${esc(r.fNext)}</div></div></div></div>
-      <div class="sw g"><div class="sh-sbox green"><div class="t">LÝ THUYẾT VÀ BÀI TẬP CẦN CHUẨN BỊ</div><div class="fit" data-max="15" data-force="1">${prep}</div></div></div>
+      <div class="sw g"><div class="sh-sbox green" data-ocr="next"><div class="t">NỘI DUNG VÀ VỊ TRÍ TRANG TÀI LIỆU</div><div class="fit" data-max="15" data-force="1"><div class="hw">${esc(r.fNext)}</div></div></div></div>
+      <div class="sw g"><div class="sh-sbox green" data-ocr="prep"><div class="t">LÝ THUYẾT VÀ BÀI TẬP CẦN CHUẨN BỊ</div><div class="fit" data-max="15" data-force="1">${prep}</div></div></div>
     </div>
    </div>
    <div class="sh-foot"><div><span>THÔNG TIN LIÊN HỆ</span><span>SĐT: 0966.101.957 (Ms. Minh Thư)</span><span>GROW WITH ENGLISH</span></div></div>
@@ -466,6 +491,107 @@ const KT_CHIPS=['Con làm bài tốt, nắm chắc kiến thức đã học.','C
 $('#ktChips').innerHTML=KT_CHIPS.map(t=>`<button type="button">${esc(t)}</button>`).join('');
 $$('#ktChips button').forEach(b=>b.onclick=()=>{const t=$('#fKtCmt');const st=t.value?t.value.length+1:0;t.value=t.value?t.value+' '+b.textContent:b.textContent;
   const i=t.value.indexOf('…',st);t.focus();if(i>=0)t.setSelectionRange(i,i+1);updatePreview();});
+
+/* ---------- Bổ sung phiếu bị thiếu từ ảnh (cô yêu cầu 2026-11-13) ----------
+   Ảnh là ảnh phiếu xuất từ chính web này (làm trên máy khác). Vị trí từng ô lấy từ phiếu mẫu đang dựng
+   (data-ocr), cắt đúng ô đó trên ảnh rồi đọc chữ (Tesseract, tiếng Việt). Dấu ✓ đọc bằng màu đỏ. */
+let ocrWorker=null, ocrWant=null; // ocrWant: {sid, no} khi bấm "Thiếu phiếu buổi …" ở tab Học sinh
+function loadTess(){return window.Tesseract?Promise.resolve():new Promise((ok,no)=>{const s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';s.onload=ok;s.onerror=()=>no(new Error('Không tải được bộ đọc chữ (kiểm tra mạng)'));document.head.appendChild(s);});}
+function ocrBoxes(){ // vị trí các ô theo tỉ lệ khung phiếu
+  const sh=$('#exportHolder .sheet');if(!sh)return null;const R=sh.getBoundingClientRect(),o={};
+  sh.querySelectorAll('[data-ocr]').forEach(el=>{let r=el.getBoundingClientRect(),L=r.left,T=r.top,Rr=r.right,Bb=r.bottom;
+    if(parseFloat(getComputedStyle(el).borderTopWidth)>0){ // ô có viền: chỉ lấy phần chữ bên trong (viền + bóng làm đọc sai)
+      const bw=parseFloat(getComputedStyle(el).borderTopWidth)+3;L+=bw;T+=bw;Rr-=bw;Bb-=bw;
+      const t=el.querySelector(':scope>.t');if(t)T=t.getBoundingClientRect().bottom;} // bỏ dòng tiêu đề ô
+    o[el.dataset.ocr]={x:(L-R.left)/R.width,y:(T-R.top)/R.height,w:(Rr-L)/R.width,h:(Bb-T)/R.height};});
+  return o;
+}
+function cropTo(img,b,pad=0.004){ // cắt + phóng to + chuyển chữ màu thành đen trên nền trắng
+  const W=img.naturalWidth,H=img.naturalHeight,x=Math.max(0,(b.x-pad)*W),y=Math.max(0,(b.y-pad)*H),w=Math.min(W-x,(b.w+2*pad)*W),h=Math.min(H-y,(b.h+2*pad)*H);
+  const k=Math.max(1,2000/W*1.3),c=document.createElement('canvas');c.width=Math.round(w*k);c.height=Math.round(h*k);
+  const g=c.getContext('2d');g.imageSmoothingQuality='high';g.drawImage(img,x,y,w,h,0,0,c.width,c.height);
+  const d=g.getImageData(0,0,c.width,c.height),p=d.data;let red=0;
+  for(let i=0;i<p.length;i+=4){const r=p[i],gg=p[i+1],bb=p[i+2];if(r>140&&gg<120&&bb<120)red++;const v=Math.min(r,gg,bb)<165?0:255;p[i]=p[i+1]=p[i+2]=v;}
+  g.putImageData(d,0,0);c.redRatio=red/(p.length/4);return c;
+}
+const clean=s=>String(s||'').replace(/[|“”"‘’_]/g,' ').replace(/[ \t]+/g,' ').split('\n').map(l=>l.trim()).filter(Boolean).join('\n');
+function matchStudent(txt){
+  const q=boDau(String(txt).split('|')[0]).replace(/[^a-z0-9 ]/g,' ').split(' ').filter(w=>w.length>1);if(!q.length)return null;
+  let best=null,bs=0;db.students.forEach(s=>{const n=boDau(s.name).split(' ');const sc=n.filter(w=>q.includes(w)).length/n.length;if(sc>bs){bs=sc;best=s;}});
+  return bs>=0.5?best:null;
+}
+async function ocrRead(file){
+  const st=$('#ocrStatus'),url=URL.createObjectURL(file),img=$('#ocrImg');img.src=url;img.style.display='block';
+  await new Promise((ok,no)=>{img.onload=ok;img.onerror=()=>no(new Error('Không mở được ảnh'));});
+  const ratio=img.naturalHeight/img.naturalWidth,sh=$('#exportHolder .sheet'),want=sh?sh.offsetHeight/sh.offsetWidth:ratio;
+  const odd=Math.abs(ratio-want)>0.12; // ảnh bị cắt / chụp màn hình → vị trí ô lệch
+  st.textContent='⏳ Đang tải bộ đọc chữ… (lần đầu hơi lâu)';await loadTess();
+  if(!ocrWorker)ocrWorker=await Tesseract.createWorker('vie');
+  await ocrWorker.setParameters({tessedit_pageseg_mode:'6'});
+  const B=ocrBoxes(),keys=['name','date','no','pct','hwcmt','gram','vocab','attcmt','next','prep'],T={};
+  for(let i=0;i<keys.length;i++){st.textContent=`⏳ Đang đọc ảnh… ${i+1}/${keys.length}`;const k=keys[i];if(!B[k])continue;
+    const {data}=await ocrWorker.recognize(cropTo(img,B[k]));
+    // ô nhận xét có con dấu / nét trang trí: bỏ những chữ máy đọc không chắc
+    T[k]=['hwcmt','attcmt'].includes(k)&&data.words?clean(data.words.filter(w=>w.confidence>=60&&/[\p{L}\d]/u.test(w.text)).map(w=>w.text).join(' ')):clean(data.text);}
+  const red=k=>B[k]?cropTo(img,B[k],0).redRatio:0;
+  return {odd,T,ck:{done:red('ckDone'),not:red('ckNot'),tot:red('att_tot'),kha:red('att_kha'),cct:red('att_cct')}};
+}
+function ocrToForm({T,ck}){
+  const cur=readForm(),r={fTotal:cur.fTotal,fKtMax:10,abs:'',fMakeup:''},num=s=>(String(s||'').match(/\d+/g)||[]);
+  // học sinh
+  const s=matchStudent(T.name||''),want=ocrWant&&stu(ocrWant.sid);r.studentId=(want||s||{}).id||cur.studentId;
+  const warn=[];if(want&&s&&s.id!==want.id)warn.push(`Tên trên ảnh giống <b>${esc(s.name)}</b> hơn – cô kiểm tra lại ô Học sinh.`);
+  if(!want&&!s)warn.push('Chưa nhận ra tên học sinh – cô chọn lại ô Học sinh.');
+  // ngày, buổi
+  const dn=num(T.date);if(dn.length>=2){const y=dn[2]&&dn[2].length===4?dn[2]:today().slice(0,4);r.fDate=`${y}-${dn[1].padStart(2,'0')}-${dn[0].padStart(2,'0')}`;}else{r.fDate='';warn.push('Chưa đọc được ngày học.');}
+  const nm=String(T.no||'').replace(/\s/g,'').match(/(\d+(?:\+\d+)?)\/(\d+)/);
+  if(nm){r.fNo=nm[1].replace(/\b0(\d)/g,'$1');r.fTotal=nm[2];if(ocrWant&&!noNums(r.fNo).includes(+ocrWant.no))warn.push(`Ảnh này là phiếu <b>buổi ${esc(r.fNo)}</b>, không phải buổi ${esc(ocrWant.no)} – cô xem có đúng ảnh không.`);}else{r.fNo=ocrWant?ocrWant.no:'';warn.push('Chưa đọc được buổi số.');}
+  // BTVN
+  const pm=String(T.pct||'').match(/(\d{1,3})\s*%/);r.fPct=pm?pm[1]:'';if(+r.fPct>100)r.fPct=r.fPct.startsWith('100')?'100':r.fPct.slice(0,2); // "759%" = 75%
+  r.hw=ck.done>0.01&&ck.done>=ck.not?'done':ck.not>0.01?'not':(/—|-/.test(T.pct||'')&&!pm?'none':(+r.fPct>=80?'done':'not'));
+  r.fHwCmt=(T.hwcmt||'').replace(/\n/g,' ');
+  // nội dung buổi học: dòng nghỉ, dòng điểm kiểm tra, còn lại là ngữ pháp
+  const gl=(T.gram||'').split('\n'),rest=[];
+  gl.forEach(l=>{const a=l.match(/ngh\S*\s*(c\S|kh\S*ng)\s*ph\S*p(?:.*?b\S[:\s]*(.*))?/i),k=l.match(/Kiểm tra\s*(giữa|cuối)\s*khóa\s*:?\s*([\d.,]+)\s*\/\s*([\d.,]+)/i);
+    if(a){r.abs=/^c/i.test(a[1])?'cp':'kp';r.fMakeup=(a[2]||'').trim();if(r.fMakeup&&/^\d+$/.test(r.fMakeup))warn.push('Ô "học bù vào buổi" đọc chưa rõ – cô sửa lại giúp.');}
+    else if(k){r.fKtScore=k[2].replace(',','.');r.fKtMax=k[3];r.fKtName=`Kiểm tra ${k[1].toLowerCase()} khóa`;}
+    else rest.push(l);});
+  r.fGram=rest.join('\n');
+  // "Khảo từ vựng Unit 4 (30 từ)" – 3 chữ đầu là nhãn, phần còn lại trước "(" là bài
+  const v=T.vocab||'',vu=v.split('\n')[0].match(/^\s*\S+\s+\S+\s+\S+\s*(.*?)\s*\(\s*(\d+)/),vs=v.match(/qu[aả]\s*:?\s*(\d+)\s*\/\s*(\d+)/i);
+  r.fVUnit=vu?vu[1].replace(/\.{2,}/g,'').replace(/^U\S{1,4}\s*(\d)/i,'Unit $1').trim():'';r.fVNum=vu?vu[2]:'';r.fVScore=vs?vs[1]:'';
+  // tinh thần
+  const a=[['tot',ck.tot],['kha',ck.kha],['cct',ck.cct]].sort((x,y)=>y[1]-x[1]);r.att=a[0][1]>0.01?a[0][0]:'tot';
+  r.fAttCmt=/nhận xét \(nếu có\)/i.test(T.attcmt||'')?'':(T.attcmt||'').replace(/\n/g,' ');
+  // BTVN buổi kế tiếp
+  r.fNext=T.next||'';
+  const pl=(T.prep||'').split('\n'),pm2=(pl[0]||'').match(/Khảo\s*(\d+)\s*từ\s*vựng\s*bài\s*(.*)/i);
+  if(pm2){r.fNVNum=pm2[1];r.fNVUnit=pm2[2].replace(/^U\S{1,4}\s*(\d)/i,'Unit $1').trim();pl.shift();}else{r.fNVNum='';r.fNVUnit='';}
+  r.fPrep=pl.join('\n');
+  writeForm(r);setEditing(null);updatePreview();
+  return warn;
+}
+$('#ocrFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;const st=$('#ocrStatus');
+  try{const res=await ocrRead(f);const warn=ocrToForm(res);
+    if(res.odd)warn.unshift('Ảnh không giống khung phiếu xuất từ web (bị cắt hoặc chụp màn hình?) nên dễ đọc sai – cô kiểm tra kỹ từng ô.');
+    st.innerHTML=`✅ Đã đọc xong và điền vào các ô bên dưới. <b>Cô so với ảnh, sửa chỗ đọc sai</b> rồi bấm <b>💾 Lưu phiếu</b>.`+(warn.length?'<br>⚠️ '+warn.join('<br>⚠️ '):'');}
+  catch(err){console.error(err);st.textContent='❌ '+(err.message||'Đọc ảnh bị lỗi')+' – cô thử lại hoặc nhập tay.';}
+  e.target.value='';};
+// các buổi còn thiếu phiếu trong khóa đang học
+function missingNos(s){
+  const l=latestSess(s.id);if(!l)return [];const top=noMax(l.fNo);if(top<2)return [];
+  const {prev}=khoaSess(s.id,top+1,'9',null),have=new Set();prev.forEach(x=>noNums(x.fNo).forEach(n=>have.add(n)));
+  const out=[];for(let i=1;i<=top;i++)if(!have.has(i))out.push(i);return out;
+}
+const rangeTxt=a=>{const o=[];for(let i=0;i<a.length;i++){let j=i;while(j+1<a.length&&a[j+1]===a[j]+1)j++;o.push(j>i?`${a[i]}–${a[j]}`:''+a[i]);i=j;}return o.join(', ');};
+function startFill(sid,no){ // từ tab Học sinh: bổ sung phiếu buổi "no"
+  const s=stu(sid);ocrWant={sid,no:String(no)};$('#fFind').value='';fillStudentSelects();$('#fStudent').value=sid;prefillFor(sid,false);
+  $('#fNo').value=no;$('#fDate').value='';['fGram','fNext','fPrep'].forEach(i=>$('#'+i).value='');updatePreview();
+  $('nav.tabs button[data-v=nhap]').click();$('#ocrTarget').innerHTML=`Đang bổ sung <b>buổi ${no}</b> của <b>${esc(s.name)}</b>: tải ảnh phiếu buổi đó lên – web đọc và điền sẵn, cô xem lại rồi bấm <b>Lưu phiếu</b>. Không có ảnh thì nhập tay các ô bên dưới.`;
+  $('#ocrStatus').textContent='';$('#ocrImg').style.display='none';
+  setTimeout(()=>$('#ocrCard').scrollIntoView({behavior:'smooth',block:'start'}),150);
+}
 
 // ô bài khảo từ: trống hoặc có số / mã đề (Unit 5, C17-T1-P1); chỉ "Unit" là thiếu
 const unitOk=v=>{v=String(v||'').trim();return !v||/\d/.test(v);};
@@ -615,12 +741,13 @@ function renderStudents(){
     const ss=sessOf(s.id);const last=ss.length?ss[ss.length-1].fNo:(s.done||0);
     const k=khoi(s), head=k!==grp?`<tr><td colspan="6" class="khoi-h">${k<99?'Khối '+k:'Chưa ghi lớp'}</td></tr>`:'';
     if(k!==grp){grp=k;stt=0;} stt++;
-    return `${head}<tr><td>${stt}</td><td><b>${esc(s.name)}</b>${s.note?`<div class="hint">${esc(s.note)}</div>`:''}${sts[s.id]?`<div>${ktTag(s,sts[s.id])}</div>`:''}</td><td>${esc(s.cls)}</td><td>${last}/${s.total}</td><td>${esc(s.parent)}</td>
+    return `${head}<tr><td>${stt}</td><td><b>${esc(s.name)}</b>${s.note?`<div class="hint">${esc(s.note)}</div>`:''}${sts[s.id]?`<div>${ktTag(s,sts[s.id])}</div>`:''}${(()=>{const mi=missingNos(s);return mi.length?`<div><button type="button" class="kt-tag miss" data-a="miss" data-id="${s.id}" data-no="${mi[0]}">📷 Thiếu phiếu buổi ${rangeTxt(mi)} – bổ sung</button></div>`:'';})()}</td><td>${esc(s.cls)}</td><td>${last}/${s.total}</td><td>${esc(s.parent)}</td>
     <td style="white-space:nowrap"><button class="btn" data-a="go" data-id="${s.id}" style="padding:5px 9px">✏️ Phiếu</button>
     <button class="btn g" data-a="ed" data-id="${s.id}" style="padding:5px 9px">Sửa</button>
     <button class="btn r" data-a="del" data-id="${s.id}" style="padding:5px 9px">Xóa</button></td></tr>`;}).join('');
   $$('#sTable button').forEach(b=>b.onclick=()=>{
     const s=stu(b.dataset.id);
+    if(b.dataset.a==='miss'){startFill(s.id,b.dataset.no);return;}
     if(b.dataset.a==='kt'){const x=db.sessions.find(y=>y.id===b.dataset.ses);if(!x)return; // mở lại phiếu buổi kiểm tra để nhập điểm
       $('#fFind').value='';fillStudentSelects();$('nav.tabs button[data-v=nhap]').click();writeForm(x);setEditing(x.id);updatePreview();
       setTimeout(()=>{$('#ktScore').scrollIntoView({behavior:'smooth',block:'center'});$('#fKtScore').focus();},150);}
@@ -655,7 +782,7 @@ function renderSaved(){
   const att={tot:'Tốt',kha:'Khá',cct:'Cần cải thiện'}, hw={done:'Hoàn thành',not:'Chưa HT',none:'Không có'};
   $('#lTable').innerHTML='<tr><th>Ngày</th><th>Học sinh</th><th>Buổi</th><th>BTVN</th><th>Khảo từ</th><th>Tinh thần</th><th></th></tr>'+
    (list.length?list.map(x=>{const s=stu(x.studentId)||{name:'?'};const[d,m]=dmy(x.fDate);
-    return `<tr><td>${d}/${m}</td><td>${esc(s.name)}</td><td>${esc(x.fNo)}/${esc(x.fTotal)}</td><td>${hw[x.hw]||''}${x.fPct?` (${esc(x.fPct)}%)`:''}</td>
+    return `<tr><td>${d}/${m}</td><td>${esc(s.name)}</td><td>${esc(x.fNo)}/${esc(x.fTotal)}</td><td>${x.abs?`<b style="color:#B23A12">${x.abs==='cp'?'Nghỉ có phép':'Nghỉ không phép'}</b>${x.fMakeup?`<div class="hint">bù: ${esc(x.fMakeup)}</div>`:''}`:`${hw[x.hw]||''}${x.fPct?` (${esc(x.fPct)}%)`:''}`}</td>
      <td>${x.fVScore!==''&&x.fVScore!=null?esc(x.fVScore)+'/'+esc(x.fVNum):'—'}</td><td>${att[x.att]||''}</td>
      <td style="white-space:nowrap"><button class="btn" data-a="op" data-id="${x.id}" style="padding:5px 9px">Mở</button>
      <button class="btn r" data-a="del" data-id="${x.id}" style="padding:5px 9px">Xóa</button></td></tr>`;}).join('')

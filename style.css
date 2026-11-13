@@ -175,3 +175,5 @@ button.kt-tag{cursor:pointer}
 .kt-tag.late{background:#FFE9E2;border-color:#E5774F;color:#B23A12}
 .kt-tag.in{background:#E8F1FD;border-color:#7FA8E0;color:#1E4E8C}
 .kt-tag.diem{background:#E9F6EA;border-color:#7BBF7F;color:#2E6B32}
+.kt-tag.miss{background:#F3EAFB;border-color:#B98AD9;color:#6B2E8E}
+#ocrImg{max-width:100%;max-height:260px;margin-top:8px;border:1px solid var(--line);border-radius:6px;display:none}
