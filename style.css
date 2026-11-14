@@ -186,3 +186,44 @@ button.kt-tag{cursor:pointer}
 .ocr-paste.busy{opacity:.6;pointer-events:none}
 .kt-tag.miss{background:#F3EAFB;border-color:#B98AD9;color:#6B2E8E}
 #ocrImg{max-width:100%;max-height:260px;margin-top:8px;border:1px solid var(--line);border-radius:6px;display:none}
+
+/* ============ PHIẾU MẪU C (cô chốt 2026-11-14): dải xanh đầu phiếu, 4 nhãn mục ombre, ô trong suốt thấy logo nền ============
+   Chỉ áp cho phiếu mặt trước (.sheet.c2 trong index.html). Màu lấy từ logo. */
+.sheet.c2{--o:#F47C35;--g:#3F7F32;--g2:#2C6424;--y:#F7CF5E;background:#fff;color:#2b2b2b}
+.sheet.c2 .hw{color:#C62828}
+.sheet.c2::before{content:"";position:absolute;left:0;right:0;top:0;height:172px;background:linear-gradient(115deg,#22521C 0%,var(--g2) 35%,var(--g) 70%,#58A23E 100%);border-bottom:5px solid var(--o);border-radius:0 0 50% 50%/0 0 26px 26px}
+.sheet.c2::after{content:"";position:absolute;right:-60px;top:-70px;width:220px;height:220px;border-radius:50%;border:26px solid rgba(255,255,255,.07)}
+.sheet.c2 .wm{opacity:.16;top:290px}
+.sheet.c2 .sh-top .logo{width:88px;height:88px;margin-top:14px;background:var(--y);padding:3px;border:4px solid #fff;border-radius:50%;position:relative;z-index:2}
+.sheet.c2 .sh-motto{color:#FFF6D6;font-size:15.5px;letter-spacing:1.2px}
+.sheet.c2 .sh-tag{background:var(--o);border:2px solid #fff;color:#fff;border-radius:20px;letter-spacing:1px;padding:6px 13px}
+.sheet.c2 .sh-title{color:#fff;font-weight:800;font-size:40px;line-height:1.1;letter-spacing:4px;text-shadow:0 2px 0 rgba(0,0,0,.18);margin-top:-10px}
+.sheet.c2 .sh-sub{color:var(--y);font-style:italic;font-weight:700;font-size:11px;letter-spacing:2.4px;display:flex;align-items:center;justify-content:center;gap:10px;margin-top:9px}
+.sheet.c2 .sh-sub::before,.sheet.c2 .sh-sub::after{content:"";width:28px;height:2px;border-radius:2px;background:var(--y)}
+.sheet.c2 .sh-badge{background:#fff;color:var(--o);border-radius:50%;width:40px;height:40px;border:3px solid var(--o);top:80px}
+.sheet.c2 .sh-info{margin-top:52px}
+.sheet.c2 .sh-lab{color:var(--g);font-size:12.5px;letter-spacing:1px}
+/* ô trong suốt (thấy logo nền), bóng ô chỉ còn viền phải-dưới */
+.sheet.c2 .sh-box,.sheet.c2 .sh-rbox,.sheet.c2 .sh-sbox,.sheet.c2 .sh-note{background:transparent}
+.sheet.c2 .sh-box{border:1.6px solid var(--g);border-radius:10px}
+.sheet.c2 .sw::before{background:transparent;border:solid #D6EEC6;border-width:0 5px 5px 0;border-radius:14px;left:5px;top:5px;right:-5px;bottom:-5px}
+.sheet.c2 .sw.o::before{border-color:var(--y);border-width:0 3px 3px 0;border-radius:10px;left:3px;top:3px;right:-3px;bottom:-3px}
+/* 4 nhãn mục dạng nút, mỗi nhãn 1 dải màu chuyển */
+.sheet.c2 .sh-h{width:max-content;margin:22px auto 12px;padding:5px 22px 5px 6px;border-radius:30px;color:#fff;font-family:'Be Vietnam Pro',sans-serif;font-weight:800;font-size:15px;letter-spacing:1.5px;text-transform:uppercase;display:flex;align-items:center;gap:10px}
+.sheet.c2 .sh-h::before{width:24px;height:24px;border-radius:50%;background:#fff;font-size:13px;display:inline-flex;align-items:center;justify-content:center}
+.sheet.c2 .sh-h.n1{background:linear-gradient(90deg,#1F5A1B,#3F7F32 50%,#78B84E)}.sheet.c2 .sh-h.n1::before{content:"1";color:#1F5A1B}
+.sheet.c2 .sh-h.n2{background:linear-gradient(90deg,#D4501A,#F47C35 55%,#F9A646)}.sheet.c2 .sh-h.n2::before{content:"2";color:#D4501A}
+.sheet.c2 .sh-h.n3{background:linear-gradient(90deg,#2E7A3A,#5FA344 50%,#A3C94A)}.sheet.c2 .sh-h.n3::before{content:"3";color:#2E7A3A}
+.sheet.c2 .sh-h.n4{background:linear-gradient(90deg,#C2410C,#EA6A24 50%,#F2B33D)}.sheet.c2 .sh-h.n4::before{content:"4";color:#C2410C}
+.sheet.c2 .sh-colh{color:var(--g);font-size:14px;letter-spacing:.8px;margin-bottom:9px}
+.sheet.c2 .sh-rbox{border:1.6px solid var(--g);border-radius:14px}
+.sheet.c2 .sh-st{font-size:13.5px;margin:4px 0}
+.sheet.c2 .sh-ck{border-color:var(--o)}
+.sheet.c2 .sh-sbox{border:1.6px solid var(--g);border-radius:14px;padding-top:0}
+.sheet.c2 .sh-2.nx .sh-sbox.green{height:118px} /* 2 ô BTVN buổi kế tiếp cao hơn (cô yêu cầu) */
+.sheet.c2 .sh-sbox .t{margin:0 -12px 6px;padding:5px 6px;border-radius:12px 12px 0 0;background:#EEF7E6;color:var(--g2);font-family:'Be Vietnam Pro',sans-serif;font-size:12.5px;letter-spacing:.2px;text-transform:uppercase;white-space:nowrap}
+.sheet.c2 .sh-note{border:1.6px solid var(--g);border-radius:24px;color:#5E8A52}
+.sheet.c2 .sh-opt{color:var(--g2);letter-spacing:.8px}
+.sheet.c2 .sh-circ{border-color:var(--g)}
+.sheet.c2 .sh-foot{margin-top:28px;border-top:none;padding-top:0}
+.sheet.c2 .sh-foot div{background:linear-gradient(120deg,var(--g2),var(--g) 60%,#5FA344);border-top:5px solid var(--o);font-style:normal;letter-spacing:.4px;font-size:11.5px}

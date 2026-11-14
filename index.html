@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lora:ital,wght@0,700;1,600&display=swap" rel="stylesheet">
 <script src="logo.js?v=202611111700"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<link rel="stylesheet" href="style.css?v=202611141100">
+<link rel="stylesheet" href="style.css?v=202611141300">
 </head>
 <body>
 <header class="app">
@@ -400,11 +400,11 @@ function sheetHTML(r){
     +(r.fVScore!==''&&r.fVScore!=null?`<div class="hw" style="margin-top:4px">Kết quả: ${esc(r.fVScore)}/${esc(r.fVNum)||'?'} từ</div>`:'');
   const prep=`<span class="hw k k2">Khảo</span> <span class="hw">${esc(r.fNVNum)||'....'}</span> <span class="hw k k2">từ vựng bài</span> <span class="hw">${esc(r.fNVUnit)}</span>`
     +(r.fPrep?`<div class="hw">${esc(r.fPrep)}</div>`:'');
-  return `<div class="sheet ${db.cfg.font==='print'?'print':'f-'+db.cfg.font}">
+  return `<div class="sheet c2 ${db.cfg.font==='print'?'print':'f-'+db.cfg.font}">
    <img class="wm" src="${L}">
    <div class="in">
     <div class="sh-top"><img class="logo" src="${L}"><div class="sh-motto">KIÊN TRÌ - YÊU THƯƠNG - TIẾN BỘ</div><div class="sh-tag">MS. MINH THƯ</div></div>
-    <div class="sh-title">📚 PHIẾU HỌC TẬP 📚</div>
+    <div class="sh-title">PHIẾU HỌC TẬP</div>
     <div class="sh-badge">1</div>
     <div class="sh-sub">THEO DÕI TIẾN ĐỘ HỌC TẬP VÀ ĐÁNH GIÁ CỦA HỌC VIÊN</div>
     <div class="sh-info">
@@ -412,7 +412,7 @@ function sheetHTML(r){
       <div><div class="sh-lab">NGÀY HỌC</div><div class="sw o"><div class="sh-box" data-ocr="date"><span class="hw">${d}</span>&nbsp;<b>/</b>&nbsp;<span class="hw">${m}</span>&nbsp;<b>/ ${y||'2026'}</b></div></div></div>
       <div><div class="sh-lab">SỐ BUỔI / 1 KHÓA</div><div class="sw o"><div class="sh-box" data-ocr="no"><span class="hw">${two(r.fNo)}</span>&nbsp;<b>/</b>&nbsp;<span class="hw">${esc(r.fTotal)}</span></div></div></div>
     </div>
-    <div class="sh-h green">KIỂM TRA BÀI TẬP VỀ NHÀ</div>
+    <div class="sh-h green n1">KIỂM TRA BÀI TẬP VỀ NHÀ</div>
     <div class="sh-2">
       <div><div class="sh-colh">TÌNH TRẠNG BÀI TẬP VỀ NHÀ</div><div class="sh-rbox">
         <div class="sh-st">Hoàn Thành <span data-ocr="ckDone">${ck(r.hw==='done')}</span></div>
@@ -421,20 +421,20 @@ function sheetHTML(r){
       </div></div>
       <div><div class="sh-colh">NHẬN XÉT BÀI TẬP VỀ NHÀ</div><div data-ocr="hwcmt" class="sh-rbox cmt${stamp?' st':''}"><div class="fit" data-max="19" data-lines="2"><div class="hw">${esc(r.fHwCmt)}</div></div>${stamp?'<img class="stamp" src="stamp.png" alt="">':''}</div></div>
     </div>
-    <div class="sh-h purple">MỤC TIÊU/NỘI DUNG BUỔI HỌC</div>
+    <div class="sh-h purple n2">MỤC TIÊU/NỘI DUNG BUỔI HỌC</div>
     <div class="sh-2 gv">
       <div class="sw p"><div class="sh-sbox purple" data-ocr="gram"><div class="t">Ngữ pháp</div><div class="fit" data-max="15" data-force="1"><div class="hw">${r.abs?`${r.abs==='cp'?'Con nghỉ có phép':'Con nghỉ không phép'}${r.fMakeup?' – đã học bù: '+esc(r.fMakeup):''}${r.fGram?'\n':''}`:''}${esc(r.fGram)}${hasKt(r)?`${r.fGram?'\n':''}${/(giữa|cuối) khóa/i.test(r.fKtName||"")?"Kiểm tra "+r.fKtName.match(/(giữa|cuối) khóa/i)[0]:"Kiểm tra định kỳ"}: ${esc(r.fKtScore)}/${esc(r.fKtMax||10)} điểm`:''}${hasSc(r)?(r.abs||r.fGram||hasKt(r)?'\n':'')+scLine(r):''}</div></div></div></div>
       <div class="sw p"><div class="sh-sbox purple" data-ocr="vocab"><div class="t">Từ vựng</div><div class="fit" data-max="15">${vocab}</div></div></div>
     </div>
-    <div class="sh-h navy">Tinh thần học tập của học viên</div>
+    <div class="sh-h navy n3">Tinh thần học tập của học viên</div>
     <div class="sh-att">
       <div class="sh-note" data-ocr="attcmt">${r.fAttCmt?`<div class="fit" data-max="15"><span class="hw">${esc(r.fAttCmt)}</span></div>`:'Nhận xét (nếu có)'}</div>
       <div class="sh-opt"><span data-ocr="att_tot">${circ(r.att==='tot')}</span> TỐT</div>
       <div class="sh-opt"><span data-ocr="att_kha">${circ(r.att==='kha')}</span> KHÁ</div>
       <div class="sh-opt"><span data-ocr="att_cct">${circ(r.att==='cct')}</span> CẦN CẢI THIỆN</div>
     </div>
-    <div class="sh-h green">BTVN BUỔI KẾ TIẾP</div>
-    <div class="sh-2">
+    <div class="sh-h green n4">BTVN BUỔI KẾ TIẾP</div>
+    <div class="sh-2 nx">
       <div class="sw g"><div class="sh-sbox green" data-ocr="next"><div class="t">NỘI DUNG VÀ VỊ TRÍ TRANG TÀI LIỆU</div><div class="fit" data-max="15" data-force="1"><div class="hw">${esc(r.fNext)}</div></div></div></div>
       <div class="sw g"><div class="sh-sbox green" data-ocr="prep"><div class="t">LÝ THUYẾT VÀ BÀI TẬP CẦN CHUẨN BỊ</div><div class="fit" data-max="15" data-force="1">${prep}</div></div></div>
     </div>
@@ -521,7 +521,8 @@ function ocrBoxes(){ // vị trí các ô theo tỉ lệ khung phiếu
   const sh=$('#exportHolder .sheet');if(!sh)return null;const R=sh.getBoundingClientRect(),o={};
   sh.querySelectorAll('[data-ocr]').forEach(el=>{let r=el.getBoundingClientRect(),L=r.left,T=r.top,Rr=r.right,Bb=r.bottom;
     if(parseFloat(getComputedStyle(el).borderTopWidth)>0){ // ô có viền: chỉ lấy phần chữ bên trong (viền + bóng làm đọc sai)
-      const bw=parseFloat(getComputedStyle(el).borderTopWidth)+3;L+=bw;T+=bw;Rr-=bw;Bb-=bw;
+      const cs=getComputedStyle(el),bw=parseFloat(cs.borderTopWidth)+3,bx=bw+(parseFloat(cs.borderTopLeftRadius)*0.6||0); // ô bo góc (mẫu C): né thêm phần góc cong
+      L+=bx;T+=bw;Rr-=bx;Bb-=bw;
       const t=el.querySelector(':scope>.t');if(t)T=t.getBoundingClientRect().bottom;} // bỏ dòng tiêu đề ô
     o[el.dataset.ocr]={x:(L-R.left)/R.width,y:(T-R.top)/R.height,w:(Rr-L)/R.width,h:(Bb-T)/R.height};});
   return o;
