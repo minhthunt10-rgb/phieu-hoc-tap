@@ -979,7 +979,9 @@ function renderLich(){
   const d=dowOf($('#lDay').value);
   $('#lDow').textContent=d===6?'Chủ nhật':'Thứ '+(d+2);
   const hs=db.students.filter(s=>lich.days[s.id]&&d in lich.days[s.id])
-    .sort((a,b)=>String(lich.days[a.id][d]).localeCompare(String(lich.days[b.id][d]))||byKhoi(a,b));
+    // lớp cao → thấp (chưa ghi lớp xếp cuối), cùng lớp thì theo ca rồi tên (cô yêu cầu)
+    .sort((a,b)=>{const ka=khoi(a),kb=khoi(b);return (ka===99)-(kb===99)||kb-ka
+      ||String(lich.days[a.id][d]).localeCompare(String(lich.days[b.id][d]))||byKhoi(a,b);});
   $('#lPrep').innerHTML=!hs.length?'<p class="hint">Ngày này chưa có học sinh nào trong lịch.</p>':
     `<p class="hint"><b>${hs.length} học sinh</b> – 🖨️ = tài liệu cần in (dòng có "Phát"/"Kiểm tra"), 📌 = cần chuẩn bị.</p><div class="lich-day">`+hs.map(s=>{
       const p=latestSess(s.id), ca=lich.days[s.id][d];
