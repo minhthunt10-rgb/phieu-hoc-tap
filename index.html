@@ -211,7 +211,7 @@
  </div>
  <div class="card">
   <h3>🗓️ Lịch từng học sinh</h3>
-  <p class="hint">Mỗi ô chọn <b>—</b> (không học), <b>Học</b>, <b>Ca 1</b>, <b>Ca 2</b> hoặc <b>Ca 1+2</b> (học 2 ca trong ngày = 2 phiếu). Bấm ✕ để bỏ em khỏi lịch (không xoá hồ sơ học sinh). Lịch chỉ lưu trên máy này, không gửi lên Google Sheet và không hiện trên máy trợ giảng.</p>
+  <p class="hint">Mỗi ô chọn <b>—</b> (không học), <b>Học</b>, <b>Ca 1</b>, <b>Ca 2</b> hoặc <b>Ca 1+2</b> (học 2 ca trong ngày vẫn làm 1 phiếu chung). Bấm ✕ để bỏ em khỏi lịch (không xoá hồ sơ học sinh). Lịch chỉ lưu trên máy này, không gửi lên Google Sheet và không hiện trên máy trợ giảng.</p>
   <div class="lich-add"><select id="lAddSel"></select><button class="btn" id="lAdd">➕ Thêm vào lịch</button></div>
   <div class="tbl-wrap"><table class="list lich-tbl" id="lichTable"></table></div>
  </div>
@@ -1030,7 +1030,7 @@ function renderLich(){
   const inL=db.students.filter(s=>lich.days[s.id]).sort((a,b)=>{const ka=khoi(a),kb=khoi(b);return (ka===99)-(kb===99)||kb-ka||byKhoi(a,b);});
   $('#lichTable').innerHTML=!inL.length?'<tr><td class="hint">Chưa có học sinh nào trong lịch – chọn em ở ô trên rồi bấm <b>Thêm vào lịch</b>, hoặc dán lịch từ Google Sheet.</td></tr>':
     '<tr><th>Học sinh</th>'+THU.map(t=>`<th>${t}</th>`).join('')+'<th>Buổi/tuần</th><th>Thiếu phiếu</th><th></th></tr>'+inL.map(s=>{
-    const o=lich.days[s.id], nb=Object.values(o).reduce((a,v)=>a+caCount(v),0);
+    const o=lich.days[s.id], nb=Object.keys(o).length;
     return `<tr><td><b>${esc(s.name)}</b>${s.cls?' – '+esc(s.cls):''}</td>`+THU.map((t,i)=>{const v=i in o?o[i]:'-',opts=OPT.some(p=>p[0]===v)?OPT:[...OPT,[v,v]];
       return `<td><select class="lich-ca${v==='-'?'':' on'}" data-s="${s.id}" data-d="${i}">${opts.map(p=>`<option value="${esc(p[0])}"${p[0]===v?' selected':''}>${esc(p[1])}</option>`).join('')}</select></td>`;}).join('')
       +`<td style="text-align:center"><b>${nb}</b></td><td style="text-align:center">${missOf[s.id]?`<b style="color:#b23">${missOf[s.id]}</b>`:'<span style="color:#2E7D32">✓</span>'}</td>`
@@ -1044,7 +1044,7 @@ function renderLich(){
   const out=db.students.filter(s=>!lich.days[s.id]).sort(byKhoi);
   $('#lAddSel').innerHTML=out.length?out.map(s=>`<option value="${s.id}">${esc(s.name)}${s.cls?' – '+esc(s.cls):''}</option>`).join(''):'<option value="">(Mọi học sinh đã có trong lịch)</option>';
 }
-const caCount=v=>v==null?0:Math.max(1,(String(v).match(/ca\s*\d/gi)||[]).length);
+// học 2 ca trong ngày vẫn chỉ 1 phiếu chung (cô chốt 2026-11-16) → mỗi ngày có lịch cần 1 phiếu
 // danh sách ngày (mới → cũ) trong n ngày qua có em thiếu phiếu so với lịch
 function missingByLich(n){
   const res=[],t=new Date(today()+'T00:00:00');
@@ -1052,7 +1052,7 @@ function missingByLich(n){
     const date=x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0'),w=dowOf(date),list=[];
     db.students.forEach(s=>{const o=lich.days[s.id];if(!o||!(w in o))return;
       const ss=sessOf(s.id).filter(z=>z.fDate);if(ss.length&&date<ss.map(z=>z.fDate).sort()[0])return; // chưa bắt đầu học
-      const need=caCount(o[w]),have=ss.filter(z=>z.fDate===date).length;
+      const need=1,have=ss.filter(z=>z.fDate===date).length;
       if(have<need)list.push({s,ca:o[w],need,have});});
     if(list.length)res.push({date,list:list.sort((a,b)=>khoi(b.s)-khoi(a.s)||byKhoi(a.s,b.s))});}
   return res;
