@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lora:ital,wght@0,700;1,600&display=swap" rel="stylesheet">
 <script src="logo.js?v=202611111700"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<link rel="stylesheet" href="style.css?v=202611161526">
+<link rel="stylesheet" href="style.css?v=202611161533">
 </head>
 <body>
 <header class="app">
@@ -674,14 +674,16 @@ function fitOne(el){{
   // ưu tiên không xuống dòng: thu nhỏ tối đa tới 14px mà vẫn nằm trên 1 dòng (mỗi dòng cô gõ) thì dùng
   el.classList.add("nw");
   // data-force: bắt buộc mỗi dòng cô gõ nằm trên 1 dòng (ô Lý thuyết chỉ 2 dòng; quá dài mới cho xuống dòng)
-  const floor=el.dataset.force?12.5:14;
+  // không co dưới 14px (cô chê 12.5px quá nhỏ 2026-11-16) – dòng quá dài thì xuống dòng (text-wrap:pretty tránh rớt 1 chữ lẻ)
+  const floor=14;
   for(let s=max;s>=floor;s-=.5){set(s);if(fi.offsetWidth<=W+1&&fi.offsetHeight<=H+1)return;}
 
   el.classList.remove("nw");
   // phải xuống dòng: giữ cỡ chữ chuẩn cho đều, chỉ thu nhỏ khi tràn ô
   // data-lines: ưu tiên chữ to nhất mà vẫn chỉ chiếm chừng ấy dòng (ô nhận xét BTVN: 2 dòng)
   const L=+el.dataset.lines,lh=1.4; // .hw line-height
-  if(L)for(let s=max;s>=14;s-=.5){set(s);if(fi.offsetHeight<=s*lh*L+2&&fi.offsetHeight<=H+1)return;}
+  // câu dài: 2 dòng mà phải co dưới 15px thì cho 3 dòng để chữ to hơn
+  if(L)for(const n of [L,L+1])for(let s=max;s>=(n===L?15:14);s-=.5){set(s);if(fi.offsetHeight<=s*lh*n+2&&fi.offsetHeight<=H+1)return;}
   let s=max;set(s);while(s>9&&fi.offsetHeight>H+1){s-=.5;set(s);}
 }}
 function fitPreview(){
