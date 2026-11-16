@@ -236,3 +236,4 @@ button.kt-tag{cursor:pointer}
 @media (max-width:560px){.hs-top{grid-template-columns:minmax(0,1fr)}}
 .prev-hw li.td{color:#1E6FD9;font-weight:600}
 .sheet.c2 .sh-rbox{height:76px;padding-top:6px;padding-bottom:6px}.sheet.c2 .sh-st{margin:1px 0} /* mục 1 thấp lại (cô yêu cầu 2026-11-16) */
+.sheet.c2 .sh-rbox.cmt .stamp{bottom:-42px} /* ô mục 1 thấp lại → hạ dấu xuống chỗ cô khoanh (2026-11-16) */
