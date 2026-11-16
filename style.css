@@ -227,3 +227,10 @@ button.kt-tag{cursor:pointer}
 .sheet.c2 .sh-circ{border-color:var(--g)}
 .sheet.c2 .sh-foot{margin-top:28px;border-top:none;padding-top:0}
 .sheet.c2 .sh-foot div{background:linear-gradient(120deg,var(--g2),var(--g) 60%,#5FA344);border-top:5px solid var(--o);font-style:normal;letter-spacing:.4px;font-size:11.5px}
+
+/* góc phải thẻ HS: BTVN buổi trước (cô yêu cầu 2026-11-16 để kiểm tra bài) */
+.hs-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:stretch}
+.prev-hw{border:1.5px dashed #8CC152;background:#F4FAEE;border-radius:12px;padding:8px 12px;font-size:13.5px;color:#333;max-height:150px;overflow:auto}
+.prev-hw b{display:block;color:#3E8E3F;font-size:13.5px;margin-bottom:4px}.prev-hw b small{font-weight:600;color:#6b8f5a}
+.prev-hw ul{margin:0;padding-left:18px}.prev-hw li{margin:2px 0}.prev-hw .muted{color:#999;font-style:italic}
+@media (max-width:560px){.hs-top{grid-template-columns:minmax(0,1fr)}}
