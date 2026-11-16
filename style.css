@@ -194,7 +194,7 @@ button.kt-tag{cursor:pointer}
 .sheet.c2::before{content:"";position:absolute;left:0;right:0;top:0;height:172px;background:linear-gradient(115deg,#22521C 0%,var(--g2) 35%,var(--g) 70%,#58A23E 100%);border-bottom:5px solid var(--o);border-radius:0 0 50% 50%/0 0 26px 26px}
 .sheet.c2::after{content:"";position:absolute;right:-60px;top:-70px;width:220px;height:220px;border-radius:50%;border:26px solid rgba(255,255,255,.07)}
 .sheet.c2 .wm{opacity:.07;top:250px}
-.sheet.c2 .sh-top .logo{width:88px;height:88px;margin-top:66px;background:var(--y);padding:3px;border:4px solid #fff;border-radius:50%;position:relative;z-index:2}
+.sheet.c2 .sh-top .logo{width:98px;height:98px;margin-top:52px;margin-left:-12px;background:var(--y);padding:3px;border:4px solid #fff;border-radius:50%;position:relative;z-index:2}
 .sheet.c2 .sh-motto{color:#FFF6D6;font-size:15.5px;letter-spacing:1.2px}
 .sheet.c2 .sh-tag{background:var(--o);border:2px solid #fff;color:#fff;border-radius:20px;letter-spacing:1px;padding:6px 13px}
 .sheet.c2 .sh-title{color:#fff;font-weight:800;font-size:40px;line-height:1.1;letter-spacing:4px;text-shadow:0 2px 0 rgba(0,0,0,.18);margin-top:-10px}
