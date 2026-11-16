@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lora:ital,wght@0,700;1,600&display=swap" rel="stylesheet">
 <script src="logo.js?v=202611111700"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<link rel="stylesheet" href="style.css?v=202611161533">
+<link rel="stylesheet" href="style.css?v=202611162057">
 </head>
 <body>
 <header class="app">
@@ -189,6 +189,7 @@
  </div>
  <div class="card"><h3>Danh sách học sinh (<span id="sCount">0</span>)</h3>
   <div id="ktSum" class="kt-sum"></div>
+  <div id="printList"></div>
   <input type="text" id="sSearch" placeholder="Tìm tên hoặc lớp…">
   <div class="tbl-wrap"><table class="list" id="sTable"></table></div>
  </div>
@@ -784,7 +785,20 @@ function ktTag(s,st){
   const [d,m]=dmy(st.ses.fDate);
   return `<button type="button" class="kt-tag diem" data-a="kt" data-id="${s.id}" data-ses="${st.ses.id}">✏️ Nhập điểm kiểm tra ${st.k} khóa (buổi ${esc(st.ses.fNo)}, ${d}/${m})</button>`;
 }
+// ô BTVN buổi kế tiếp có "Phát …" / "Kiểm tra …" → tài liệu cần in cho buổi sau (cô yêu cầu 2026-11-16)
+const IN_RE=/(^|[^\p{L}])(phát(?!\s+(âm|biểu|huy|triển))|kiểm tra)(?![\p{L}])/iu;
+function printItems(s){
+  const p=latestSess(s.id); if(!p)return null;
+  const ls=[p.fNext,p.fPrep].join('\n').split('\n').map(t=>t.trim()).filter(t=>t&&IN_RE.test(t));
+  return ls.length?{p,ls}:null;
+}
+function renderPrintList(){
+  const rows=db.students.slice().sort(byKhoi).map(s=>({s,x:printItems(s)})).filter(r=>r.x);
+  $('#printList').innerHTML=rows.length?`<div class="print-list"><b>🖨️ Tài liệu cần in cho buổi sau (${rows.length} HS)</b><ul>`
+    +rows.map(({s,x})=>{const[d,m]=dmy(x.p.fDate);return `<li><b>${esc(s.name)}</b>${s.cls?' – '+esc(s.cls):''} <small>(giao buổi ${esc(x.p.fNo)}${x.p.fDate?' – '+d+'/'+m:''})</small>: ${x.ls.map(esc).join('; ')}</li>`;}).join('')+'</ul></div>':'';
+}
 function renderStudents(){
+  renderPrintList();
   const q=$('#sSearch').value.toLowerCase();
   const list=db.students.filter(s=>(s.name+' '+(s.cls||'')).toLowerCase().includes(q)).sort(byKhoi);
   $('#sCount').textContent=db.students.length;

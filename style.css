@@ -239,3 +239,6 @@ button.kt-tag{cursor:pointer}
 .sheet.c2 .sh-rbox.cmt .stamp{bottom:-42px} /* ô mục 1 thấp lại → hạ dấu xuống chỗ cô khoanh (2026-11-16) */
 .sheet.c2 .cmt .fit{padding:0 6px 2px} /* bớt lề để câu nhận xét chữ to hơn (2026-11-16) */
 .sheet .sh-sbox .fit .hw{text-wrap:pretty} /* xuống dòng không rớt 1 chữ lẻ */
+/* tab Học sinh: tài liệu cần in cho buổi sau (dòng có "Phát"/"Kiểm tra") */
+.print-list{border:1.5px dashed #F08A3E;background:#FFF6EE;border-radius:12px;padding:8px 12px;margin:0 0 10px;font-size:13.5px}
+.print-list>b{color:#C0561A}.print-list ul{margin:4px 0 0;padding-left:18px}.print-list li{margin:3px 0}.print-list small{color:#888}
