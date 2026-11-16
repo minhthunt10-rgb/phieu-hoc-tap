@@ -1026,6 +1026,9 @@ function init(){
   $('#lMonth').value=today().slice(0,7);
 }
 init();
+// link riêng …/index.html#lich → mở thẳng tab Lịch học, ngày hôm nay (cô yêu cầu)
+const goLich=()=>{if(location.hash==='#lich'&&lich.on){$('#lDay').value=today();$('#navLich').click();window.scrollTo({top:0});}};
+goLich();window.addEventListener('hashchange',goLich);
 document.fonts&&document.fonts.ready.then(()=>{fitText();fitPreview();});
 // công cụ chụp ảnh tải sau (không chặn trang) → tải xong mới dựng sẵn ảnh
 window.addEventListener('load',preRender);
