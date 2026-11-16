@@ -251,3 +251,15 @@ button.kt-tag{cursor:pointer}
 .lich-ok{float:right;font-size:13px;font-weight:700;color:#3E8E3F;cursor:pointer;display:flex;align-items:center;gap:5px;margin-left:10px}.lich-ok input{width:20px;height:20px;accent-color:#3E9B4F}
 .lich-hs.ok{background:#EEF8E8;border-left-color:#3E9B4F;opacity:.8}.lich-hs.ok b{text-decoration:line-through;text-decoration-color:#3E9B4F}
 .lich-cnt{color:#C0561A}.lich-cnt.ok{color:#3E8E3F}
+/* Lịch học: 7 nút chọn ngày trong tuần */
+.lich-row{grid-template-columns:minmax(150px,240px) 1fr}
+.lich-wk{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.lich-wk button{display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 2px;border:1.5px solid #F2D9C4;border-radius:10px;background:#fff;cursor:pointer;font:inherit;color:#555;line-height:1.2}
+.lich-wk button b{color:var(--orange);font-size:15px}
+.lich-wk button span{font-size:13px}
+.lich-wk button small{font-size:11px;color:#999}
+.lich-wk button:hover{border-color:var(--orange)}
+.lich-wk button.td{border-color:#6BBF59}
+.lich-wk button.on{background:var(--orange);border-color:var(--orange);color:#fff}
+.lich-wk button.on b,.lich-wk button.on small{color:#fff}
+@media (max-width:600px){.lich-row{grid-template-columns:1fr}}

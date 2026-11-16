@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lora:ital,wght@0,700;1,600&display=swap" rel="stylesheet">
 <script src="logo.js?v=202611111700"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<link rel="stylesheet" href="style.css?v=202611162242">
+<link rel="stylesheet" href="style.css?v=202611162300">
 </head>
 <body>
 <header class="app">
@@ -200,7 +200,7 @@
 <section class="view" id="v-lich">
  <div class="card">
   <h3>📋 Chuẩn bị theo ngày</h3>
-  <div class="row"><div><label class="f">Ngày</label><input type="date" id="lDay"></div><div><label class="f">Thứ</label><div id="lDow" class="lich-dow"></div></div></div>
+  <div class="row lich-row"><div><label class="f">Ngày</label><input type="date" id="lDay"></div><div><label class="f">Chọn ngày trong tuần</label><div id="lDow" class="lich-wk"></div></div></div>
   <div id="lPrep"></div>
  </div>
  <div class="card">
@@ -977,7 +977,13 @@ $('#lRead').onclick=()=>{
 function renderLich(){
   if(!$('#lDay').value)$('#lDay').value=today();
   const d=dowOf($('#lDay').value);
-  $('#lDow').textContent=d===6?'Chủ nhật':'Thứ '+(d+2);
+  // 7 nút T2–CN của tuần đang chọn (cô yêu cầu), kèm số HS có lịch mỗi ngày
+  const iso=x=>x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');
+  const mon=new Date($('#lDay').value+'T00:00:00');mon.setDate(mon.getDate()-d);
+  $('#lDow').innerHTML=THU.map((t,i)=>{const x=new Date(mon);x.setDate(mon.getDate()+i);
+    const n=db.students.filter(s=>lich.days[s.id]&&i in lich.days[s.id]).length;
+    return `<button type="button" class="${i===d?'on':''}${iso(x)===today()?' td':''}" data-d="${iso(x)}"><b>${t}</b><span>${x.getDate()}/${x.getMonth()+1}</span><small>${n} HS</small></button>`;}).join('');
+  $$('#lDow button').forEach(b=>b.onclick=()=>{$('#lDay').value=b.dataset.d;renderLich();});
   const hs=db.students.filter(s=>lich.days[s.id]&&d in lich.days[s.id])
     // lớp cao → thấp (chưa ghi lớp xếp cuối), cùng lớp thì theo ca rồi tên (cô yêu cầu)
     .sort((a,b)=>{const ka=khoi(a),kb=khoi(b);return (ka===99)-(kb===99)||kb-ka
