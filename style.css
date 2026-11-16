@@ -263,3 +263,14 @@ button.kt-tag{cursor:pointer}
 .lich-wk button.on{background:var(--orange);border-color:var(--orange);color:#fff}
 .lich-wk button.on b,.lich-wk button.on small{color:#fff}
 @media (max-width:600px){.lich-row{grid-template-columns:1fr}}
+/* Lịch học: bảng chọn ca + phiếu còn thiếu */
+.lich-add{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 10px}
+.lich-add select{flex:1;min-width:180px;max-width:360px}
+.lich-tbl td{vertical-align:middle}
+.lich-tbl select.lich-ca{width:auto;min-width:68px;padding:4px 4px;font-size:13px;border-radius:8px;color:#bbb;background:#fff}
+.lich-tbl select.lich-ca.on{color:#a3501b;font-weight:700;background:#FFF1E6;border-color:#F4B183}
+.lich-tbl .btn.sm{padding:3px 9px;font-size:13px;background:#fff;color:#b23;border:1px solid #f0c4c4;box-shadow:none}
+.lich-miss{border-left:4px solid #E5484D;background:#FFF5F5;border-radius:10px;padding:8px 12px;margin:8px 0}
+.lich-miss>b{display:block;color:#b23;margin-bottom:4px}
+.lich-miss .lm-hs{display:inline-flex;align-items:center;gap:6px;margin:3px 14px 3px 0}
+.lich-miss .btn.sm{padding:3px 10px;font-size:13px}
