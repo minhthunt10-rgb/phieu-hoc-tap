@@ -195,7 +195,7 @@
 <section class="view" id="v-luu">
  <div class="card">
   <div class="row">
-   <div><label class="f">Học sinh</label><select id="lStudent"></select></div>
+   <div><label class="f">Học sinh</label><input type="search" id="lFind" placeholder="🔍 Gõ tên để tìm học sinh…" autocomplete="off" style="margin-bottom:6px"><select id="lStudent"></select></div>
    <div><label class="f">Từ tháng</label><input type="month" id="lMonth"></div>
    <div><label class="f">Đến tháng <span class="hint">(để trống = 1 tháng)</span></label><input type="month" id="lMonth2"></div>
   </div>
@@ -327,8 +327,10 @@ function fillStudentSelects(){
   const v1=$('#fStudent').value, v2=$('#lStudent').value;
   $('#fStudent').innerHTML=!all.length?'<option value="">(Chưa có học sinh – thêm ở tab Học sinh)</option>'
     :found.length?found.map(opt).join(''):'<option value="">(Không tìm thấy học sinh)</option>';
-  $('#lStudent').innerHTML='<option value="">Tất cả</option>'+opts;
-  if($$('#fStudent option').some(o=>o.value===v1))$('#fStudent').value=v1; if(v2===''||stu(v2))$('#lStudent').value=v2;
+  // tab Phiếu đã lưu: ô tìm riêng (lFind) lọc danh sách chọn HS
+  const q2=boDau($('#lFind').value), found2=q2?all.filter(s=>khop(s,q2)):all;
+  $('#lStudent').innerHTML=`<option value="">${q2?`Tất cả HS khớp "${esc($('#lFind').value.trim())}" (${found2.length})`:'Tất cả'}</option>`+found2.map(opt).join('');
+  if($$('#fStudent option').some(o=>o.value===v1))$('#fStudent').value=v1; if(v2===''||found2.some(s=>s.id===v2))$('#lStudent').value=v2;
 }
 // lớp ghép: đã bấm "Lưu & sang HS tiếp" thì chọn HS khác vẫn giữ nội dung chung (tới khi bấm Phiếu mới)
 let keepShared=false;
@@ -811,7 +813,8 @@ function renderSaved(){
   fillStudentSelects();
   // lọc theo khoảng tháng (HS bắt đầu giữa tháng thì xem 2 tháng – cô yêu cầu 2026-11-13)
   const sid=$('#lStudent').value;let m1=$('#lMonth').value,m2=$('#lMonth2').value||m1;if(m1&&m2<m1)[m1,m2]=[m2,m1];
-  const list=db.sessions.filter(x=>{const m=String(x.fDate||'').slice(0,7);return (!sid||x.studentId===sid)&&(!m1||(m>=m1&&m<=m2));})
+  const q=boDau($('#lFind').value), ok=q?new Set(db.students.filter(s=>khop(s,q)).map(s=>s.id)):null;
+  const list=db.sessions.filter(x=>{const m=String(x.fDate||'').slice(0,7);return (sid?x.studentId===sid:(!ok||ok.has(x.studentId)))&&(!m1||(m>=m1&&m<=m2));})
     .sort((a,b)=>b.fDate.localeCompare(a.fDate)||b.created.localeCompare(a.created));
   const att={tot:'Tốt',kha:'Khá',cct:'Cần cải thiện'}, hw={done:'Hoàn thành',not:'Chưa HT',none:'Không có'};
   $('#lTable').innerHTML='<tr><th>Ngày</th><th>Học sinh</th><th>Buổi</th><th>BTVN</th><th>Khảo từ</th><th>Tinh thần</th><th></th></tr>'+
@@ -827,7 +830,7 @@ function renderSaved(){
     if(b.dataset.a==='del'&&confirm('Xóa phiếu này?')){SYNC.remove('sessions',x.id);db.sessions=db.sessions.filter(y=>y.id!==x.id);persist();if(editingId===x.id)setEditing(null);renderSaved();}
   });
 }
-$('#lStudent').onchange=renderSaved; $('#lMonth').onchange=renderSaved; $('#lMonth2').onchange=renderSaved;
+$('#lStudent').onchange=renderSaved; $('#lFind').addEventListener('input',renderSaved); $('#lMonth').onchange=renderSaved; $('#lMonth2').onchange=renderSaved;
 $$('#lMonChips button').forEach(b=>b.onclick=()=>{const n=+b.dataset.n,cur=today().slice(0,7);
   if(!n){$('#lMonth').value='';$('#lMonth2').value='';}
   else{const [y,m]=cur.split('-').map(Number),d=new Date(y,m-n,1);$('#lMonth').value=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;$('#lMonth2').value=n>1?cur:'';}
