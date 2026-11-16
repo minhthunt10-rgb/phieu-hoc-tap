@@ -951,7 +951,11 @@ function matchCell(cell){
     .replace(/\b(vip|pro|ielts|test|nghe|sang|chieu|toi)\b/g,' ').replace(/\s+/g,' ').trim();
   const num=(t.match(/\d+/)||[])[0]; const nm=t.replace(/\d+/g,' ').replace(/\s+/g,' ').trim();
   if(!nm)return null;
-  const cand=db.students.filter(s=>{const n=boDau(s.name);return (n===nm||n.endsWith(' '+nm))&&(!num||khoi(s)===+num);});
+  // ghép từ chặt đến lỏng; tầng nào ra đúng 1 HS thì nhận, ra ≥2 thì báo trùng để cô tích tay
+  const last=w=>w.split(' ').pop(), full=s=>{const n=boDau(s.name);return n===nm||n.endsWith(' '+nm)||nm.endsWith(' '+n);};
+  const tail=s=>last(boDau(s.name))===last(nm), sameK=s=>!num||khoi(s)===+num, noK=s=>khoi(s)===99;
+  const tiers=[s=>full(s)&&sameK(s),s=>tail(s)&&sameK(s),s=>full(s)&&noK(s),s=>tail(s)&&noK(s),full];
+  let cand=[];for(const t of tiers){cand=db.students.filter(t);if(cand.length)break;}
   return {raw,ca:ca?'ca '+ca:'',s:cand.length===1?cand[0]:null,n:cand.length};
 }
 $('#lRead').onclick=()=>{
