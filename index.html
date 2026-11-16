@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lora:ital,wght@0,700;1,600&display=swap" rel="stylesheet">
 <script src="logo.js?v=202611111700"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<link rel="stylesheet" href="style.css?v=202611162107">
+<link rel="stylesheet" href="style.css?v=202611162242">
 </head>
 <body>
 <header class="app">
@@ -982,14 +982,21 @@ function renderLich(){
     // lớp cao → thấp (chưa ghi lớp xếp cuối), cùng lớp thì theo ca rồi tên (cô yêu cầu)
     .sort((a,b)=>{const ka=khoi(a),kb=khoi(b);return (ka===99)-(kb===99)||kb-ka
       ||String(lich.days[a.id][d]).localeCompare(String(lich.days[b.id][d]))||byKhoi(a,b);});
+  // dấu tích "đã soạn đủ" lưu theo từng ngày (lich.done[ngày][sid]) – chỉ trên máy này
+  const day=$('#lDay').value, dn=(lich.done=lich.done||{})[day]||{}, nDone=hs.filter(s=>dn[s.id]).length;
   $('#lPrep').innerHTML=!hs.length?'<p class="hint">Ngày này chưa có học sinh nào trong lịch.</p>':
-    `<p class="hint"><b>${hs.length} học sinh</b> – 🖨️ = tài liệu cần in (dòng có "Phát"/"Kiểm tra"), 📌 = cần chuẩn bị.</p><div class="lich-day">`+hs.map(s=>{
-      const p=latestSess(s.id), ca=lich.days[s.id][d];
+    `<p class="hint"><b>${hs.length} học sinh</b> – <b class="lich-cnt${nDone===hs.length?' ok':''}">✅ Đã soạn ${nDone}/${hs.length} em</b> – 🖨️ = tài liệu cần in (dòng có "Phát"/"Kiểm tra"), 📌 = cần chuẩn bị.</p><div class="lich-day">`+hs.map(s=>{
+      const p=latestSess(s.id), ca=lich.days[s.id][d], ok=!!dn[s.id];
       const ls=p?[p.fNext,p.fNVNum&&String(p.fNVUnit||'').trim()!=='Unit'?`Khảo ${p.fNVNum} từ vựng bài ${p.fNVUnit}`:'',p.fPrep].join('\n').split('\n').map(t=>t.trim()).filter(Boolean):[];
       const inn=ls.filter(t=>IN_RE.test(t)), prep=p?[p.fNVNum&&String(p.fNVUnit||'').trim()!=='Unit'?`Khảo ${p.fNVNum} từ vựng bài ${p.fNVUnit}`:'',...String(p.fPrep||'').split('\n')].map(t=>t.trim()).filter(t=>t&&!IN_RE.test(t)):[];
-      return `<div class="lich-hs${inn.length?' in':''}"><b>${esc(s.name)}</b>${s.cls?' – '+esc(s.cls):''}${ca?` <span class="pill">${esc(ca)}</span>`:''}`
+      return `<div class="lich-hs${inn.length?' in':''}${ok?' ok':''}"><label class="lich-ok"><input type="checkbox" data-s="${s.id}"${ok?' checked':''}> Đã soạn đủ</label><b>${esc(s.name)}</b>${s.cls?' – '+esc(s.cls):''}${ca?` <span class="pill">${esc(ca)}</span>`:''}`
         +(p?` <small>(theo phiếu buổi ${esc(p.fNo)}${p.fDate?' – '+dmy(p.fDate)[0]+'/'+dmy(p.fDate)[1]:''})</small>`:' <small>(chưa có phiếu)</small>')
         +(inn.length?'<div>🖨️ '+inn.map(esc).join('; ')+'</div>':'')+(prep.length?'<div>📌 '+prep.map(esc).join('; ')+'</div>':'')+'</div>';}).join('')+'</div>';
+  $$('#lPrep .lich-ok input').forEach(c=>c.onchange=()=>{const o=lich.done[day]=lich.done[day]||{};
+    if(c.checked)o[c.dataset.s]=1; else delete o[c.dataset.s];
+    // chỉ giữ dấu tích 30 ngày gần nhất cho gọn
+    Object.keys(lich.done).sort().slice(0,-30).forEach(k=>delete lich.done[k]);
+    saveLich();renderLich();});
   $('#lTable').innerHTML='<tr><th>Học sinh</th>'+THU.map(t=>`<th>${t}</th>`).join('')+'</tr>'+db.students.slice().sort(byKhoi).map(s=>{
     const o=lich.days[s.id]||{};
     return `<tr><td><b>${esc(s.name)}</b>${s.cls?' – '+esc(s.cls):''}</td>`+THU.map((t,i)=>`<td style="text-align:center"><input type="checkbox" data-s="${s.id}" data-d="${i}"${i in o?' checked':''}></td>`).join('')+'</tr>';}).join('');

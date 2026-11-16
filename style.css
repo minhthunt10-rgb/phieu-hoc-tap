@@ -248,3 +248,6 @@ button.kt-tag{cursor:pointer}
 .lich-hs{border:1px solid var(--line);border-left:4px solid #8CC152;border-radius:10px;padding:8px 12px;background:#fff;font-size:14px}
 .lich-hs.in{border-left-color:#F08A3E;background:#FFF6EE}.lich-hs small{color:#888}.lich-hs div{margin-top:3px}
 .lich-tbl th,.lich-tbl td{padding:4px 6px}
+.lich-ok{float:right;font-size:13px;font-weight:700;color:#3E8E3F;cursor:pointer;display:flex;align-items:center;gap:5px;margin-left:10px}.lich-ok input{width:20px;height:20px;accent-color:#3E9B4F}
+.lich-hs.ok{background:#EEF8E8;border-left-color:#3E9B4F;opacity:.8}.lich-hs.ok b{text-decoration:line-through;text-decoration-color:#3E9B4F}
+.lich-cnt{color:#C0561A}.lich-cnt.ok{color:#3E8E3F}
