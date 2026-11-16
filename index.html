@@ -983,14 +983,19 @@ function renderLich(){
     .sort((a,b)=>{const ka=khoi(a),kb=khoi(b);return (ka===99)-(kb===99)||kb-ka
       ||String(lich.days[a.id][d]).localeCompare(String(lich.days[b.id][d]))||byKhoi(a,b);});
   // dấu tích "đã soạn đủ" lưu theo từng ngày (lich.done[ngày][sid]) – chỉ trên máy này
-  const day=$('#lDay').value, dn=(lich.done=lich.done||{})[day]||{}, nDone=hs.filter(s=>dn[s.id]).length;
+  const day=$('#lDay').value, dn=(lich.done=lich.done||{})[day]||{};
+  // đếm "đã soạn" chỉ tính các em có tài liệu cần photo
+  const prevOf=s=>sessOf(s.id).filter(x=>x.fDate&&x.fDate<day).sort((a,b)=>(a.fDate+a.created).localeCompare(b.fDate+b.created)).pop();
+  const needIn=hs.filter(s=>{const p=prevOf(s);return p&&[p.fNVNum&&String(p.fNVUnit||'').trim()!=='Unit'?`Khảo ${p.fNVNum} từ vựng bài ${p.fNVUnit}`:'',...String(p.fPrep||'').split('\n')].some(t=>IN_RE.test(t.trim()));});
+  const nDone=needIn.filter(s=>dn[s.id]).length;
   $('#lPrep').innerHTML=!hs.length?'<p class="hint">Ngày này chưa có học sinh nào trong lịch.</p>':
-    `<p class="hint"><b>${hs.length} học sinh</b> – <b class="lich-cnt${nDone===hs.length?' ok':''}">✅ Đã soạn ${nDone}/${hs.length} em</b> – 🖨️ = tài liệu cần in (dòng có "Phát"/"Kiểm tra"), 📌 = cần chuẩn bị.</p><div class="lich-day">`+hs.map(s=>{
+    `<p class="hint"><b>${hs.length} học sinh</b> – <b class="lich-cnt${nDone===needIn.length?' ok':''}">✅ Đã soạn ${nDone}/${needIn.length} em cần photo</b> – 🖨️ = tài liệu cần in (dòng có "Phát"/"Kiểm tra"), 📌 = cần chuẩn bị.</p><div class="lich-day">`+hs.map(s=>{
       // việc cần làm ngày đang chọn = phần giao ở phiếu buổi TRƯỚC ngày đó (không lấy phiếu cùng ngày – cô chốt)
       const p=sessOf(s.id).filter(x=>x.fDate&&x.fDate<day).sort((a,b)=>(a.fDate+a.created).localeCompare(b.fDate+b.created)).pop(), ca=lich.days[s.id][d], ok=!!dn[s.id];
       const ls=p?[p.fNVNum&&String(p.fNVUnit||'').trim()!=='Unit'?`Khảo ${p.fNVNum} từ vựng bài ${p.fNVUnit}`:'',p.fPrep].join('\n').split('\n').map(t=>t.trim()).filter(Boolean):[];
       const inn=ls.filter(t=>IN_RE.test(t)), prep=p?[p.fNVNum&&String(p.fNVUnit||'').trim()!=='Unit'?`Khảo ${p.fNVNum} từ vựng bài ${p.fNVUnit}`:'',...String(p.fPrep||'').split('\n')].map(t=>t.trim()).filter(t=>t&&!IN_RE.test(t)):[];
-      return `<div class="lich-hs${inn.length?' in':''}${ok?' ok':''}"><label class="lich-ok"><input type="checkbox" data-s="${s.id}"${ok?' checked':''}> Đã soạn đủ</label><b>${esc(s.name)}</b>${s.cls?' – '+esc(s.cls):''}${ca?` <span class="pill">${esc(ca)}</span>`:''}`
+      // ô tích "Đã soạn đủ" chỉ hiện ở em có tài liệu cần photo (cô chốt)
+      return `<div class="lich-hs${inn.length?' in':''}${ok&&inn.length?' ok':''}">${inn.length?`<label class="lich-ok"><input type="checkbox" data-s="${s.id}"${ok?' checked':''}> Đã soạn đủ</label>`:''}<b>${esc(s.name)}</b>${s.cls?' – '+esc(s.cls):''}${ca?` <span class="pill">${esc(ca)}</span>`:''}`
         +(p?` <small>(theo phiếu buổi ${esc(p.fNo)}${p.fDate?' – '+dmy(p.fDate)[0]+'/'+dmy(p.fDate)[1]:''})</small>`:' <small>(chưa có phiếu buổi trước)</small>')
         +(inn.length?'<div>🖨️ '+inn.map(esc).join('; ')+'</div>':'')+(prep.length?'<div>📌 '+prep.map(esc).join('; ')+'</div>':'')+'</div>';}).join('')+'</div>';
   $$('#lPrep .lich-ok input').forEach(c=>c.onchange=()=>{const o=lich.done[day]=lich.done[day]||{};
