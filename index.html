@@ -213,7 +213,7 @@
  <div class="card">
   <h3>🗓️ Lịch từng học sinh</h3>
   <p class="hint">Tích ngày học của từng em (sửa tay được). Lịch chỉ lưu trên máy này, không gửi lên Google Sheet và không hiện trên máy trợ giảng.</p>
-  <div class="tbl-wrap"><table class="list lich-tbl" id="lTable"></table></div>
+  <div class="tbl-wrap"><table class="list lich-tbl" id="lichTable"></table></div>
  </div>
 </section>
 
@@ -997,10 +997,10 @@ function renderLich(){
     // chỉ giữ dấu tích 30 ngày gần nhất cho gọn
     Object.keys(lich.done).sort().slice(0,-30).forEach(k=>delete lich.done[k]);
     saveLich();renderLich();});
-  $('#lTable').innerHTML='<tr><th>Học sinh</th>'+THU.map(t=>`<th>${t}</th>`).join('')+'</tr>'+db.students.slice().sort(byKhoi).map(s=>{
+  $('#lichTable').innerHTML='<tr><th>Học sinh</th>'+THU.map(t=>`<th>${t}</th>`).join('')+'</tr>'+db.students.slice().sort(byKhoi).map(s=>{
     const o=lich.days[s.id]||{};
     return `<tr><td><b>${esc(s.name)}</b>${s.cls?' – '+esc(s.cls):''}</td>`+THU.map((t,i)=>`<td style="text-align:center"><input type="checkbox" data-s="${s.id}" data-d="${i}"${i in o?' checked':''}></td>`).join('')+'</tr>';}).join('');
-  $$('#lTable input').forEach(c=>c.onchange=()=>{const o=lich.days[c.dataset.s]=lich.days[c.dataset.s]||{};
+  $$('#lichTable input').forEach(c=>c.onchange=()=>{const o=lich.days[c.dataset.s]=lich.days[c.dataset.s]||{};
     if(c.checked)o[c.dataset.d]=o[c.dataset.d]||''; else delete o[c.dataset.d];
     if(!Object.keys(o).length)delete lich.days[c.dataset.s]; saveLich(); renderLich();});
 }
