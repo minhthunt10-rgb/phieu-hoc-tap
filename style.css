@@ -242,3 +242,9 @@ button.kt-tag{cursor:pointer}
 /* tab Học sinh: tài liệu cần in cho buổi sau (dòng có "Phát"/"Kiểm tra") */
 .print-list{border:1.5px dashed #F08A3E;background:#FFF6EE;border-radius:12px;padding:8px 12px;margin:0 0 10px;font-size:13.5px}
 .print-list>b{color:#C0561A}.print-list ul{margin:4px 0 0;padding-left:18px}.print-list li{margin:3px 0}.print-list small{color:#888}
+/* tab Lịch học (chỉ trên máy cô) */
+.lich-dow{padding:10px 0;font-weight:700;color:var(--orange)}
+.lich-day{display:grid;gap:8px}
+.lich-hs{border:1px solid var(--line);border-left:4px solid #8CC152;border-radius:10px;padding:8px 12px;background:#fff;font-size:14px}
+.lich-hs.in{border-left-color:#F08A3E;background:#FFF6EE}.lich-hs small{color:#888}.lich-hs div{margin-top:3px}
+.lich-tbl th,.lich-tbl td{padding:4px 6px}

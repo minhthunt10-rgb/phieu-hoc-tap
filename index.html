@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lora:ital,wght@0,700;1,600&display=swap" rel="stylesheet">
 <script src="logo.js?v=202611111700"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<link rel="stylesheet" href="style.css?v=202611162057">
+<link rel="stylesheet" href="style.css?v=202611162107">
 </head>
 <body>
 <header class="app">
@@ -20,6 +20,7 @@
   <button data-v="hs">👩‍🎓 Học sinh</button>
   <button data-v="luu">📂 Phiếu đã lưu</button>
   <button data-v="caidat">⚙️ Sao lưu &amp; cài đặt</button>
+  <button data-v="lich" id="navLich" style="display:none">📅 Lịch học</button>
   <a href="bao-cao.html">📊 Báo cáo tháng</a>
 </nav>
 <main>
@@ -195,6 +196,27 @@
  </div>
 </section>
 
+<!-- ================= LỊCH HỌC (chỉ trên máy cô – lưu riêng, không đồng bộ) ================= -->
+<section class="view" id="v-lich">
+ <div class="card">
+  <h3>📋 Chuẩn bị theo ngày</h3>
+  <div class="row"><div><label class="f">Ngày</label><input type="date" id="lDay"></div><div><label class="f">Thứ</label><div id="lDow" class="lich-dow"></div></div></div>
+  <div id="lPrep"></div>
+ </div>
+ <div class="card">
+  <h3>📥 Dán lịch từ Google Sheet</h3>
+  <p class="hint">Trong Google Sheet bôi đen cả bảng lịch (gồm dòng tiêu đề T2 … CN) → Ctrl+C → dán vào ô dưới → bấm <b>Đọc lịch</b>. Web tự ghép tên trong ô (VD "Trâm 10 (ca 1)", "LAN ANH VIP 4") với học sinh theo tên + khối. Lịch mới thay lịch cũ.</p>
+  <textarea id="lPaste" rows="5" placeholder="Dán lịch vào đây…"></textarea>
+  <div class="btns"><button class="btn" id="lRead">📥 Đọc lịch</button></div>
+  <div id="lMsg"></div>
+ </div>
+ <div class="card">
+  <h3>🗓️ Lịch từng học sinh</h3>
+  <p class="hint">Tích ngày học của từng em (sửa tay được). Lịch chỉ lưu trên máy này, không gửi lên Google Sheet và không hiện trên máy trợ giảng.</p>
+  <div class="tbl-wrap"><table class="list lich-tbl" id="lTable"></table></div>
+ </div>
+</section>
+
 <!-- ================= PHIẾU ĐÃ LƯU ================= -->
 <section class="view" id="v-luu">
  <div class="card">
@@ -279,7 +301,7 @@ const sessOf=id=>db.sessions.filter(x=>x.studentId===id).sort((a,b)=>(a.date+a.c
 $$('nav.tabs button').forEach(b=>b.onclick=()=>{
   $$('nav.tabs button').forEach(x=>x.classList.toggle('on',x===b));
   $$('.view').forEach(v=>v.classList.toggle('on',v.id==='v-'+b.dataset.v));
-  if(b.dataset.v==='luu')renderSaved(); if(b.dataset.v==='hs')renderStudents(); if(b.dataset.v==='caidat')loadCfg();
+  if(b.dataset.v==='luu')renderSaved(); if(b.dataset.v==='hs')renderStudents(); if(b.dataset.v==='caidat')loadCfg(); if(b.dataset.v==='lich')renderLich();
   if(b.dataset.v==='nhap')updatePreview();
 });
 
@@ -911,6 +933,65 @@ const SYNC=createSync({app:'phieu',cols:['students','sessions'],get:c=>db[c],set
     if(v&&v.v==='hs')renderStudents(); if(v&&v.v==='luu')renderSaved();
     // máy mới chưa có HS: kéo danh sách về xong thì điền sẵn phiếu cho HS đầu tiên
     if(fresh&&$('#fStudent').value)prefillFor($('#fStudent').value,false);}});
+
+/* ---------- Lịch học: chỉ trên máy cô (khoá riêng, KHÔNG nằm trong db nên không đồng bộ) ---------- */
+const LKEY='gwe-lich-hoc-v1', THU=['T2','T3','T4','T5','T6','T7','CN'];
+let lich={on:false,days:{}}; // days[sid] = {0:'ca 1', 3:''} – 0 = Thứ 2 … 6 = Chủ nhật
+try{const s=localStorage.getItem(LKEY);if(s)lich={...lich,...JSON.parse(s)};}catch(e){}
+const saveLich=()=>{try{localStorage.setItem(LKEY,JSON.stringify(lich));}catch(e){}};
+// mở trang với đuôi #lich một lần → máy này hiện tab Lịch học
+if(location.hash==='#lich'&&!lich.on){lich.on=true;saveLich();}
+if(lich.on)$('#navLich').style.display='';
+const dowOf=iso=>(new Date(iso+'T00:00:00').getDay()+6)%7;
+// ô lịch "Trâm 10 (ca 1)", "LAN ANH VIP 4", "HUY IELTS 11 (ca 2) - TEST" → học sinh khớp tên + khối
+function matchCell(cell){
+  const raw=String(cell||'').trim(); if(!raw)return null;
+  const ca=(raw.match(/ca\s*(\d)/i)||[])[1];
+  let t=boDau(raw).replace(/\(.*?\)/g,' ').replace(/\s-\s.*$/,' ').replace(/\bca\s*\d\b/g,' ')
+    .replace(/\b(vip|pro|ielts|test|nghe|sang|chieu|toi)\b/g,' ').replace(/\s+/g,' ').trim();
+  const num=(t.match(/\d+/)||[])[0]; const nm=t.replace(/\d+/g,' ').replace(/\s+/g,' ').trim();
+  if(!nm)return null;
+  const cand=db.students.filter(s=>{const n=boDau(s.name);return (n===nm||n.endsWith(' '+nm))&&(!num||khoi(s)===+num);});
+  return {raw,ca:ca?'ca '+ca:'',s:cand.length===1?cand[0]:null,n:cand.length};
+}
+$('#lRead').onclick=()=>{
+  const rows=$('#lPaste').value.split(/\r?\n/).map(r=>r.split('\t'));
+  if(!rows.some(r=>r.some(c=>c.trim()))){toast('Chưa dán lịch');return;}
+  // tìm cột T2…CN theo dòng tiêu đề; không có thì lấy 7 cột đầu
+  let col=null;
+  for(const r of rows){const m=r.map(c=>THU.indexOf(c.trim().toUpperCase()));if(m.filter(x=>x>=0).length>=5){col=m;break;}}
+  if(!col)col=[0,1,2,3,4,5,6];
+  const days={},bad=[];let n=0;
+  rows.forEach(r=>r.forEach((c,i)=>{const d=col[i];if(d==null||d<0||THU.includes(c.trim().toUpperCase()))return;
+    const m=matchCell(c);if(!m)return;
+    if(!m.s){bad.push(m.raw+(m.n>1?' (trùng '+m.n+' HS)':''));return;}
+    const o=days[m.s.id]=days[m.s.id]||{};o[d]=o[d]&&m.ca&&o[d]!==m.ca?o[d]+', '+m.ca:(o[d]||m.ca);n++;}));
+  lich.days=days;saveLich();renderLich();
+  $('#lMsg').innerHTML=`<p class="hint">✅ Đã đọc ${n} ô lịch cho ${Object.keys(days).length} học sinh.</p>`
+    +(bad.length?`<p class="hint" style="color:#b23">⚠️ ${bad.length} ô chưa ghép được học sinh (tích tay ở bảng dưới): ${[...new Set(bad)].map(esc).join('; ')}</p>`:'');
+};
+function renderLich(){
+  if(!$('#lDay').value)$('#lDay').value=today();
+  const d=dowOf($('#lDay').value);
+  $('#lDow').textContent=d===6?'Chủ nhật':'Thứ '+(d+2);
+  const hs=db.students.filter(s=>lich.days[s.id]&&d in lich.days[s.id])
+    .sort((a,b)=>String(lich.days[a.id][d]).localeCompare(String(lich.days[b.id][d]))||byKhoi(a,b));
+  $('#lPrep').innerHTML=!hs.length?'<p class="hint">Ngày này chưa có học sinh nào trong lịch.</p>':
+    `<p class="hint"><b>${hs.length} học sinh</b> – 🖨️ = tài liệu cần in (dòng có "Phát"/"Kiểm tra"), 📌 = cần chuẩn bị.</p><div class="lich-day">`+hs.map(s=>{
+      const p=latestSess(s.id), ca=lich.days[s.id][d];
+      const ls=p?[p.fNext,p.fNVNum&&String(p.fNVUnit||'').trim()!=='Unit'?`Khảo ${p.fNVNum} từ vựng bài ${p.fNVUnit}`:'',p.fPrep].join('\n').split('\n').map(t=>t.trim()).filter(Boolean):[];
+      const inn=ls.filter(t=>IN_RE.test(t)), prep=p?[p.fNVNum&&String(p.fNVUnit||'').trim()!=='Unit'?`Khảo ${p.fNVNum} từ vựng bài ${p.fNVUnit}`:'',...String(p.fPrep||'').split('\n')].map(t=>t.trim()).filter(t=>t&&!IN_RE.test(t)):[];
+      return `<div class="lich-hs${inn.length?' in':''}"><b>${esc(s.name)}</b>${s.cls?' – '+esc(s.cls):''}${ca?` <span class="pill">${esc(ca)}</span>`:''}`
+        +(p?` <small>(theo phiếu buổi ${esc(p.fNo)}${p.fDate?' – '+dmy(p.fDate)[0]+'/'+dmy(p.fDate)[1]:''})</small>`:' <small>(chưa có phiếu)</small>')
+        +(inn.length?'<div>🖨️ '+inn.map(esc).join('; ')+'</div>':'')+(prep.length?'<div>📌 '+prep.map(esc).join('; ')+'</div>':'')+'</div>';}).join('')+'</div>';
+  $('#lTable').innerHTML='<tr><th>Học sinh</th>'+THU.map(t=>`<th>${t}</th>`).join('')+'</tr>'+db.students.slice().sort(byKhoi).map(s=>{
+    const o=lich.days[s.id]||{};
+    return `<tr><td><b>${esc(s.name)}</b>${s.cls?' – '+esc(s.cls):''}</td>`+THU.map((t,i)=>`<td style="text-align:center"><input type="checkbox" data-s="${s.id}" data-d="${i}"${i in o?' checked':''}></td>`).join('')+'</tr>';}).join('');
+  $$('#lTable input').forEach(c=>c.onchange=()=>{const o=lich.days[c.dataset.s]=lich.days[c.dataset.s]||{};
+    if(c.checked)o[c.dataset.d]=o[c.dataset.d]||''; else delete o[c.dataset.d];
+    if(!Object.keys(o).length)delete lich.days[c.dataset.s]; saveLich(); renderLich();});
+}
+$('#lDay').addEventListener('change',renderLich);
 
 /* ---------- Khởi động ---------- */
 function init(){
