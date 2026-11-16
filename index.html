@@ -986,11 +986,12 @@ function renderLich(){
   const day=$('#lDay').value, dn=(lich.done=lich.done||{})[day]||{}, nDone=hs.filter(s=>dn[s.id]).length;
   $('#lPrep').innerHTML=!hs.length?'<p class="hint">Ngày này chưa có học sinh nào trong lịch.</p>':
     `<p class="hint"><b>${hs.length} học sinh</b> – <b class="lich-cnt${nDone===hs.length?' ok':''}">✅ Đã soạn ${nDone}/${hs.length} em</b> – 🖨️ = tài liệu cần in (dòng có "Phát"/"Kiểm tra"), 📌 = cần chuẩn bị.</p><div class="lich-day">`+hs.map(s=>{
-      const p=latestSess(s.id), ca=lich.days[s.id][d], ok=!!dn[s.id];
-      const ls=p?[p.fNext,p.fNVNum&&String(p.fNVUnit||'').trim()!=='Unit'?`Khảo ${p.fNVNum} từ vựng bài ${p.fNVUnit}`:'',p.fPrep].join('\n').split('\n').map(t=>t.trim()).filter(Boolean):[];
+      // việc cần làm ngày đang chọn = phần giao ở phiếu buổi TRƯỚC ngày đó (không lấy phiếu cùng ngày – cô chốt)
+      const p=sessOf(s.id).filter(x=>x.fDate&&x.fDate<day).sort((a,b)=>(a.fDate+a.created).localeCompare(b.fDate+b.created)).pop(), ca=lich.days[s.id][d], ok=!!dn[s.id];
+      const ls=p?[p.fNVNum&&String(p.fNVUnit||'').trim()!=='Unit'?`Khảo ${p.fNVNum} từ vựng bài ${p.fNVUnit}`:'',p.fPrep].join('\n').split('\n').map(t=>t.trim()).filter(Boolean):[];
       const inn=ls.filter(t=>IN_RE.test(t)), prep=p?[p.fNVNum&&String(p.fNVUnit||'').trim()!=='Unit'?`Khảo ${p.fNVNum} từ vựng bài ${p.fNVUnit}`:'',...String(p.fPrep||'').split('\n')].map(t=>t.trim()).filter(t=>t&&!IN_RE.test(t)):[];
       return `<div class="lich-hs${inn.length?' in':''}${ok?' ok':''}"><label class="lich-ok"><input type="checkbox" data-s="${s.id}"${ok?' checked':''}> Đã soạn đủ</label><b>${esc(s.name)}</b>${s.cls?' – '+esc(s.cls):''}${ca?` <span class="pill">${esc(ca)}</span>`:''}`
-        +(p?` <small>(theo phiếu buổi ${esc(p.fNo)}${p.fDate?' – '+dmy(p.fDate)[0]+'/'+dmy(p.fDate)[1]:''})</small>`:' <small>(chưa có phiếu)</small>')
+        +(p?` <small>(theo phiếu buổi ${esc(p.fNo)}${p.fDate?' – '+dmy(p.fDate)[0]+'/'+dmy(p.fDate)[1]:''})</small>`:' <small>(chưa có phiếu buổi trước)</small>')
         +(inn.length?'<div>🖨️ '+inn.map(esc).join('; ')+'</div>':'')+(prep.length?'<div>📌 '+prep.map(esc).join('; ')+'</div>':'')+'</div>';}).join('')+'</div>';
   $$('#lPrep .lich-ok input').forEach(c=>c.onchange=()=>{const o=lich.done[day]=lich.done[day]||{};
     if(c.checked)o[c.dataset.s]=1; else delete o[c.dataset.s];
