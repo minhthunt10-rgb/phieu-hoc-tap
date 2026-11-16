@@ -234,3 +234,4 @@ button.kt-tag{cursor:pointer}
 .prev-hw b{display:block;color:#3E8E3F;font-size:13.5px;margin-bottom:4px}.prev-hw b small{font-weight:600;color:#6b8f5a}
 .prev-hw ul{margin:0;padding-left:18px}.prev-hw li{margin:2px 0}.prev-hw .muted{color:#999;font-style:italic}
 @media (max-width:560px){.hs-top{grid-template-columns:minmax(0,1fr)}}
+.prev-hw li.td{color:#1E6FD9;font-weight:600}

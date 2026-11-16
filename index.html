@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lora:ital,wght@0,700;1,600&display=swap" rel="stylesheet">
 <script src="logo.js?v=202611111700"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<link rel="stylesheet" href="style.css?v=202611161450">
+<link rel="stylesheet" href="style.css?v=202611161458">
 </head>
 <body>
 <header class="app">
@@ -326,9 +326,11 @@ function renderPrevHw(){
   const p=ss.pop();
   if(!p){box.innerHTML='<b>BTVN buổi trước</b><span class="muted">Chưa có phiếu buổi trước</span>';return;}
   const [dd,mm]=dmy(p.fDate), kh=p.fNVNum&&String(p.fNVUnit||'').trim()!=='Unit'?`Khảo ${p.fNVNum} từ vựng bài ${p.fNVUnit}`:'';
-  const ls=[p.fNext,kh,p.fPrep].join('\n').split('\n').map(t=>t.trim()).filter(Boolean);
+  // bài về nhà (fNext) chữ thường; khảo từ + phần cần chuẩn bị = việc làm buổi hôm nay → xanh biển (cô chốt)
+  const sp=s=>String(s||'').split('\n').map(t=>t.trim()).filter(Boolean);
+  const ls=[...sp(p.fNext).map(t=>[t,'']),...sp(kh+'\n'+(p.fPrep||'')).map(t=>[t,'td'])];
   box.innerHTML=`<b>BTVN buổi trước <small>(buổi ${esc(p.fNo)}${p.fDate?` – ${dd}/${mm}`:''})</small></b>`
-    +(ls.length?'<ul>'+ls.map(t=>`<li>${esc(t)}</li>`).join('')+'</ul>':'<span class="muted">Buổi trước không giao BTVN</span>');
+    +(ls.length?'<ul>'+ls.map(([t,c])=>`<li${c?` class="${c}"`:""}>${esc(t)}</li>`).join('')+'</ul>':'<span class="muted">Buổi trước không giao BTVN</span>');
 }
 // tìm tên không cần gõ dấu: "lan anh", "lananh" đều ra Lan Anh
 const boDau=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[đĐ]/g,'d').toLowerCase().replace(/\s+/g,' ').trim();
