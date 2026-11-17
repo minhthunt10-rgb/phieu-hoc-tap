@@ -306,3 +306,28 @@ button.kt-tag{cursor:pointer}
 .plan-it.ktk{border-color:#ED93B1}
 .plan-ktk{margin-top:3px;font-size:13px;color:#72243E;background:#FBEAF0;border-radius:8px;padding:3px 9px;display:inline-block}
 .plan-sum{line-height:1.6}
+/* lộ trình chi tiết + gợi ý chọn lộ trình (2026-11-17) */
+.pi-dt{font-size:13.5px;line-height:1.45;margin-top:3px}
+.pi-dt b{color:#7A4A1E}
+.plan-u small{font-weight:400;color:#7A6A5C}
+.plan-sw{margin:4px 0 6px;padding:7px 10px;border:1.5px dashed #85B7EB;border-radius:10px;background:#F5F9FE;font-size:13.5px}
+.pt-d{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:6px 0 2px;font-size:13px;line-height:1.45}
+.pt-d>div{background:#fff;border-radius:8px;padding:5px 8px}
+@media (max-width:800px){.pt-d{grid-template-columns:1fr}}
+.sug{margin-top:10px}
+.sug-u{border:1.5px solid #F4B183;border-radius:12px;padding:10px 12px;margin:8px 0;background:#FFFBF7}
+.sug-h{font-weight:700;color:#C55A11;margin-bottom:4px}
+.sug-o{display:block;margin:6px 0 2px;cursor:pointer}
+.sug-o small{color:#7A6A5C}.sug-o .warn{color:#B23}
+.sug details{margin:0 0 4px 24px;font-size:13px}
+.sug summary{cursor:pointer;color:#1E6FD9}
+.sug-pv{margin:6px 0;padding-left:20px}
+.sug-pv li{margin:0 0 7px}
+.sug-r{display:grid;grid-template-columns:110px minmax(0,1fr);gap:6px;line-height:1.4}
+.sug-r span{color:#7A6A5C}
+.bt-c{margin:8px 0;font-size:13px}
+.bt-c>div{margin:4px 0}
+.bt-c button{margin:2px 3px;padding:3px 8px;border:1px solid #CFE6C2;background:#F4FAF0;border-radius:14px;cursor:pointer;font:inherit;font-size:12.5px}
+.bt-c button:hover{background:#E1F5EE}
+.bt-c button small{color:#5B8A4A}
+.plan-ed textarea.tgt{border-color:#ED7D31;box-shadow:0 0 0 2px #FBE0CC}
