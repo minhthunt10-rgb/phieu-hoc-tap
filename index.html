@@ -503,7 +503,7 @@ function sheetHTML(r){
     </div>
     <div class="sh-h purple n2">MỤC TIÊU/NỘI DUNG BUỔI HỌC</div>
     <div class="sh-2 gv">
-      <div class="sw p"><div class="sh-sbox purple" data-ocr="gram"><div class="t">Ngữ pháp</div><div class="fit" data-max="15" data-force="1"><div class="hw">${r.abs?`${r.abs==='cp'?'Con nghỉ có phép':'Con nghỉ không phép'}${r.fMakeup?' – đã học bù: '+esc(r.fMakeup):''}${r.fGram?'\n':''}`:''}${esc(r.fGram)}${hasKt(r)?`${r.fGram?'\n':''}${/(giữa|cuối) khóa/i.test(r.fKtName||"")?"Kiểm tra "+r.fKtName.match(/(giữa|cuối) khóa/i)[0]:"Kiểm tra định kỳ"}: ${esc(r.fKtScore)}/${esc(r.fKtMax||10)} điểm`:''}${hasSc(r)?(r.abs||r.fGram||hasKt(r)?'\n':'')+scLine(r):''}</div></div></div></div>
+      <div class="sw p"><div class="sh-sbox purple" data-ocr="gram"><div class="t">Ngữ pháp</div><div class="fit" data-max="15" data-force="1"><div class="hw">${r.abs?`${r.abs==='cp'?'Con nghỉ có phép':'Con nghỉ không phép'}${r.fMakeup?' – đã học bù: '+esc(r.fMakeup):''}${r.fGram?'\n':''}`:''}${esc(r.fGram)}${hasSc(r)?(r.abs||r.fGram?'\n':'')+scLine(r):''}</div></div></div></div>
       <div class="sw p"><div class="sh-sbox purple" data-ocr="vocab"><div class="t">Từ vựng</div><div class="fit" data-max="15">${vocab}</div></div></div>
     </div>
     <div class="sh-h navy n3">Tinh thần học tập của học viên</div>
@@ -548,7 +548,7 @@ function ktCheck(){
   const r=readForm(),box=$('#ktRemind'),sc=$('#ktScore'),hint=$('#ktScoreHint');
   const N=noMax(r.fNo),T=+r.fTotal;
   const showSc=(name,html)=>{if(name&&!(hasKt(r)&&$('#fKtName').value))$('#fKtName').value=name;
-    hint.innerHTML=hasKt(r)?`✓ Đã nhập điểm <b>${esc($('#fKtName').value||'kiểm tra')}</b>. Điểm hiện trên phiếu (ô Ngữ pháp) và tự vào <b>Báo cáo tháng</b>.`:html;sc.style.display='block';};
+    hint.innerHTML=hasKt(r)?`✓ Đã nhập điểm <b>${esc($('#fKtName').value||'kiểm tra')}</b>. Điểm tự vào <b>Báo cáo tháng</b> (không ghi trên phiếu).`:html;sc.style.display='block';};
   box.style.display='none';sc.style.display=hasKt(r)?'block':'none';
   if(!r.studentId||!N||!T||T<4){if(hasKt(r))showSc('Kiểm tra định kỳ','');return;}
   const K=Math.ceil(T/2),{prev,before}=khoaSess(r.studentId,N,r.fDate);
