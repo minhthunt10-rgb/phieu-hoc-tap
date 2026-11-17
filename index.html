@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lora:ital,wght@0,700;1,600&display=swap" rel="stylesheet">
 <script src="logo.js?v=202611111700"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<link rel="stylesheet" href="style.css?v=202611171200">
+<link rel="stylesheet" href="style.css?v=202611171430">
 </head>
 <body>
 <header class="app">
@@ -246,7 +246,7 @@
  </div>
  <div class="card">
   <h3>📐 Khung mẫu mỗi Unit</h3>
-  <p class="hint">Dùng khi tạo lộ trình mới (lộ trình đã tạo không bị đổi theo). <b>{U}</b> = Unit đang học, <b>{N}</b> = Unit tiếp theo. Ô "Khảo" để trống = buổi đó không khảo từ. Dòng ở ô "Chuẩn bị cho buổi sau" có chữ <b>Phát</b>/<b>Kiểm tra</b> sẽ hiện vào danh sách cần in.</p>
+  <p class="hint">Dùng khi tạo lộ trình mới (lộ trình đã tạo không bị đổi theo). <b>{U}</b> = Unit đang học, <b>{N}</b> = Unit tiếp theo, <b>{NP1}</b> / <b>{NP2}</b> = nửa đầu / nửa sau chủ điểm ngữ pháp của Unit (tự lấy tên theo khối, từ sách chuyên đề của cô), <b>{NPT}</b> = tên chủ điểm. Ô "Khảo" để trống = buổi đó không khảo từ. Dòng ở ô "Chuẩn bị cho buổi sau" có chữ <b>Phát</b>/<b>Kiểm tra</b> sẽ hiện vào danh sách cần in.</p>
   <div id="pTpl"></div>
   <div class="btns"><button class="btn g" id="pTplAdd">➕ Thêm buổi vào khung</button><button class="btn" id="pTplSave">💾 Lưu khung mẫu</button><button class="btn r" id="pTplReset">↺ Khung mặc định</button></div>
  </div>
@@ -303,6 +303,7 @@
 <div id="exportHolder"></div>
 <div class="toast" id="toast"></div>
 
+<script src="ngu-phap-unit.js?v=202611171400"></script>
 <script src="sync.js?v=202611051400"></script>
 <script>
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
@@ -1132,11 +1133,11 @@ $('#lAdd').onclick=()=>{const id=$('#lAddSel').value;if(!id)return;lich.days[id]
    lich.alerts = [{id,sid,t,it,at}] nhắc nhở khi lộ trình bị đổi (nghỉ, phiếu khác lộ trình) */
 // khung 6 buổi/Unit cô chốt 2026-11-17 (buổi 7–12: Unit tiếp theo hoặc ôn phần yếu – thêm tay)
 const DEF_TPL=[
- {k:'20 từ đầu + 1/2 ngữ pháp',gram:'Học 20 từ vựng đầu Unit {U}\nHọc 1/2 ngữ pháp Unit {U}',vNum:'',next:'Học thuộc 20 từ vựng đầu Unit {U}\nLàm BT ngữ pháp Unit {U} (phần 1)',nvNum:20,prep:''},
- {k:'20 từ tiếp + ngữ pháp còn lại',gram:'Học 20 từ vựng tiếp theo Unit {U}\nHọc phần ngữ pháp còn lại Unit {U}',vNum:20,next:'Học thuộc 20 từ vựng tiếp theo Unit {U}\nLàm BT ngữ pháp Unit {U} (phần 2)',nvNum:20,prep:''},
- {k:'Tổng ôn ngữ pháp + BT luyện tập',gram:'Tổng ôn ngữ pháp Unit {U}\nLàm BT luyện tập Unit {U}',vNum:20,next:'Hoàn thành BT luyện tập Unit {U}\nÔn toàn bộ từ vựng Unit {U}',nvNum:40,prep:''},
+ {k:'20 từ đầu + 1/2 ngữ pháp',gram:'Học 20 từ vựng đầu Unit {U}\n{NP1}',vNum:'',next:'Học thuộc 20 từ vựng đầu Unit {U}\nLàm BT ngữ pháp Unit {U} (phần 1)',nvNum:20,prep:''},
+ {k:'20 từ tiếp + ngữ pháp còn lại',gram:'Học 20 từ vựng tiếp theo Unit {U}\n{NP2}',vNum:20,next:'Học thuộc 20 từ vựng tiếp theo Unit {U}\nLàm BT ngữ pháp Unit {U} (phần 2)',nvNum:20,prep:''},
+ {k:'Tổng ôn ngữ pháp + BT luyện tập',gram:'Tổng ôn ngữ pháp Unit {U}{NPT}\nLàm BT luyện tập Unit {U}',vNum:20,next:'Hoàn thành BT luyện tập Unit {U}\nÔn toàn bộ từ vựng Unit {U}',nvNum:40,prep:''},
  {k:'Tổng ôn từ vựng + đọc hiểu',gram:'Tổng ôn từ vựng Unit {U}\nLàm bài đọc hiểu Unit {U}',vNum:40,next:'Ôn ngữ pháp Unit {U} chuẩn bị kiểm tra',nvNum:'',prep:'Kiểm tra ngữ pháp Unit {U}'},
- {k:'Kiểm tra ngữ pháp',gram:'Kiểm tra ngữ pháp Unit {U}',vNum:'',next:'Ôn lại từ vựng Unit {U}',nvNum:40,prep:'Phát bài kiểm tra + sửa BT ngữ pháp Unit {U}'},
+ {k:'Kiểm tra ngữ pháp',gram:'Kiểm tra ngữ pháp Unit {U}{NPT}',vNum:'',next:'Ôn lại từ vựng Unit {U}',nvNum:40,prep:'Phát bài kiểm tra + sửa BT ngữ pháp Unit {U}'},
  {k:'Sửa BT ngữ pháp + ôn từ vựng',gram:'Sửa bài kiểm tra + BT ngữ pháp Unit {U}\nÔn tập từ vựng Unit {U}',vNum:40,next:'Xem trước từ vựng Unit {N}',nvNum:'',prep:''}];
 const PF=['k','gram','vNum','next','nvNum','prep'];
 const tplOf=()=>lich.tpl&&lich.tpl.length?lich.tpl:DEF_TPL;
@@ -1148,12 +1149,32 @@ const thuOf=iso=>{const w=dowOf(iso);return w===6?'CN':'T'+(w+2);};
 if(lich.on)$('#navPlan').style.display='';
 // loại buổi → màu (từ vựng tím, ngữ pháp xanh, luyện/sửa cam, kiểm tra hồng)
 const kind=k=>{k=boDau(k);return /kiem tra/.test(k)?'kt':/sua|luyen|on tap|tong on ngu/.test(k)?'ls':/ngu phap/.test(k)&&!/tu/.test(k)?'np':'tv';};
-function makeItems(units,from){ // units: ['4','5'] → mỗi unit đủ các buổi trong khung
-  const out=[],T=tplOf();
-  units.forEach((u,i)=>{const n=units[i+1]||'tiếp theo';
-    T.forEach((t,j)=>{const it={id:uid(),u,s:j+1};PF.forEach(f=>it[f]=typeof t[f]==='string'?t[f].replace(/\{U\}/g,u).replace(/\{N\}/g,n):t[f]);out.push(it);});});
+// chủ điểm ngữ pháp Unit theo khối (ngu-phap-unit.js, lấy từ sách chuyên đề của cô): nửa đầu các mục → buổi 1, nửa sau → buổi 2
+function npOf(k,u){
+  const d=((window.NP_UNIT||{})[k]||{})[String(u).replace(/\D.*$/,'')];
+  if(!d)return {NP1:`Học 1/2 ngữ pháp Unit ${u}`,NP2:`Học phần ngữ pháp còn lại Unit ${u}`,NPT:'',D1:'',D2:''};
+  const h=Math.ceil(d.a.length/2);
+  // trên phiếu chỉ ghi tên chủ điểm (ô ngữ pháp nhỏ, ghi cả các mục thì chữ teo còn 9px); các mục chi tiết lưu riêng it.npd
+  return {NP1:`Ngữ pháp: ${d.t} (phần 1)`,NP2:`Ngữ pháp: ${d.t} (phần 2)`,NPT:`: ${d.t}`,D1:d.a.slice(0,h).join('; '),D2:d.a.slice(h).join('; ')};
+}
+function makeItems(units,sid){ // units: ['4','5'] → mỗi unit đủ các buổi trong khung
+  const out=[],T=tplOf(),s=stu(sid),k=s?khoi(s):99;
+  units.forEach((u,i)=>{const n=units[i+1]||'tiếp theo',np=npOf(k,u);
+    T.forEach((t,j)=>{const it={id:uid(),u,s:j+1};PF.forEach(f=>it[f]=typeof t[f]==='string'?t[f].replace(/\{U\}/g,u).replace(/\{N\}/g,n).replace(/\{(NP1|NP2|NPT)\}/g,(m,x)=>np[x]):t[f]);const m=String(t.gram||'').match(/{NP([12])}/);if(m)it.npd=np['D'+m[1]];out.push(it);});});
   return out;
 }
+// lộ trình / khung tạo trước khi có tên chủ điểm: điền tên vào các buổi chưa học (một lần, giữ chỗ cô đã sửa)
+(function npMigrate(){
+  let ch=false;
+  (lich.tpl||[]).forEach(t=>{const g=String(t.gram||'').replace('Học 1/2 ngữ pháp Unit {U}','{NP1}').replace('Học phần ngữ pháp còn lại Unit {U}','{NP2}')
+    .replace(/^(Tổng ôn ngữ pháp Unit \{U\}|Kiểm tra ngữ pháp Unit \{U\})$/m,'$1{NPT}');if(g!==t.gram){t.gram=g;ch=true;}});
+  Object.entries(lich.plans||{}).forEach(([sid,p])=>{const s=stu(sid);if(!s)return;
+    p.items.forEach(it=>{if(it.ses)return;const np=npOf(khoi(s),it.u);if(String(it.gram).includes(`Học 1/2 ngữ pháp Unit ${it.u}`))it.npd=np.D1;if(String(it.gram).includes(`Học phần ngữ pháp còn lại Unit ${it.u}`))it.npd=np.D2;const u=it.u.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+      const g=String(it.gram||'').replace(`Học 1/2 ngữ pháp Unit ${it.u}`,np.NP1).replace(`Học phần ngữ pháp còn lại Unit ${it.u}`,np.NP2)
+        .replace(new RegExp(`^(Tổng ôn ngữ pháp Unit ${u}|Kiểm tra ngữ pháp Unit ${u})$`,'m'),'$1'+np.NPT);
+      if(g!==it.gram){it.gram=g;ch=true;}});});
+  if(ch)saveLich();
+})();
 // ngày dự kiến cho các buổi chưa học: lần lượt vào các ngày có lịch, bắt đầu sau phiếu gần nhất (nghỉ cũng tính là đã qua buổi)
 function planDates(sid){
   const p=planOf(sid),o=lich.days[sid],res={};if(!p||!o||!Object.keys(o).length)return res;
@@ -1177,7 +1198,7 @@ function renderPlanTag(){
   const el=$('#planTag');const p=planFill&&planOf(planFill.sid),it=p&&p.items.find(x=>x.id===planFill.id);
   if(!it){el.style.display='none';return;}
   const n=p.items.filter(x=>x.u===it.u).length;
-  el.innerHTML=`🧭 <b>Theo lộ trình:</b> Unit ${esc(it.u)} · buổi ${it.s}/${n} – ${esc(it.k)} <small>(cô sửa nội dung thoải mái; khác lộ trình web sẽ hỏi lại)</small>`;el.style.display='block';
+  el.innerHTML=`🧭 <b>Theo lộ trình:</b> Unit ${esc(it.u)} · buổi ${it.s}/${n} – ${esc(it.k)}${it.npd?`<br><b>Các mục ngữ pháp:</b> ${esc(it.npd)}`:''} <small>(cô sửa nội dung thoải mái; khác lộ trình web sẽ hỏi lại)</small>`;el.style.display='block';
 }
 const normT=s=>String(s||'').replace(/\s+/g,' ').trim();
 function planAfterSave(rec,pf){
@@ -1221,7 +1242,7 @@ function renderPlanBody(){
     $('#pBody').innerHTML=`<div class="plan-new"><p class="hint"><b>${esc(s.name)}</b> chưa có lộ trình. Ghi các Unit sẽ học theo thứ tự, cách nhau dấu phẩy – mỗi Unit tự tạo ${tplOf().length} buổi theo khung mẫu.</p>
       <div class="lich-add"><input id="pUnits" placeholder="VD: 5, 6, 7" value="${lastU?esc(lastU):''}"><button class="btn" id="pMake">✨ Tạo lộ trình</button></div></div>`;
     $('#pMake').onclick=()=>{const u=$('#pUnits').value.split(/[,;]+/).map(x=>x.trim().replace(/^unit\s*/i,'')).filter(Boolean);
-      if(!u.length){toast('Ghi ít nhất 1 Unit');return;}lich.plans[sid]={items:makeItems(u)};saveLich();renderPlan();toast('Đã tạo lộ trình '+u.length+' Unit cho '+s.name);};
+      if(!u.length){toast('Ghi ít nhất 1 Unit');return;}lich.plans[sid]={items:makeItems(u,sid)};saveLich();renderPlan();toast('Đã tạo lộ trình '+u.length+' Unit cho '+s.name);};
     return;}
   const ds=planDates(sid),done=p.items.filter(isDone).length,pend=p.items.filter(x=>!isDone(x)),endD=pend.length?ds[pend[pend.length-1].id]:'';
   $('#pSum').innerHTML=`<b>Đã học ${done}/${p.items.length} buổi</b>${endD?` · dự kiến xong <b>${thuOf(endD)} ${dm(endD)}</b>`:''}${!lich.days[sid]?' · <span style="color:#b23">chưa có lịch học nên chưa xếp được ngày</span>':''}`;
@@ -1233,7 +1254,7 @@ function renderPlanBody(){
     return head+`<div class="plan-it${ok?' done':''}${cur?' cur':''}" data-i="${i}">
       <div class="pi-d">${d?`<b>${thuOf(d)}</b> ${dm(d)}`:'—'}<small>${ok?'✓ đã học':cur?'buổi tới':''}</small></div>
       <div class="pi-c"><span class="chip ${kind(it.k)}">B${it.s} · ${esc(it.k)}</span>
-        <div class="pi-t">${L(it.gram)}${it.vNum?` <span class="muted">· khảo ${esc(it.vNum)} từ</span>`:''}</div>
+        <div class="pi-t">${L(it.gram)}${it.npd?`<div class="pi-np">📖 ${esc(it.npd)}</div>`:''}${it.vNum?` <span class="muted">· khảo ${esc(it.vNum)} từ</span>`:''}</div>
         <div class="pi-n">BTVN: ${L(it.next)||'—'}${it.prep?` · <b>Chuẩn bị:</b> ${L(it.prep)}`:''}</div></div>
       <div class="pi-a">${ok?'':`<button data-a="ed" title="Sửa">✏️</button><button data-a="up" title="Lên">↑</button><button data-a="dn" title="Xuống">↓</button><button data-a="ins" title="Chèn buổi ôn tập phía sau">＋</button><button data-a="del" title="Xoá buổi">✕</button>`}</div>
     </div><div class="pi-ed" id="pe${i}"></div>`;}).join('')+'</div>'
@@ -1247,7 +1268,7 @@ function renderPlanBody(){
     saveLich();renderPlanBody();});
   $('#pAddU').onclick=()=>{const v=prompt('Thêm Unit nào? (nhiều Unit cách nhau dấu phẩy, VD: 8, 9)');if(!v)return;
     const u=v.split(/[,;]+/).map(x=>x.trim().replace(/^unit\s*/i,'')).filter(Boolean);if(!u.length)return;
-    p.items.push(...makeItems(u));saveLich();renderPlan();toast('Đã thêm '+u.length+' Unit');};
+    p.items.push(...makeItems(u,sid));saveLich();renderPlan();toast('Đã thêm '+u.length+' Unit');};
   $('#pAddR').onclick=()=>{const u=(p.items[p.items.length-1]||{}).u||'';p.items.push({id:uid(),u,s:'+',k:'Ôn tập phần yếu',gram:'Ôn tập phần còn yếu',vNum:'',next:'',nvNum:'',prep:''});saveLich();renderPlanBody();};
   $('#pDel').onclick=()=>{if(!confirm('Xoá cả lộ trình của '+s.name+'? (Phiếu đã lưu vẫn giữ nguyên)'))return;delete lich.plans[sid];saveLich();renderPlan();};
 }
@@ -1275,10 +1296,10 @@ $('#pTplSave').onclick=()=>{lich.tpl=readTpl();saveLich();toast('Đã lưu khung
 $('#pTplReset').onclick=()=>{if(!confirm('Đưa khung mẫu về 6 buổi mặc định?'))return;delete lich.tpl;saveLich();renderTpl();};
 // Excel (CSV có BOM để Excel đọc đúng tiếng Việt)
 $('#pCsv').onclick=()=>{
-  const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"',rows=[['Học sinh','Lớp','STT','Unit','Buổi','Tên buổi','Ngày','Trạng thái','Nội dung buổi học','Khảo (từ)','BTVN buổi kế tiếp','Khảo buổi sau','Chuẩn bị cho buổi sau']];
+  const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"',rows=[['Học sinh','Lớp','STT','Unit','Buổi','Tên buổi','Ngày','Trạng thái','Nội dung buổi học','Các mục ngữ pháp','Khảo (từ)','BTVN buổi kế tiếp','Khảo buổi sau','Chuẩn bị cho buổi sau']];
   db.students.filter(s=>planOf(s.id)).sort((a,b)=>khoi(b)-khoi(a)||byKhoi(a,b)).forEach(s=>{const ds=planDates(s.id);
     planOf(s.id).items.forEach((it,i)=>{const ok=isDone(it),d=ok?it.date:ds[it.id];
-      rows.push([s.name,s.cls||'',i+1,it.u,it.s,it.k,d?dmy(d).join('/'):'',ok?'Đã học':'Dự kiến',it.gram,it.vNum,it.next,it.nvNum,it.prep]);});});
+      rows.push([s.name,s.cls||'',i+1,it.u,it.s,it.k,d?dmy(d).join('/'):'',ok?'Đã học':'Dự kiến',it.gram,it.npd||'',it.vNum,it.next,it.nvNum,it.prep]);});});
   if(rows.length<2){toast('Chưa có lộ trình nào');return;}
   download(new Blob(['﻿'+rows.map(r=>r.map(q).join(',')).join('\r\n')],{type:'text/csv'}),`LoTrinh_${today()}.csv`);toast('Đã xuất '+(rows.length-1)+' buổi');};
 

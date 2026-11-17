@@ -300,3 +300,4 @@ button.kt-tag{cursor:pointer}
 .tpl-h{display:flex;gap:8px;align-items:center}.tpl-h input{flex:1}
 .tpl-g{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) 120px;gap:8px;margin-top:6px}
 @media (max-width:800px){.tpl-g{grid-template-columns:1fr}.plan-it{grid-template-columns:70px minmax(0,1fr)}.pi-a{grid-column:1/-1;max-width:none}}
+.pi-np{font-size:12.5px;color:#085041;background:#E1F5EE;border-radius:6px;padding:2px 8px;margin:3px 0 1px;display:inline-block}
