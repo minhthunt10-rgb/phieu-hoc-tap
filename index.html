@@ -222,6 +222,12 @@
   <div class="btns"><button class="btn" id="lRead">📥 Đọc lịch</button></div>
   <div id="lMsg"></div>
  </div>
+ <div class="card">
+  <h3>🔄 Chuyển lịch sang trình duyệt / máy khác</h3>
+  <p class="hint">Học sinh và phiếu tự đồng bộ qua Google Sheet: ở trình duyệt mới (VD Cốc Cốc) chỉ cần bấm nút <b>🔑 Nhập mã nhóm</b> góc trên, nhập đúng mã nhóm như bên Chrome. Riêng <b>lịch học</b> chỉ nằm trên máy nên phải chuyển bằng file: bên cũ bấm <b>📤 Xuất lịch</b> → bên mới mở link <b>…/index.html#lich</b>, đợi đồng bộ xong học sinh → bấm <b>📥 Nhập lịch từ file</b> và chọn file vừa tải.</p>
+  <div class="btns"><button class="btn" id="lExport">📤 Xuất lịch (.json)</button>
+   <label class="btn g">📥 Nhập lịch từ file<input type="file" id="lImport" accept=".json" hidden></label></div>
+ </div>
 </section>
 
 <!-- ================= PHIẾU ĐÃ LƯU ================= -->
@@ -1065,6 +1071,26 @@ function fillByDate(sid,date){
 }
 $('#lDay').addEventListener('change',renderLich);
 $('#lMissN').addEventListener('change',renderLich);
+// chuyển lịch giữa trình duyệt: lưu theo TÊN + lớp (id HS mỗi máy có thể khác), máy nhận ghép lại theo tên
+const nmKey=n=>String(n||'').normalize('NFC').toLowerCase().replace(/\s+/g,' ').trim();
+$('#lExport').onclick=()=>{
+  const rows=db.students.filter(s=>lich.days[s.id]).map(s=>({name:s.name,cls:s.cls||'',days:lich.days[s.id]}));
+  if(!rows.length){toast('Chưa có lịch để xuất');return;}
+  const done={};Object.entries(lich.done||{}).forEach(([d,o])=>{done[d]=Object.keys(o).map(id=>(stu(id)||{}).name).filter(Boolean);});
+  download(new Blob([JSON.stringify({kind:'lich-hoc',rows,done},null,1)],{type:'application/json'}),`LichHoc_${today()}.json`);
+  toast(`Đã xuất lịch của ${rows.length} học sinh`);};
+$('#lImport').onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();
+  rd.onload=()=>{try{const o=JSON.parse(rd.result);if(o.kind!=='lich-hoc'||!Array.isArray(o.rows))throw 0;
+    const find=(n,c)=>{const l=db.students.filter(s=>nmKey(s.name)===nmKey(n));return l.find(s=>(s.cls||'')===c)||l[0];};
+    const days={},miss=[];o.rows.forEach(r=>{const s=find(r.name,r.cls);if(s)days[s.id]=r.days||{};else miss.push(r.name+(r.cls?' – '+r.cls:''));});
+    if(!Object.keys(days).length){toast('Chưa ghép được học sinh nào – đợi đồng bộ xong danh sách HS rồi nhập lại');return;}
+    if(Object.keys(lich.days).length&&!confirm(`Nhập lịch của ${Object.keys(days).length} học sinh? Lịch hiện có trên trình duyệt này sẽ được thay.`))return;
+    const done={};Object.entries(o.done||{}).forEach(([d,ns])=>{done[d]={};ns.forEach(n=>{const s=find(n,'');if(s)done[d][s.id]=1;});});
+    lich={...lich,on:true,days,done};saveLich();$('#navLich').style.display='';renderLich();
+    toast(`Đã nhập lịch của ${Object.keys(days).length} học sinh`+(miss.length?` – ${miss.length} em chưa có trong danh sách`:''));
+    if(miss.length)$('#lMsg').innerHTML=`<p class="hint" style="color:#b23">⚠️ Chưa có trong danh sách học sinh nên chưa nhập lịch: ${miss.map(esc).join('; ')}</p>`;
+  }catch(_){toast('File không phải file lịch học');}};
+  rd.readAsText(f);e.target.value='';};
 $('#lAdd').onclick=()=>{const id=$('#lAddSel').value;if(!id)return;lich.days[id]={};saveLich();renderLich();toast('Đã thêm '+stu(id).name+' vào lịch – chọn ca từng ngày ở bảng');};
 
 /* ---------- Khởi động ---------- */
