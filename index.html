@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lora:ital,wght@0,700;1,600&display=swap" rel="stylesheet">
 <script src="logo.js?v=202611111700"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<link rel="stylesheet" href="style.css?v=202611171430">
+<link rel="stylesheet" href="style.css?v=202611171600">
 </head>
 <body>
 <header class="app">
@@ -1245,14 +1245,22 @@ function renderPlanBody(){
       if(!u.length){toast('Ghi ít nhất 1 Unit');return;}lich.plans[sid]={items:makeItems(u,sid)};saveLich();renderPlan();toast('Đã tạo lộ trình '+u.length+' Unit cho '+s.name);};
     return;}
   const ds=planDates(sid),done=p.items.filter(isDone).length,pend=p.items.filter(x=>!isDone(x)),endD=pend.length?ds[pend[pend.length-1].id]:'';
-  $('#pSum').innerHTML=`<b>Đã học ${done}/${p.items.length} buổi</b>${endD?` · dự kiến xong <b>${thuOf(endD)} ${dm(endD)}</b>`:''}${!lich.days[sid]?' · <span style="color:#b23">chưa có lịch học nên chưa xếp được ngày</span>':''}`;
+  // buổi số trên khóa (cô yêu cầu 2026-11-17): đã học = số buổi ghi trên phiếu; chưa học = nối tiếp phiếu gần nhất, hết khóa quay về buổi 1
+  // buổi giữa khóa (T/2) và cuối khóa (T) là buổi kiểm tra định kỳ → đánh dấu để cô chỉnh lộ trình cho khớp
+  const T=+s.total||12,K=Math.ceil(T/2),last=latestSess(sid),nos={};let N=nextNo(s);
+  p.items.forEach(it=>{if(isDone(it)){const x=db.sessions.find(z=>z.id===it.ses);nos[it.id]=x?String(x.fNo||''):'';}else{nos[it.id]=N;N=N>=T?1:N+1;}});
+  const ktK=no=>{const n=noMax(no);return n===K?'giữa':n===T?'cuối':'';};
+  const nxt=pend[0],kts=pend.filter(it=>ktK(nos[it.id])).slice(0,2);
+  $('#pSum').innerHTML=`<div><b>Đang ở buổi ${last?esc(last.fNo):0}/${T} của khóa</b>${nxt?` · buổi kế tiếp: <b>buổi ${nos[nxt.id]}</b>${ds[nxt.id]?` (${thuOf(ds[nxt.id])} ${dm(ds[nxt.id])})`:''}`:''}</div>`
+    +`<div>Lộ trình: đã học ${done}/${p.items.length} buổi${endD?` · dự kiến xong <b>${thuOf(endD)} ${dm(endD)}</b>`:''}${!lich.days[sid]?' · <span style="color:#b23">chưa có lịch học nên chưa xếp được ngày</span>':''}</div>`
+    +kts.map(it=>`<div class="plan-ktk">📝 Kiểm tra ${ktK(nos[it.id])} khóa: buổi ${nos[it.id]}${ds[it.id]?` (${thuOf(ds[it.id])} ${dm(ds[it.id])})`:''} – trùng bài "${esc(it.k)}" Unit ${esc(it.u)}</div>`).join('');
   let lastU=null;
   $('#pBody').innerHTML='<div class="plan-list">'+p.items.map((it,i)=>{
-    const ok=isDone(it),d=ok?it.date:ds[it.id],cur=!ok&&pend[0]===it;
+    const ok=isDone(it),d=ok?it.date:ds[it.id],cur=!ok&&pend[0]===it,kk=!ok&&ktK(nos[it.id]);
     const head=it.u!==lastU?`<div class="plan-u">Unit ${esc(it.u)}</div>`:'';lastU=it.u;
     const L=t=>String(t||'').split('\n').map(x=>x.trim()).filter(Boolean).map(esc).join(' · ');
-    return head+`<div class="plan-it${ok?' done':''}${cur?' cur':''}" data-i="${i}">
-      <div class="pi-d">${d?`<b>${thuOf(d)}</b> ${dm(d)}`:'—'}<small>${ok?'✓ đã học':cur?'buổi tới':''}</small></div>
+    return head+`<div class="plan-it${ok?' done':''}${cur?' cur':''}${kk?' ktk':''}" data-i="${i}">
+      <div class="pi-d"><span class="pi-no">Buổi ${nos[it.id]||'?'}/${T}</span>${d?`<b>${thuOf(d)}</b> ${dm(d)}`:'—'}<small>${ok?'✓ đã học':cur?'buổi tới':''}</small>${kk?`<span class="pi-kt">📝 KT ${kk} khóa</span>`:''}</div>
       <div class="pi-c"><span class="chip ${kind(it.k)}">B${it.s} · ${esc(it.k)}</span>
         <div class="pi-t">${L(it.gram)}${it.npd?`<div class="pi-np">📖 ${esc(it.npd)}</div>`:''}${it.vNum?` <span class="muted">· khảo ${esc(it.vNum)} từ</span>`:''}</div>
         <div class="pi-n">BTVN: ${L(it.next)||'—'}${it.prep?` · <b>Chuẩn bị:</b> ${L(it.prep)}`:''}</div></div>

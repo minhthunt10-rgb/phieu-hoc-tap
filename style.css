@@ -301,3 +301,8 @@ button.kt-tag{cursor:pointer}
 .tpl-g{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) 120px;gap:8px;margin-top:6px}
 @media (max-width:800px){.tpl-g{grid-template-columns:1fr}.plan-it{grid-template-columns:70px minmax(0,1fr)}.pi-a{grid-column:1/-1;max-width:none}}
 .pi-np{font-size:12.5px;color:#085041;background:#E1F5EE;border-radius:6px;padding:2px 8px;margin:3px 0 1px;display:inline-block}
+.pi-no{display:block;font-weight:700;color:var(--orange);font-size:12.5px;margin-bottom:1px}
+.pi-kt{display:block;margin-top:3px;font-size:11px;font-weight:700;color:#72243E;background:#FBEAF0;border-radius:6px;padding:1px 5px}
+.plan-it.ktk{border-color:#ED93B1}
+.plan-ktk{margin-top:3px;font-size:13px;color:#72243E;background:#FBEAF0;border-radius:8px;padding:3px 9px;display:inline-block}
+.plan-sum{line-height:1.6}
