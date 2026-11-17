@@ -274,3 +274,29 @@ button.kt-tag{cursor:pointer}
 .lich-miss>b{display:block;color:#b23;margin-bottom:4px}
 .lich-miss .lm-hs{display:inline-flex;align-items:center;gap:6px;margin:3px 14px 3px 0}
 .lich-miss .btn.sm{padding:3px 10px;font-size:13px}
+/* Lộ trình học */
+.plan-tag{margin:8px 0 2px;padding:7px 12px;border-radius:10px;background:#EEF4FC;border:1.5px dashed #85B7EB;color:#0C447C;font-size:14px}
+.plan-tag small{color:#5878A0}
+.plan-sum{padding-top:26px;font-size:14px;color:#555}
+.chip{display:inline-block;font-size:13px;font-weight:600;padding:2px 9px;border-radius:8px;margin:0 4px 3px 0}
+.chip.tv{background:#EEEDFE;color:#3C3489}.chip.np{background:#E1F5EE;color:#085041}.chip.ls{background:#FAEEDA;color:#633806}.chip.kt{background:#FBEAF0;color:#72243E}
+.plan-list{margin:8px 0}
+.plan-u{font-weight:700;color:var(--orange);margin:14px 0 4px;font-size:15px}
+.plan-it{display:grid;grid-template-columns:86px minmax(0,1fr) auto;gap:10px;align-items:start;padding:8px 10px;border:1px solid #F2E3D6;border-radius:10px;margin:4px 0;background:#fff}
+.plan-it.done{background:#F4FAF0;border-color:#CFE6C2;opacity:.75}
+.plan-it.cur{border:2px solid #378ADD;background:#F5F9FE}
+.pi-d{font-size:13px;line-height:1.3}.pi-d small{display:block;color:#888;font-size:11px}
+.plan-it.cur .pi-d small{color:#1E6FD9;font-weight:700}
+.pi-t{font-size:14px;margin-top:2px}.pi-n{font-size:12.5px;color:#777;margin-top:2px}
+.pi-a{display:flex;gap:3px;flex-wrap:wrap;max-width:150px;justify-content:flex-end}
+.pi-a button{border:1px solid #eee;background:#fff;border-radius:7px;padding:2px 7px;cursor:pointer;font-size:13px}
+.pi-a button:hover{border-color:var(--orange)}
+.plan-ed{border:1.5px dashed #F4B183;border-radius:10px;padding:10px 12px;margin:2px 0 8px;background:#FFFBF7}
+.plan-al{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;border-left:4px solid #BA7517;background:#FFF8EC;padding:8px 12px;margin:6px 0;font-size:14px}
+.plan-al.chg{border-color:#378ADD;background:#F2F7FD}.plan-al.end{border-color:#E24B4A;background:#FFF5F5}.plan-al.none{border-color:#aaa;background:#f7f7f7}
+.plan-al .btns{margin:0}.plan-al small{color:#888}
+.btn.sm{padding:4px 10px;font-size:13px}
+.tpl-it{border:1px solid #F2E3D6;border-radius:10px;padding:8px 10px;margin:8px 0;background:#fff}
+.tpl-h{display:flex;gap:8px;align-items:center}.tpl-h input{flex:1}
+.tpl-g{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) 120px;gap:8px;margin-top:6px}
+@media (max-width:800px){.tpl-g{grid-template-columns:1fr}.plan-it{grid-template-columns:70px minmax(0,1fr)}.pi-a{grid-column:1/-1;max-width:none}}
