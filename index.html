@@ -304,7 +304,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="ngu-phap-unit.js?v=202611171400"></script>
-<script src="lo-trinh-unit.js?v=202611172000"></script>
+<script src="lo-trinh-unit.js?v=202611172130"></script>
 <script src="sync.js?v=202611051400"></script>
 <script>
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
@@ -1205,7 +1205,7 @@ function renderPlanTag(){
   const n=p.items.filter(x=>x.u===it.u).length;
   const D=t=>esc(t).replace(/\n/g,'<br>');
   el.innerHTML=`🧭 <b>Theo lộ trình:</b> Unit ${esc(it.u)} · buổi ${it.s}/${n} – ${esc(it.k)}${it.npd?`<br><b>Các mục ngữ pháp:</b> ${esc(it.npd)}`:''}`
-    +(it.lop?`<div class="pt-d"><div><b>🔧 Sửa đầu giờ</b><br>${D(it.fix||'—')}</div><div><b>📖 Trên lớp (cô sửa ngay)</b><br>${D(it.lop)}</div><div><b>🏠 BTVN</b><br>${D(it.btvn||'—')}</div></div>`:'')
+    +(it.lop?`<div class="pt-d"><div><b>🔧 Khảo + sửa đầu giờ</b><br>${D(it.fix||'—')}</div><div><b>📖 Trên lớp (cô sửa ngay)</b><br>${D(it.lop)}</div><div><b>🏠 BTVN</b><br>${D(it.btvn||'—')}</div></div>`:'')
     +` <small>(cô sửa nội dung thoải mái; khác lộ trình web sẽ hỏi lại)</small>`;el.style.display='block';
 }
 const normT=s=>String(s||'').replace(/\s+/g,' ').trim();
@@ -1270,7 +1270,7 @@ function renderPlanBody(){
     const sw=!ok&&it.u!==lastU&&it.src!=='ct'&&ltOf(sid,it.u)&&!p.items.some(x=>x.u===it.u&&isDone(x))
       ?`<div class="plan-sw">💡 Unit ${esc(it.u)} có <b>lộ trình chi tiết ${ltOf(sid,it.u).buoi.length} buổi</b> (ghi trang sách, bài trên lớp, BTVN) <button class="btn sm" data-sw="${esc(it.u)}">Xem gợi ý</button><div class="sw-box"></div></div>`:'';
     const head=it.u!==lastU?`<div class="plan-u">Unit ${esc(it.u)}${ltOf(sid,it.u)&&it.src==='ct'?` <small>· ${esc(ltOf(sid,it.u).ten)} – lộ trình chi tiết</small>`:''}</div>${sw}`:'';lastU=it.u;
-    const body=it.lop?`<div class="pi-dt"><div><b>🔧 Sửa đầu giờ:</b> ${L(it.fix)||'—'}</div><div><b>📖 Trên lớp:</b> ${L(it.lop)}</div><div><b>🏠 BTVN:</b> ${L(it.btvn)||'—'}</div>${it.prep?`<div><b>🖨️ Chuẩn bị:</b> ${L(it.prep)}</div>`:''}</div>`
+    const body=it.lop?`<div class="pi-dt"><div><b>🔧 Khảo + sửa đầu giờ:</b> ${L(it.fix)||'—'}</div><div><b>📖 Trên lớp:</b> ${L(it.lop)}</div><div><b>🏠 BTVN:</b> ${L(it.btvn)||'—'}</div>${it.prep?`<div><b>🖨️ Chuẩn bị:</b> ${L(it.prep)}</div>`:''}</div>`
       :`<div class="pi-t">${L(it.gram)}${it.npd?`<div class="pi-np">📖 ${esc(it.npd)}</div>`:''}${it.vNum?` <span class="muted">· khảo ${esc(it.vNum)} từ</span>`:''}</div>
         <div class="pi-n">BTVN: ${L(it.next)||'—'}${it.prep?` · <b>Chuẩn bị:</b> ${L(it.prep)}`:''}</div>`;
     return head+`<div class="plan-it${ok?' done':''}${cur?' cur':''}${kk?' ktk':''}" data-i="${i}">
@@ -1300,7 +1300,7 @@ function renderPlanBody(){
 // gợi ý lộ trình cho từng Unit: cô xem trước từng buổi, chọn kiểu (chi tiết / khung chung) rồi bấm Chọn mới áp dụng
 function sugUI(box,sid,units,onPick){
   const pv=(u,mode)=>{const its=makeItems([u],sid,{[u]:mode});const D=t=>String(t||'').split('\n').filter(Boolean).map(esc).join('<br>');
-    return '<ol class="sug-pv">'+its.map(it=>`<li><b>${esc(it.k)}</b>${it.lop?`<div class="sug-r"><span>🔧 Sửa đầu giờ</span>${D(it.fix)||'—'}</div><div class="sug-r"><span>📖 Trên lớp</span>${D(it.lop)}</div><div class="sug-r"><span>🏠 BTVN</span>${D(it.btvn)||'—'}</div>`
+    return '<ol class="sug-pv">'+its.map(it=>`<li><b>${esc(it.k)}</b>${it.lop?`<div class="sug-r"><span>🔧 Khảo + sửa</span>${D(it.fix)||'—'}</div><div class="sug-r"><span>📖 Trên lớp</span>${D(it.lop)}</div><div class="sug-r"><span>🏠 BTVN</span>${D(it.btvn)||'—'}</div>`
       :`<div class="sug-r"><span>Nội dung</span>${D(it.gram)}</div><div class="sug-r"><span>BTVN</span>${D(it.next)||'—'}</div>`}</li>`).join('')+'</ol>';};
   box.innerHTML='<div class="sug">'+units.map((u,ix)=>{const lt=ltOf(sid,u),n=tplOf().length;
     return `<div class="sug-u"><div class="sug-h">Unit ${esc(u)}${lt?' – '+esc(lt.ten):''}</div>
@@ -1318,7 +1318,7 @@ function btChips(sid,u){const lt=ltOf(sid,u);if(!lt||!lt.bt)return '';const g={}
 function planEdit(sid,i){
   const it=planOf(sid).items[i],box=$('#pe'+i);if(box.innerHTML){box.innerHTML='';return;}
   box.innerHTML=`<div class="plan-ed"><div class="row"><div><label class="f">Tên buổi</label><input data-f="k" value="${esc(it.k)}"></div><div><label class="f">Unit</label><input data-f="u" value="${esc(it.u)}"></div><div><label class="f">Khảo (số từ)</label><input data-f="vNum" value="${esc(it.vNum)}"></div><div><label class="f">Khảo buổi sau</label><input data-f="nvNum" value="${esc(it.nvNum)}"></div></div>
-    ${it.lop!==undefined?`<label class="f">🔧 Sửa bài đầu giờ</label><textarea data-f="fix" rows="2">${esc(it.fix)}</textarea>
+    ${it.lop!==undefined?`<label class="f">🔧 Khảo + sửa bài đầu giờ</label><textarea data-f="fix" rows="2">${esc(it.fix)}</textarea>
     <label class="f">📖 Học và làm trên lớp (cô sửa ngay)</label><textarea data-f="lop" rows="3">${esc(it.lop)}</textarea>
     <label class="f">🏠 Bài tập về nhà (chi tiết)</label><textarea data-f="btvn" rows="3">${esc(it.btvn)}</textarea>`:''}
     <label class="f">Nội dung buổi học${it.lop!==undefined?' (ghi lên phiếu)':''}</label><textarea data-f="gram" rows="2">${esc(it.gram)}</textarea>
@@ -1348,7 +1348,7 @@ $('#pTplSave').onclick=()=>{lich.tpl=readTpl();saveLich();toast('Đã lưu khung
 $('#pTplReset').onclick=()=>{if(!confirm('Đưa khung mẫu về 6 buổi mặc định?'))return;delete lich.tpl;saveLich();renderTpl();};
 // Excel (CSV có BOM để Excel đọc đúng tiếng Việt)
 $('#pCsv').onclick=()=>{
-  const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"',rows=[['Học sinh','Lớp','STT','Unit','Buổi','Tên buổi','Ngày','Trạng thái','Nội dung buổi học','Các mục ngữ pháp','Khảo (từ)','BTVN buổi kế tiếp','Khảo buổi sau','Chuẩn bị cho buổi sau','Sửa đầu giờ','Trên lớp (chi tiết)','BTVN (chi tiết)']];
+  const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"',rows=[['Học sinh','Lớp','STT','Unit','Buổi','Tên buổi','Ngày','Trạng thái','Nội dung buổi học','Các mục ngữ pháp','Khảo (từ)','BTVN buổi kế tiếp','Khảo buổi sau','Chuẩn bị cho buổi sau','Khảo + sửa đầu giờ','Trên lớp (chi tiết)','BTVN (chi tiết)']];
   db.students.filter(s=>planOf(s.id)).sort((a,b)=>khoi(b)-khoi(a)||byKhoi(a,b)).forEach(s=>{const ds=planDates(s.id);
     planOf(s.id).items.forEach((it,i)=>{const ok=isDone(it),d=ok?it.date:ds[it.id];
       rows.push([s.name,s.cls||'',i+1,it.u,it.s,it.k,d?dmy(d).join('/'):'',ok?'Đã học':'Dự kiến',it.gram,it.npd||'',it.vNum,it.next,it.nvNum,it.prep,it.fix||'',it.lop||'',it.btvn||'']);});});
