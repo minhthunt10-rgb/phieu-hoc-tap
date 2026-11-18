@@ -43,6 +43,24 @@ table.gs tr.st:hover td{background:#FFFAF4}
 .bm-cc span{background:var(--lt2);border:1px solid var(--lt);border-radius:20px;padding:3px 12px;white-space:nowrap}
 .bm-cc span.no{background:#FFF1E6;border-color:#F8C9A6}
 .bm-cc .hw{font-size:16px}
+/* gọn lại (2026-11-18): logo nhỏ không đụng tiêu đề, ô kết quả + nhận xét thấp lại, nhận xét dài mới cao thêm */
+.sheet.c2.bc .sh-top .logo{width:80px;height:80px;margin-top:34px;margin-left:-14px}
+.sheet.c2.bc .sh-title{font-size:34px;letter-spacing:3px}
+.sheet.c2.bc .sh-info{margin-top:66px;gap:18px}
+.sheet.c2.bc .sh-h{margin:16px auto 9px;font-size:13.5px;padding:4px 18px 4px 5px}
+.sheet.c2.bc .sh-h::before{width:21px;height:21px;font-size:12px}
+.sheet.c2.bc .bc-stats{gap:16px}
+.sheet.c2.bc .bc-st{height:100%;padding:7px 6px 8px}
+.sheet.c2.bc .bc-stats .sw>div{height:100%}
+.sheet.c2.bc .bc-st .t{font-size:10.5px}
+.sheet.c2.bc .bc-st .big{font-size:26px}
+.sheet.c2.bc .bc-st .big small{font-size:13px}
+.sheet.c2.bc .bc-st .s{font-size:10.5px}
+.sheet.c2.bc .bc-bars{height:62px}
+.sheet.c2.bc .bc-cmt{height:auto;min-height:54px;padding:12px 16px}
+.sheet.c2.bc .bc-cmt .tx{max-height:none;padding-right:56px}
+.sheet.c2.bc .bc-cmt .stamp{width:72px;right:-8px;bottom:-20px}
+.sheet.c2.bc .sh-foot{margin-top:22px}
 .sheet.c2.rm .sh-h.n4.sm,.sheet.c2.rm .sh-h.sm{font-size:13px;padding:4px 18px 4px 5px}
 .sheet.c2.rw .sh-sub,.sheet.c2.rm .sh-sub{letter-spacing:1.2px;font-size:11.5px}
 .sheet.c2.rw .sw::before,.sheet.c2.rm .sw::before{background:var(--lt)}
@@ -133,7 +151,7 @@ table.gs tr.st:hover td{background:#FFFAF4}
 <nav class="tabs">
   <button data-v="gs" class="on">👀 Giám sát</button>
   <button data-v="kt">📝 Điểm kiểm tra</button>
-  <button data-v="pt">📄 Phiếu tháng</button>
+  <button data-v="pt">📄 Báo cáo khóa</button>
   <button data-v="tw">📅 Báo cáo tuần</button>
   <a href="index.html">✏️ Phiếu học tập</a>
   <a href="khao-tu.html">🔤 Khảo từ</a>
@@ -178,11 +196,13 @@ table.gs tr.st:hover td{background:#FFFAF4}
     <h3>Học sinh</h3>
     <input type="search" id="pFind" placeholder="🔍 Gõ tên để tìm học sinh…" autocomplete="off" style="margin-bottom:6px">
     <div class="ks"><select id="pStudent"></select><button class="btn g" id="pNext" type="button">HS tiếp ▶</button></div>
+    <label class="f" style="margin-top:8px">Khóa học</label><select id="pKhoa"></select>
+    <p class="hint">Khóa tự tách theo phiếu buổi: buổi số quay về 1 là sang khóa mới. Ô Tháng ở trên không áp cho báo cáo khóa.</p>
     <div id="pInfo" class="hint" style="margin-top:8px"></div>
    </div>
    <div class="card sec4">
-    <h3>Nhận xét của cô (tháng này)</h3>
-    <textarea id="pCmt" rows="5" placeholder="Tháng này con đi học đều, hoàn thành tốt BTVN…"></textarea>
+    <h3>Nhận xét của cô (cả khóa)</h3>
+    <textarea id="pCmt" rows="5" placeholder="Khóa này con đi học đều, hoàn thành tốt BTVN…"></textarea>
     <div class="chips" id="pChips"></div>
     <div class="btns"><button class="btn" id="pSave">💾 Lưu nhận xét</button></div>
     <p class="hint">Số buổi, ngày học, % BTVN, số từ thuộc, điểm kiểm tra được <b>tự tổng hợp</b> từ phiếu từng buổi, bài khảo từ và điểm kiểm tra – cô chỉ cần viết nhận xét.</p>
@@ -190,7 +210,7 @@ table.gs tr.st:hover td{background:#FFFAF4}
   </div>
   <div class="sticky">
    <div class="card">
-    <h3>Xem trước phiếu tháng</h3>
+    <h3>Xem trước báo cáo khóa</h3>
     <div id="bcPrevWrap"><div id="bcPrev"></div></div>
     <div class="btns">
       <button class="btn n" id="bShare">📤 Gửi Zalo (điện thoại)</button>
@@ -251,6 +271,6 @@ table.gs tr.st:hover td{background:#FFFAF4}
 <div class="toast" id="toast"></div>
 <script src="sync.js?v=202611051400"></script>
 <script src="lo-trinh-luyen-thi.js?v=202611181400"></script>
-<script src="bao-cao.js?v=202611182100"></script>
+<script src="bao-cao.js?v=202611190900"></script>
 </body>
 </html>

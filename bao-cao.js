@@ -27,14 +27,16 @@ const month=()=>$('#gMonth').value||today().slice(0,7);
 const active=()=>db.students.filter(s=>!s.deleted);
 
 /* ---------- Tổng hợp 1 HS trong 1 tháng ---------- */
-function summary(s,mon){
-  const ss=db.sessions.filter(x=>x.studentId===s.id&&String(x.fDate||'').startsWith(mon)).sort((a,b)=>a.fDate.localeCompare(b.fDate)||String(a.created).localeCompare(String(b.created)));
+function summary(s,mon,rng){
+  // rng={a,b}: tổng hợp theo khoảng ngày (cả khóa) thay vì theo tháng
+  const inR=d=>rng?(d>=rng.a&&d<=rng.b):d.startsWith(mon);
+  const ss=db.sessions.filter(x=>x.studentId===s.id&&inR(String(x.fDate||''))).sort((a,b)=>a.fDate.localeCompare(b.fDate)||String(a.created).localeCompare(String(b.created)));
   // 1 ngày tính 1 buổi (lỡ lưu 2 phiếu cùng ngày)
   const byDate={};ss.forEach(x=>byDate[x.fDate]=x);const days=Object.keys(byDate).sort();const sess=days.map(d=>byDate[d]);
   const hwS=sess.filter(x=>!x.abs&&x.hw!=='none'&&x.fPct!==''&&x.fPct!=null&&!isNaN(+x.fPct));
   const hwAvg=hwS.length?Math.round(hwS.reduce((a,x)=>a+(+x.fPct),0)/hwS.length):null;
   // số từ thuộc: khảo đi khảo lại cùng 1 Unit không cộng dồn – mỗi từ chỉ tính 1 lần, lấy kết quả lần khảo gần nhất
-  const ts=db.tests.filter(x=>x.studentId===s.id&&String(x.date||'').startsWith(mon)).sort((a,b)=>String(a.date).localeCompare(String(b.date))||String(a.created).localeCompare(String(b.created)));
+  const ts=db.tests.filter(x=>x.studentId===s.id&&inR(String(x.date||''))).sort((a,b)=>String(a.date).localeCompare(String(b.date))||String(a.created).localeCompare(String(b.created)));
   let words=0,asked=0,nTests=0;const wl={};
   ts.forEach(t=>{nTests++;const u=boDau(t.unit);
     if(t.items&&t.items.length)t.items.forEach(it=>{wl[u+'|'+boDau(it.en)]=!!it.ok;});
@@ -43,7 +45,7 @@ function summary(s,mon){
   if(!ts.length)sess.forEach(x=>{if(!x.abs&&x.fVScore!==''&&x.fVScore!=null&&!isNaN(+x.fVScore)){nTests++;wl['P|'+boDau(x.fVUnit)+'|'+(x.fVNum||'')]={s:+x.fVScore,n:+x.fVNum||0};}});
   Object.values(wl).forEach(v=>{if(typeof v==='boolean'){asked++;if(v)words++;}else{words+=v.s;asked+=v.n;}});
   const att={tot:0,kha:0,cct:0};sess.forEach(x=>{if(!x.abs&&att[x.att]!=null)att[x.att]++;});
-  const checks=db.checks.filter(x=>x.studentId===s.id&&String(x.date||'').startsWith(mon));
+  const checks=db.checks.filter(x=>x.studentId===s.id&&inR(String(x.date||'')));
   // điểm kiểm tra định kỳ cô nhập ngay trên phiếu buổi học (trang Phiếu học tập)
   ss.forEach(x=>{if(x.fKtScore===''||x.fKtScore==null)return;const name=x.fKtName||'Kiểm tra định kỳ';
     if(checks.some(c=>c.date===x.fDate&&String(c.name).trim().toLowerCase()===name.toLowerCase()))return;
@@ -153,9 +155,9 @@ $('#cSave').onclick=()=>{
 
 /* ---------- 3. Phiếu tháng ---------- */
 let ptSid='';
-const P_CHIPS=['Tháng này con đi học đều, hoàn thành tốt bài tập về nhà.','Con tiến bộ rõ ở phần từ vựng, thuộc bài nhanh hơn tháng trước.',
+const P_CHIPS=['Khóa này con đi học đều, hoàn thành tốt bài tập về nhà.','Con tiến bộ rõ ở phần từ vựng, thuộc bài nhanh hơn khóa trước.',
   'Con nắm chắc ngữ pháp đã học, làm bài cẩn thận.','Con cần dành thêm thời gian học thuộc từ vựng ở nhà.','Con cần làm BTVN đầy đủ hơn, PH nhắc con giúp cô ạ.',
-  'Điểm kiểm tra của con ổn định, tiếp tục phát huy nhé!','Tháng sau con tập trung ôn …','Con nghỉ … buổi, PH sắp xếp cho con học bù giúp cô ạ.'];
+  'Điểm kiểm tra của con ổn định, tiếp tục phát huy nhé!','Khóa sau con tập trung ôn …','Con nghỉ … buổi, PH sắp xếp cho con học bù giúp cô ạ.'];
 $('#pChips').innerHTML=P_CHIPS.map(t=>`<button type="button">${esc(t)}</button>`).join('');
 $$('#pChips button').forEach(b=>b.onclick=()=>{const t=$('#pCmt');const st=t.value?t.value.length+1:0;t.value=t.value?t.value+'\n'+b.textContent:b.textContent;
   const i=t.value.indexOf('…',st);t.focus();if(i>=0)t.setSelectionRange(i,i+1);cmtDirty=true;drawPT();});
@@ -166,24 +168,47 @@ function fillPT(){
   $('#pStudent').innerHTML=found.length?found.map(s=>`<option value="${s.id}">${esc(s.name)}${s.cls?' – '+esc(s.cls):''}</option>`).join(''):'<option value="">(Không có học sinh)</option>';
   if(!found.some(s=>s.id===ptSid)){if(q||!stu(ptSid)||!inCls(stu(ptSid)))ptSid=found.length?found[0].id:'';}
   if(found.some(s=>s.id===ptSid))$('#pStudent').value=ptSid;
+  fillK();
+}
+/* ---------- Khóa học: tách từ phiếu buổi – buổi số quay về 1 = sang khóa mới ---------- */
+const noNs=v=>(String(v||'').match(/\d+/g)||[]).map(Number);
+function khoas(s){
+  if(!s)return [];
+  const ss=db.sessions.filter(x=>x.studentId===s.id&&!x.bu&&x.fDate).sort((a,b)=>a.fDate.localeCompare(b.fDate)||String(a.created).localeCompare(String(b.created)));
+  const K=[];let prev=0;
+  ss.forEach(x=>{const n=noNs(x.fNo),mn=n.length?Math.min(...n):null;
+    if(!K.length||(mn===1&&prev>1&&K[K.length-1].a!==x.fDate))K.push({a:x.fDate});
+    if(n.length)prev=Math.max(...n);});
+  K.forEach((k,i)=>{k.i=i+1;k.b=K[i+1]?addD(K[i+1].a,-1):'9999-12-31';});
+  return K;
+}
+let ptK=null; // ngày bắt đầu khóa đang xem
+const curK=()=>{const K=khoas(stu(ptSid));return K.find(k=>k.a===ptK)||K[K.length-1]||null;};
+const kEnd=(s,k)=>{if(k.b!=='9999-12-31')return k.b;const d=db.sessions.filter(x=>x.studentId===s.id&&x.fDate>=k.a).map(x=>x.fDate).sort().pop();return d||k.a;};
+function fillK(){
+  const s=stu(ptSid),K=khoas(s);
+  $('#pKhoa').innerHTML=K.length?K.slice().reverse().map(k=>`<option value="${k.a}">Khóa ${k.i}: ${dmS(k.a)} – ${k.b==='9999-12-31'?'nay':dmS(k.b)}</option>`).join(''):'<option value="">(Chưa có phiếu buổi nào)</option>';
+  const c=curK();ptK=c?c.a:null;if(c)$('#pKhoa').value=c.a;
 }
 $('#pFind').addEventListener('input',()=>{fillPT();loadCmt();drawPT();});
 // sang HS khác: nhận xét đang gõ dở của HS trước được lưu luôn
-$('#pStudent').onchange=()=>{if(cmtDirty)saveCmt(true);ptSid=$('#pStudent').value;loadCmt();drawPT();};
-$('#pNext').onclick=()=>{if(cmtDirty)saveCmt(true);const o=$$('#pStudent option').map(x=>x.value),i=o.indexOf(ptSid);if(o.length){ptSid=o[(i+1)%o.length];$('#pStudent').value=ptSid;loadCmt();drawPT();}};
-function loadCmt(){const r=db.reports.find(x=>x.id===ptSid+'_'+month());$('#pCmt').value=r?r.cmt:'';cmtDirty=false;}
+$('#pStudent').onchange=()=>{if(cmtDirty)saveCmt(true);ptSid=$('#pStudent').value;ptK=null;fillK();loadCmt();drawPT();};
+$('#pKhoa').onchange=()=>{if(cmtDirty)saveCmt(true);ptK=$('#pKhoa').value;loadCmt();drawPT();};
+$('#pNext').onclick=()=>{if(cmtDirty)saveCmt(true);const o=$$('#pStudent option').map(x=>x.value),i=o.indexOf(ptSid);if(o.length){ptSid=o[(i+1)%o.length];$('#pStudent').value=ptSid;ptK=null;fillK();loadCmt();drawPT();}};
+const kRepId=()=>{const k=curK();return k?ptSid+'_K'+k.a:'';};
+function loadCmt(){const r=db.reports.find(x=>x.id===kRepId());$('#pCmt').value=r?r.cmt:'';cmtDirty=false;}
 function saveCmt(quiet){
-  if(!stu(ptSid))return false;
-  const id=ptSid+'_'+month(),cmt=$('#pCmt').value.trim();let r=db.reports.find(x=>x.id===id);
-  if(!r){r={id,studentId:ptSid,month:month()};db.reports.push(r);}
-  r.cmt=cmt;SYNC.touch('reports',r);persist();cmtDirty=false;if(!quiet)toast('Đã lưu nhận xét tháng');return true;
+  if(!stu(ptSid)||!curK())return false;
+  const id=kRepId(),cmt=$('#pCmt').value.trim();let r=db.reports.find(x=>x.id===id);
+  if(!r){r={id,studentId:ptSid,month:'K'+curK().a};db.reports.push(r);}
+  r.cmt=cmt;SYNC.touch('reports',r);persist();cmtDirty=false;if(!quiet)toast('Đã lưu nhận xét khóa');return true;
 }
 $('#pSave').onclick=()=>saveCmt();
 function renderPT(){fillPT();if(!cmtDirty)loadCmt();drawPT();}
 
 function sheetHTML(){
-  const s=stu(ptSid);if(!s)return '';
-  const mon=month(),[y,m]=mon.split('-'),M=summary(s,mon),L=window.LOGO||'';
+  const s=stu(ptSid),k=curK();if(!s||!k)return '';
+  const M=summary(s,'',{a:k.a,b:k.b}),L=window.LOGO||'',end=kEnd(s,k);
   const cmt=$('#pCmt').value.trim();
   const dl=xs=>xs.map(x=>{const[d,mm]=dmy(x.fDate);return d+'/'+mm;}).join(', ');
   const nghiCp=M.caList.filter(x=>x.abs==='cp'),nghiKp=M.caList.filter(x=>x.abs==='kp'),bu=M.buList;
@@ -195,7 +220,7 @@ function sheetHTML(){
     +(bu.length?`<span>Học bù: <b>${bu.length}</b> buổi (${dl(bu)})</span>`:'')+'</div>';
   const att=attTop(M.att);
   const bars=M.hwS.length?`<div class="bc-chart" style="margin-top:0"><div class="t">TRUNG BÌNH ${M.hwAvg}% · ${M.hwS.length} BUỔI</div>
-    <div class="bc-bars">${M.hwS.map(x=>`<div class="bc-bar"><span class="v">${+x.fPct}%</span><div class="b${+x.fPct<80?' lo':''}" style="height:${Math.max(3,+x.fPct*.72)}px"></div></div>`).join('')}</div>
+    <div class="bc-bars">${M.hwS.map(x=>`<div class="bc-bar"><span class="v">${+x.fPct}%</span><div class="b${+x.fPct<80?' lo':''}" style="height:${Math.max(3,+x.fPct*.46)}px"></div></div>`).join('')}</div>
     <div class="bc-lbl">${M.hwS.map(x=>{const[d,mm]=dmy(x.fDate);return `<span>${d}/${mm}</span>`;}).join('')}</div></div>`:'<div class="bc-none">Tháng này chưa có BTVN.</div>';
   const checks=M.checks.length?`<table class="bc-tbl"><tr><th style="width:70px">Ngày</th><th>Bài kiểm tra</th><th style="width:78px">Điểm</th><th>Nhận xét</th></tr>`
     +M.checks.map(c=>{const[d,mm]=dmy(c.date);return `<tr><td class="c">${d}/${mm}</td><td>${esc(c.name)}</td><td class="c"><span class="hw">${esc(c.score)}</span>/${esc(c.max)}</td><td>${c.note?`<span class="hw">${esc(c.note)}</span>`:''}</td></tr>`;}).join('')+'</table>'
@@ -204,17 +229,17 @@ function sheetHTML(){
    <img class="wm" src="${L}">
    <div class="in">
     <div class="sh-top"><img class="logo" src="logo-c2.png"><div class="sh-motto">KIÊN TRÌ - YÊU THƯƠNG - TIẾN BỘ</div><div class="sh-tag">MS. MINH THƯ</div></div>
-    <div class="sh-title">BÁO CÁO THÁNG</div><div class="sh-badge">${+m}</div>
-    <div class="sh-sub">KẾT QUẢ HỌC TẬP THÁNG ${+m}/${y} – GỬI PHỤ HUYNH HỌC VIÊN</div>
+    <div class="sh-title">BÁO CÁO KHÓA</div>
+    <div class="sh-sub">KẾT QUẢ HỌC TẬP CẢ KHÓA – GỬI PHỤ HUYNH HỌC VIÊN</div>
     <div class="sh-info">
       <div><div class="sh-lab">HỌ TÊN HỌC VIÊN | LỚP</div><div class="sw o"><div class="sh-box"><span class="hw">${esc(s.name)}${s.cls?' | '+esc(s.cls):''}</span></div></div></div>
-      <div><div class="sh-lab">THÁNG</div><div class="sw o"><div class="sh-box"><span class="hw">${two(+m)}</span>&nbsp;<b>/ ${y}</b></div></div></div>
+      <div><div class="sh-lab">THỜI GIAN KHÓA</div><div class="sw o"><div class="sh-box" style="white-space:nowrap"><span class="hw">${dmS(k.a)}</span>&nbsp;<b>–</b>&nbsp;<span class="hw">${dmS(end)}</span><b>/${end.slice(0,4)}</b></div></div></div>
     </div>
     <div class="sh-h n1">KẾT QUẢ HỌC TẬP</div>
     <div class="bc-stats">
-      <div class="sw p"><div class="bc-st"><div class="t">TỪ VỰNG – THUỘC TRUNG BÌNH</div><div class="big">${M.asked?Math.round(M.words/M.asked*100)+'<small>%</small>':'—'}</div><div class="s">${M.asked?`thuộc ${M.words}/${M.asked} từ<br>${M.nTests} lần khảo`:'Chưa khảo từ'}</div></div></div>
+      <div class="sw p"><div class="bc-st"><div class="t">TỪ VỰNG THUỘC (TB)</div><div class="big">${M.asked?Math.round(M.words/M.asked*100)+'<small>%</small>':'—'}</div><div class="s">${M.asked?`${M.words}/${M.asked} từ · ${M.nTests} lần khảo`:'Chưa khảo từ'}</div></div></div>
       <div class="sw p"><div class="bc-st"><div class="t">HOÀN THÀNH BTVN</div><div class="big">${M.hwAvg==null?'—':M.hwAvg+'<small>%</small>'}</div><div class="s">${M.hwS.length?`trung bình ${M.hwS.length} buổi`:'Chưa có BTVN'}</div></div></div>
-      <div class="sw p"><div class="bc-st"><div class="t">TINH THẦN HỌC TẬP</div><div class="big" style="font-size:${att&&att.length>4?24:30}px">${att||'—'}</div><div class="s">${att?[['tot','tốt'],['kha','khá'],['cct','cần cố gắng']].filter(([k])=>M.att[k]).map(([k,t])=>`${M.att[k]} buổi ${t}`).join(' · '):''}</div></div></div>
+      <div class="sw p"><div class="bc-st"><div class="t">TINH THẦN HỌC TẬP</div><div class="big" style="font-size:${att&&att.length>4?19:24}px">${att||'—'}</div><div class="s">${att?[['tot','tốt'],['kha','khá'],['cct','cần cố gắng']].filter(([k])=>M.att[k]).map(([k,t])=>`${M.att[k]} buổi ${t}`).join(' · '):''}</div></div></div>
     </div>
     <div class="sh-h n2">ĐIỂM KIỂM TRA</div>
     ${checks}
@@ -223,7 +248,7 @@ function sheetHTML(){
     <div class="sh-h n4">CHUYÊN CẦN</div>
     ${cc}
     <div class="sh-h n5">NHẬN XÉT CỦA GIÁO VIÊN</div>
-    <div class="bc-cmt"><div class="tx">${cmt?`<span class="hw">${esc(cmt)}</span>`:'<span class="ph">(Cô viết nhận xét ở ô bên trái)</span>'}</div>${cmt?'<img class="stamp" src="stamp.png" alt="">':''}</div>
+    <div class="bc-cmt"><div class="tx">${cmt?`<span class="hw">${esc(cmt)}</span>`:'<span class="ph">(Cô viết nhận xét ở ô bên trái)</span>'}</div></div>
    </div>
    <div class="sh-foot"><div><span>THÔNG TIN LIÊN HỆ</span><span>SĐT: 0966.101.957 (Ms. Minh Thư)</span><span>GROW WITH ENGLISH</span></div></div>
   </div>`;
@@ -232,8 +257,8 @@ function sheetHTML(){
 function fitCmt(root){root.querySelectorAll('.bc-cmt .tx').forEach(el=>{let s=17;el.style.fontSize=s+'px';const H=el.parentNode.clientHeight-20;
   while(s>11&&el.scrollHeight>H){s-=.5;el.style.fontSize=s+'px';}});}
 function drawPT(){
-  const s=stu(ptSid),M=s?summary(s,month()):null;
-  $('#pInfo').innerHTML=s?`Tháng ${month().split('-').reverse().join('/')}: ${M.nCa}/${M.total} buổi · BTVN ${M.hwAvg==null?'—':M.hwAvg+'%'} · ${M.asked?M.words+' từ thuộc':'chưa khảo từ'} · ${M.checks.length} bài KT`:'';
+  const s=stu(ptSid),k=curK(),M=s&&k?summary(s,'',{a:k.a,b:k.b}):null;
+  $('#pInfo').innerHTML=M?`Khóa ${k.i} (từ ${dmS(k.a)}): ${M.nCa}/${M.total} buổi · BTVN ${M.hwAvg==null?'—':M.hwAvg+'%'} · ${M.asked?M.words+' từ thuộc':'chưa khảo từ'} · ${M.checks.length} bài KT`:'';
   const h=sheetHTML(),ex=$('#bcExport');ex.innerHTML=h;fitCmt(ex);
   $('#bcPrev').innerHTML=ex.innerHTML;fitPrev();
 }
@@ -244,7 +269,7 @@ function fitPrev(){const wrap=$('#bcPrevWrap'),el=$('#bcPrev');wrap.style.width=
 addEventListener('resize',fitPrev);
 
 /* ---------- Xuất ảnh + Zalo ---------- */
-const pngName=()=>{const s=stu(ptSid);return `BaoCaoThang_${fileSafe(s?s.name:'HS')}_${month()}.png`;};
+const pngName=()=>{const s=stu(ptSid);const k=curK();return `BaoCaoKhoa_${fileSafe(s?s.name:'HS')}_K${k?k.i:''}.png`;};
 async function makePNG(){
   if(!window.html2canvas){toast('Chưa tải được công cụ chụp ảnh – kiểm tra mạng internet');throw new Error('no html2canvas');}
   if(!stu(ptSid)){toast('Chọn học sinh trước đã ạ');throw new Error('no student');}
@@ -414,7 +439,7 @@ function weekSheet(){
     ${pr}
     ${nx?`<div class="sh-h n3">CÁC BUỔI SẮP TỚI</div>${nx}`:''}
     <div class="sh-h n${nx?4:3}">NHẬN XÉT CỦA GIÁO VIÊN</div>
-    <div class="bc-cmt"><div class="tx">${cmt?`<span class="hw">${esc(cmt)}</span>`:'<span class="ph">(Cô viết nhận xét ở ô bên trái)</span>'}</div>${cmt?'<img class="stamp" src="stamp.png" alt="">':''}</div>
+    <div class="bc-cmt"><div class="tx">${cmt?`<span class="hw">${esc(cmt)}</span>`:'<span class="ph">(Cô viết nhận xét ở ô bên trái)</span>'}</div></div>
    </div>
    <div class="sh-foot"><div><span>THÔNG TIN LIÊN HỆ</span><span>SĐT: 0966.101.957 (Ms. Minh Thư)</span><span>GROW WITH ENGLISH</span></div></div>
   </div>`;
