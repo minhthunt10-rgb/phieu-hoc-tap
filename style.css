@@ -388,3 +388,4 @@ details.card.tools h4{margin:14px 0 4px;font-size:14px;color:var(--orange)}
 .nuoc-ck input{width:20px;height:20px;margin:0}
 .nuoc-note{margin-top:4px;color:#444}.nuoc-note b{font-weight:600;color:#1E6FA8}
 .nuoc-note .ok{color:#3E8E3F;font-weight:600}.nuoc-note .warn{color:#C2410C;font-weight:600}.nuoc-note .muted{color:#888;font-style:italic}
+.kt-tag.nuoc{background:#E3F2FD;color:#1565C0;border:1px solid #90CAF9}

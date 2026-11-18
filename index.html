@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lora:ital,wght@0,700;1,600&display=swap" rel="stylesheet">
 <script src="logo.js?v=202611111700"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<link rel="stylesheet" href="style.css?v=202611181800">
+<link rel="stylesheet" href="style.css?v=202611181830">
 </head>
 <body>
 <header class="app">
@@ -880,18 +880,19 @@ function renderStudents(){
   let grp=null,stt=0;
   const sts={};db.students.forEach(s=>{try{sts[s.id]=ktStatus(s);}catch(e){}});
   const cnt=t=>Object.values(sts).filter(x=>x&&x.t===t).length,nD=cnt('dan'),nI=cnt('in'),nM=cnt('diem');
-  $('#ktSum').innerHTML=nD+nM?`<b>Kiểm tra định kỳ:</b> ${nD?`<span class="kt-tag dan">🔔 ${nD} HS cần dặn ôn</span>`:''} ${nM?`<span class="kt-tag diem">✏️ ${nM} HS cần nhập điểm</span>`:''}`:'';
+  $('#ktSum').innerHTML=(nD+nM?`<b>Kiểm tra định kỳ:</b> ${nD?`<span class="kt-tag dan">🔔 ${nD} HS cần dặn ôn</span>`:''} ${nM?`<span class="kt-tag diem">✏️ ${nM} HS cần nhập điểm</span>`:''}`:'')+(window.nuocSum?nuocSum():'');
   $('#sTable').innerHTML='<tr><th>STT</th><th>Họ tên</th><th>Lớp</th><th>Buổi</th><th>Phụ huynh</th><th></th></tr>'+list.map(s=>{
     const ss=sessOf(s.id);const last=ss.length?ss[ss.length-1].fNo:(s.done||0);
     const k=khoi(s), head=k!==grp?`<tr><td colspan="6" class="khoi-h">${k<99?'Khối '+k:'Chưa ghi lớp'}</td></tr>`:'';
     if(k!==grp){grp=k;stt=0;} stt++;
-    return `${head}<tr><td>${stt}</td><td><b>${esc(s.name)}</b>${s.note?`<div class="hint">${esc(s.note)}</div>`:''}${sts[s.id]?`<div>${ktTag(s,sts[s.id])}</div>`:''}${(()=>{const mi=missingNos(s);return mi.length?`<div><button type="button" class="kt-tag miss" data-a="miss" data-id="${s.id}" data-no="${mi[0]}">📷 Thiếu phiếu buổi ${rangeTxt(mi)} – bổ sung</button></div>`:'';})()}</td><td>${esc(s.cls)}</td><td>${last}/${s.total}</td><td>${esc(s.parent)}</td>
+    return `${head}<tr><td>${stt}</td><td><b>${esc(s.name)}</b>${s.note?`<div class="hint">${esc(s.note)}</div>`:''}${sts[s.id]?`<div>${ktTag(s,sts[s.id])}</div>`:''}${(()=>{const mi=missingNos(s);return mi.length?`<div><button type="button" class="kt-tag miss" data-a="miss" data-id="${s.id}" data-no="${mi[0]}">📷 Thiếu phiếu buổi ${rangeTxt(mi)} – bổ sung</button></div>`:'';})()}${window.nuocTag?nuocTag(s):''}</td><td>${esc(s.cls)}</td><td>${last}/${s.total}</td><td>${esc(s.parent)}</td>
     <td style="white-space:nowrap"><button class="btn" data-a="go" data-id="${s.id}" style="padding:5px 9px">✏️ Phiếu</button>
     <button class="btn g" data-a="ed" data-id="${s.id}" style="padding:5px 9px">Sửa</button>
     <button class="btn r" data-a="del" data-id="${s.id}" style="padding:5px 9px">Xóa</button></td></tr>`;}).join('');
   $$('#sTable button').forEach(b=>b.onclick=()=>{
     const s=stu(b.dataset.id);
     if(b.dataset.a==='miss'){startFill(s.id,b.dataset.no);return;}
+    if(b.dataset.a==='nuoc'){nuocUndo(s);return;}
     if(b.dataset.a==='kt'){const x=db.sessions.find(y=>y.id===b.dataset.ses);if(!x)return; // mở lại phiếu buổi kiểm tra để nhập điểm
       $('#fFind').value='';fillStudentSelects();$('nav.tabs button[data-v=nhap]').click();writeForm(x);setEditing(x.id);updatePreview();
       setTimeout(()=>{const f=$('#ktFill');if(f)f.click();else{$('#scBox').scrollIntoView({behavior:'smooth',block:'center'});$('#fScVal').focus();}},150);}
@@ -998,18 +999,22 @@ if(lich.on)$('#navLich').style.display='';
 // 🥤 Uống nước – mỗi HS 1 tháng 1 lần; lich.nuoc[sid] = ['2026-11-18', …] (chỉ máy cô)
 window.renderNuoc=()=>{
   const box=$('#nuocBox'), id=$('#fStudent').value, d=$('#fDate').value||today();
-  if(!lich.on||!id){box.style.display='none';return;} box.style.display='';
-  const l=(lich.nuoc||{})[id]||[], m=d.slice(0,7), inM=l.filter(x=>x.slice(0,7)===m).sort();
+  const l=(lich.nuoc||{})[id]||[], m=d.slice(0,7), other=l.filter(x=>x.slice(0,7)===m&&x!==d);
+  // đã uống ngày khác trong tháng → ẩn ô (xem ở tab Học sinh); cùng ngày thì vẫn hiện để bỏ tích nếu nhầm
+  if(!lich.on||!id||other.length){box.style.display='none';return;} box.style.display='';
   $('#nuocCk').checked=l.includes(d);
-  const f=x=>{const[dd,mm]=dmy(x);return dd+'/'+mm;}, other=inM.filter(x=>x!==d);
-  const last=l.filter(x=>x.slice(0,7)<m).sort().pop();
-  let t='<b>Ghi chú: mỗi học sinh 1 tháng uống 1 lần.</b> ';
-  if(l.includes(d))t+='<span class="ok">✓ Đã tích uống ngày '+f(d)+'.</span>'+(other.length?' <span class="warn">⚠️ Tháng này em đã uống thêm ngày '+other.map(f).join(', ')+'.</span>':'');
-  else if(inM.length)t+='<span class="warn">⚠️ Tháng '+(+m.slice(5))+' em đã uống ngày '+inM.map(f).join(', ')+' – không uống nữa nhé.</span>';
-  else t+='<span class="ok">Tháng '+(+m.slice(5))+' em chưa uống.</span>'+(last?' <span class="muted">(lần trước: '+f(last)+'/'+last.slice(0,4)+')</span>':'');
-  box.classList.toggle('used',!l.includes(d)&&inM.length>0);
-  $('#nuocNote').innerHTML=t;
+  const f=x=>{const[dd,mm]=dmy(x);return dd+'/'+mm;}, last=l.filter(x=>x.slice(0,7)<m).sort().pop();
+  $('#nuocNote').innerHTML='<b>Ghi chú: mỗi học sinh 1 tháng uống 1 lần.</b> '+(l.includes(d)?'<span class="ok">✓ Đã tích uống ngày '+f(d)+'.</span>'
+    :'<span class="ok">Tháng '+(+m.slice(5))+' em chưa uống.</span>'+(last?' <span class="muted">(lần trước: '+f(last)+'/'+last.slice(0,4)+')</span>':''));
 };
+// nhãn ở tab Học sinh: em đã uống trong tháng này (bấm để bỏ nếu tích nhầm)
+const nuocThang=id=>{const m=today().slice(0,7);return ((lich.nuoc||{})[id]||[]).filter(x=>x.slice(0,7)===m);};
+window.nuocTag=s=>{if(!lich.on)return '';const l=nuocThang(s.id);
+  return l.length?`<div><button type="button" class="kt-tag nuoc" data-a="nuoc" data-id="${s.id}" title="Bấm để bỏ nếu tích nhầm">🥤 Đã uống nước ${l.map(x=>{const[dd,mm]=dmy(x);return dd+'/'+mm;}).join(', ')}</button></div>`:'';};
+window.nuocSum=()=>{if(!lich.on)return '';const n=db.students.filter(s=>nuocThang(s.id).length).length;
+  return `<div style="margin-top:4px"><b>🥤 Uống nước tháng ${+today().slice(5,7)}:</b> <span class="kt-tag nuoc">${n}/${db.students.length} em đã uống</span> <span class="hint">– mỗi em 1 tháng 1 lần; em đã uống thì ô tích ở Nhập phiếu tự ẩn.</span></div>`;};
+window.nuocUndo=s=>{if(!confirm('Bỏ dấu đã uống nước tháng này của '+s.name+'?'))return;const m=today().slice(0,7);
+  lich.nuoc[s.id]=(lich.nuoc[s.id]||[]).filter(x=>x.slice(0,7)!==m);if(!lich.nuoc[s.id].length)delete lich.nuoc[s.id];saveLich();renderStudents();renderNuoc();};
 $('#nuocCk').onchange=e=>{const id=$('#fStudent').value;if(!id)return;const d=$('#fDate').value||today();
   lich.nuoc=lich.nuoc||{};let l=lich.nuoc[id]||[];
   if(e.target.checked){const m=d.slice(0,7),inM=l.filter(x=>x.slice(0,7)===m&&x!==d);
