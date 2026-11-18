@@ -268,9 +268,10 @@ function drawPT(){
    Điểm nhập ở trang Báo cáo → xóa hẳn; điểm từ phiếu buổi → chỉ ẩn khỏi báo cáo (phiếu vẫn giữ nguyên). */
 function drawPChecks(M){
   const box=$('#pChecks');if(!box)return;const cs=M?M.checks:[];
+  const k=curK(),dd=$('#paDate');if(dd&&k){dd.min=k.a;dd.max=k.b==='9999-12-31'?'':k.b;if(!dd.value||dd.value<k.a||(dd.max&&dd.value>dd.max))dd.value=dd.max&&today()>dd.max?dd.max:(today()<k.a?k.a:today());}
   if(!cs.length){box.innerHTML='<p class="hint" style="margin:0">Khóa này chưa có điểm kiểm tra.</p>';return;}
   const SRC={c:'trang Báo cáo',kt:'phiếu (thẻ kiểm tra cũ)',sc:'phiếu – ô ✍️ Nhập điểm'};
-  box.innerHTML=cs.map((c,i)=>`<div class="pck"><div class="pck-h"><b>${dmS(c.date)}</b> · ${esc(c.name)}: <b class="pck-s">${esc(String(c.score).replace('.',','))}/${esc(c.max)}</b>
+  box.innerHTML=cs.map((c,i)=>`<div class="pck"><div class="pck-h"><b>${dmS(c.date)}</b> · ${esc(c.name)}: <b class="pck-s">${esc(String(c.score).replace('.',','))}/${esc(String(isNaN(+c.max)?c.max:+c.max).replace('.',','))}</b>
     <button type="button" class="pck-del" data-i="${i}" title="Xóa dòng điểm này">🗑</button></div>
     <input type="text" class="pck-n" data-i="${i}" value="${esc(c.note||'')}" placeholder="Nhận xét (không in trên phiếu)">
     <div class="hint pck-src">Nguồn: ${SRC[c.src]||''}</div></div>`).join('');
@@ -284,6 +285,16 @@ function drawPChecks(M){
     else{c.ref[c.src==='kt'?'ktHide':'scHide']=1;save(c);}
     toast('Đã xóa dòng điểm');drawPT();});
 }
+// ➕ Nhập thêm điểm ngay trong ô Điểm kiểm tra trong khóa (cô yêu cầu 2026-11-19) → lưu vào checks như trang Điểm KT
+$('#paAdd').onclick=()=>{
+  if(!stu(ptSid)){toast('Chọn học sinh trước đã ạ');return;}
+  const num=v=>String(v||'').trim().replace(',','.'),d=$('#paDate').value,name=$('#paName').value.trim(),sc=num($('#paScore').value),mx=num($('#paMax').value)||'10';
+  if(!d||!name||sc===''||isNaN(+sc)||isNaN(+mx)){toast('Nhập đủ ngày, tên bài và điểm ạ');return;}
+  const c={id:uid(),studentId:ptSid,date:d,name,score:+sc,max:+mx,note:$('#paNote').value.trim()};
+  db.checks.push(c);SYNC.touch('checks',c);persist();
+  ['paName','paScore','paMax','paNote'].forEach(i=>$('#'+i).value='');
+  toast('Đã lưu điểm');drawPT();
+};
 function fitPrev(){const wrap=$('#bcPrevWrap'),el=$('#bcPrev');wrap.style.width='';const w=wrap.clientWidth;if(!w)return;
   const sh=el.firstElementChild?el.firstElementChild.offsetHeight:0;let k=w/630;
   if(innerWidth>900&&sh){const card=wrap.closest('.card'),other=card.offsetHeight-wrap.offsetHeight;k=Math.max(.45,Math.min(k,(innerHeight-76-12-other)/sh));wrap.style.width=630*k+'px';}

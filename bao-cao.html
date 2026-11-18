@@ -146,6 +146,8 @@ table.gs tr.st:hover td{background:#FFFAF4}
 .pck-h{display:flex;align-items:center;gap:6px;font-size:14px;line-height:1.35}.pck-s{color:#C0392B;white-space:nowrap}
 .pck-del{margin-left:auto;border:0;background:#FDECEA;border-radius:8px;padding:4px 8px;cursor:pointer;font-size:14px;flex:none}
 .pck-n{width:100%;margin-top:5px;font-size:13px;padding:5px 8px}.pck-src{font-size:11.5px;margin-top:2px}
+.pck-add{background:#F3FAEF;border-color:#CFE6C4}.pck-g{display:grid;grid-template-columns:1fr 1.4fr;gap:6px;margin-top:5px}
+.pck-g input{width:100%;min-width:0;font-size:13px;padding:5px 8px}
 </style>
 </head>
 <body>
@@ -208,6 +210,14 @@ table.gs tr.st:hover td{background:#FFFAF4}
    <div class="card">
     <h3>📝 Điểm kiểm tra trong khóa</h3>
     <div id="pChecks"></div>
+    <div class="pck pck-add">
+     <div class="pck-h" style="font-weight:700">➕ Nhập thêm điểm</div>
+     <div class="pck-g"><input type="date" id="paDate"><input type="text" id="paName" placeholder="Tên bài (VD Writing task 2)" list="paNames"></div>
+     <div class="pck-g"><input type="text" inputmode="decimal" id="paScore" placeholder="Điểm"><input type="text" inputmode="decimal" id="paMax" placeholder="Thang (10)"></div>
+     <input type="text" class="pck-n" id="paNote" placeholder="Nhận xét (không bắt buộc)">
+     <datalist id="paNames"><option>Kiểm tra giữa khóa</option><option>Kiểm tra cuối khóa</option><option>Writing task 1</option><option>Writing task 2</option><option>Speaking</option><option>Listening</option><option>Reading</option></datalist>
+     <button type="button" class="btn g" id="paAdd" style="margin-top:6px;width:100%">Lưu điểm</button>
+    </div>
     <p class="hint" style="margin:6px 0 0">Sửa nhận xét xong bấm ra ngoài là tự lưu. 🗑 xóa dòng điểm bị trùng.</p>
    </div>
    <div class="card sec4">
@@ -281,6 +291,6 @@ table.gs tr.st:hover td{background:#FFFAF4}
 <div class="toast" id="toast"></div>
 <script src="sync.js?v=202611051400"></script>
 <script src="lo-trinh-luyen-thi.js?v=202611181400"></script>
-<script src="bao-cao.js?v=202611191000"></script>
+<script src="bao-cao.js?v=202611191100"></script>
 </body>
 </html>
