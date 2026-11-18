@@ -76,7 +76,7 @@ let tab='gs';
 $$('nav.tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.v;
   $$('nav.tabs button').forEach(x=>x.classList.toggle('on',x===b));
   $$('.view').forEach(v=>v.classList.toggle('on',v.id==='v-'+tab));renderAll();});
-function renderAll(){fillCls();if(tab==='gs')renderGS();if(tab==='kt')renderKT();if(tab==='pt')renderPT();}
+function renderAll(){fillCls();if(tab==='gs')renderGS();if(tab==='kt')renderKT();if(tab==='pt')renderPT();if(tab==='tw')renderTW();}
 // đổi tháng: nhận xét đang gõ dở được lưu vào tháng cũ trước
 let lastMon='';
 $('#gMonth').onchange=()=>{if(cmtDirty&&lastMon){const m=$('#gMonth').value;$('#gMonth').value=lastMon;saveCmt(true);$('#gMonth').value=m;}
@@ -260,6 +260,180 @@ $('#bShare').onclick=async()=>{try{const b=await makePNG(),f=new File([b],pngNam
   if(navigator.canShare&&navigator.canShare({files:[f]}))await navigator.share({files:[f]});
   else{download(b,pngName());toast('Máy này không hỗ trợ chia sẻ trực tiếp – đã tải ảnh về');}}catch(e){if(e.name!=='AbortError')console.error(e);}};
 
+/* ---------- 4. Báo cáo tuần (kiểm tra sát, gửi PH mỗi tuần) ----------
+   Điểm kiểm tra sát lưu vào checks (như điểm KT thường → phiếu tháng cũng thấy).
+   Nhận xét tuần lưu vào reports, id = <hs>_W<thứ 2 đầu tuần>. Lộ trình + ngày thi đọc từ lịch trên máy cô (không đồng bộ). */
+const LICH=()=>{try{return JSON.parse(localStorage.getItem('gwe-lich-hoc-v1')||'{}');}catch(e){return {};}};
+const isoD=x=>x.getFullYear()+'-'+two(x.getMonth()+1)+'-'+two(x.getDate());
+const addD=(iso,n)=>{const d=new Date(iso+'T00:00:00');d.setDate(d.getDate()+n);return isoD(d);};
+const monOf=iso=>{const d=new Date(iso+'T00:00:00');d.setDate(d.getDate()-(d.getDay()+6)%7);return isoD(d);};
+const dmS=iso=>{const[d,m]=dmy(iso);return d+'/'+m;};
+const dowI=iso=>(new Date(iso+'T00:00:00').getDay()+6)%7;
+const baseName=n=>boDau(String(n||'').replace(/\(.*?\)/g,'').split(/\s[–-]\s/)[0]);
+// bộ bài kiểm tra sát theo loại lộ trình [tên, thang điểm]
+const SAT={
+  movers:[['Part 3 – điền từ vào truyện',6],['Part 5 – hoàn thành câu theo truyện',7],['Part 4 – chọn từ đúng',5],['Khiên Nghe',5],['Khiên Đọc – Viết',5],['Khiên Nói',5]],
+  ielts:[['IELTS Listening (số câu đúng)',40],['IELTS Reading (số câu đúng)',40],['IELTS Writing Task 1 (band)',9],['IELTS Writing Task 2 (band)',9],['IELTS Speaking (band)',9]],
+  khac:[['Kiểm tra từ vựng',10],['Kiểm tra ngữ pháp',10],['Kiểm tra đọc hiểu',10]]};
+// quy đổi số câu đúng /40 ra band (bảng tham khảo IELTS Academic)
+const BAND={L:[[39,9],[37,8.5],[35,8],[32,7.5],[30,7],[26,6.5],[23,6],[18,5.5],[16,5],[13,4.5],[10,4],[8,3.5],[6,3],[4,2.5]],
+  R:[[39,9],[37,8.5],[35,8],[33,7.5],[30,7],[27,6.5],[23,6],[19,5.5],[15,5],[13,4.5],[10,4],[8,3.5],[6,3],[4,2.5]]};
+const band=(name,sc,max)=>{if(+max!==40)return '';const t=/listening/i.test(name)?'L':/reading/i.test(name)?'R':'';if(!t)return '';const r=BAND[t].find(([n])=>+sc>=n);return r?' ≈ '+r[1]:'';};
+let twSid='',twLink=null;
+const twMon=()=>monOf($('#wDay').value||today());
+const twIds=()=>[twSid].concat(twLink&&stu(twLink)&&twLink!==twSid?[twLink]:[]);
+const planType=ids=>{const P=LICH().plans||{},k=ids.map(i=>(P[i]||{}).thi||'').join(' ');return /movers/.test(k)?'movers':/ielts/.test(k)?'ielts':'khac';};
+function checksIn(ids,a,b){
+  const ss=db.sessions.filter(x=>ids.includes(x.studentId)&&x.fDate>=a&&x.fDate<=b);
+  const cs=db.checks.filter(x=>ids.includes(x.studentId)&&x.date>=a&&x.date<=b).map(c=>({...c}));
+  const has=(d,n)=>cs.some(c=>c.date===d&&String(c.name).trim().toLowerCase()===n.toLowerCase());
+  ss.forEach(x=>{if(x.fKtScore!==''&&x.fKtScore!=null){const n=x.fKtName||'Kiểm tra định kỳ';if(!has(x.fDate,n))cs.push({date:x.fDate,name:n,score:x.fKtScore,max:x.fKtMax||10,note:x.fKtCmt||''});}
+    if(x.scOn&&x.fScVal!==''&&x.fScVal!=null){const n=String(x.fScName||'Điểm kiểm tra').replace(/[:\s]+$/,'');if(!has(x.fDate,n))cs.push({date:x.fDate,name:n,score:String(x.fScVal).replace(',','.'),max:x.fScMax||10,note:x.fScNote||''});}});
+  return cs.sort((p,q)=>p.date.localeCompare(q.date));
+}
+function weekData(){
+  const s=stu(twSid);if(!s)return null;
+  const ids=twIds(),a=twMon(),b=addD(a,6),L=LICH(),P=L.plans||{},days=L.days||{};
+  const byK={};db.sessions.filter(x=>ids.includes(x.studentId)&&x.fDate>=a&&x.fDate<=b).forEach(x=>byK[x.studentId+x.fDate]=x);
+  const sess=Object.values(byK).sort((p,q)=>p.fDate.localeCompare(q.fDate));
+  const ck=checksIn(ids,a,b),all=checksIn(ids,'0000','9999');
+  const prog=[...new Set(ck.map(c=>c.name))].map(n=>{const xs=all.filter(c=>c.name===n),cur=ck.filter(c=>c.name===n).pop(),
+    prev=xs.filter(c=>c.date<a).pop()||null,first=xs[0]&&xs[0].date<a&&xs[0]!==prev?xs[0]:null;return {n,cur,prev,first};});
+  // lộ trình (có thể 2 hồ sơ: lớp + kèm)
+  let done=0,tot=0,exam='',ten=[];const next=[],learn=[];
+  const lastD=id=>db.sessions.filter(x=>x.studentId===id).map(x=>x.fDate||'').sort().pop()||'';
+  ids.forEach(id=>{const p=P[id];if(!p||!p.items)return;
+    const isD=it=>!!(it.ses&&db.sessions.some(x=>x.id===it.ses));
+    tot+=p.items.length;done+=p.items.filter(isD).length;if(p.exam&&(!exam||p.exam<exam))exam=p.exam;
+    if(p.thi&&window.LT_THI&&LT_THI[p.thi])ten.push(LT_THI[p.thi].ten.split(' – ')[0].replace(/\s*\(.*\)$/,''));
+    p.items.filter(it=>isD(it)&&it.date>=a&&it.date<=b).forEach(it=>learn.push({d:it.date,k:it.k,id}));
+    // xếp ngày cho buổi chưa học theo lịch tuần của em (giống tab Lộ trình)
+    const o=days[id]||{},pend=p.items.filter(it=>!isD(it));if(!Object.keys(o).length)return;
+    let d=today();const ld=lastD(id);if(ld>=d)d=addD(ld,1);const lim=addD(b,7);
+    for(let i=0,g=0;i<pend.length&&g<60&&d<=lim;g++,d=addD(d,1)){if(dowI(d) in o){next.push({d,k:pend[i].k,id,u:pend[i].u});i++;}}});
+  next.sort((p,q)=>p.d.localeCompare(q.d));
+  return {s,ids,a,b,sess,ck,prog,done,tot,exam,ten:[...new Set(ten)],next,learn};
+}
+// ô chọn HS + hồ sơ gộp + tuần
+function fillTW(){
+  const q=boDau($('#wFind').value),all=listed(),found=q?all.filter(s=>khop(s,q)):all;
+  // em có lộ trình luyện thi lên đầu danh sách
+  const P=LICH().plans||{},thi=s=>P[s.id]&&P[s.id].thi?0:1;found.sort((x,y)=>thi(x)-thi(y));
+  $('#wStudent').innerHTML=found.length?found.map(s=>`<option value="${s.id}">${thi(s)?'':'🎯 '}${esc(s.name)}${s.cls?' – '+esc(s.cls):''}</option>`).join(''):'<option value="">(Không có học sinh)</option>';
+  if(!found.some(s=>s.id===twSid))twSid=found.length?found[0].id:'';
+  if(twSid)$('#wStudent').value=twSid;
+  const s=stu(twSid),others=active().filter(x=>x.id!==twSid);
+  if(twLink===null&&s){const same=others.filter(x=>baseName(x.name)===baseName(s.name));twLink=same.length===1?same[0].id:'';}
+  $('#wLink').innerHTML='<option value="">— Không gộp —</option>'+others.sort(byKhoi).map(x=>`<option value="${x.id}">${esc(x.name)}${x.cls?' – '+esc(x.cls):''}</option>`).join('');
+  $('#wLink').value=twLink||'';
+}
+function renderWC(){
+  const ids=twIds(),a=twMon(),b=addD(a,6);let d=$('#wcDate').value;
+  if(!d||d<a||d>b){d=today()>=a&&today()<=b?today():(db.sessions.filter(x=>ids.includes(x.studentId)&&x.fDate>=a&&x.fDate<=b).map(x=>x.fDate).sort().pop()||a);$('#wcDate').value=d;}
+  const pre=SAT[planType(ids)].map(x=>[...x]),names=pre.map(x=>x[0]);
+  db.checks.filter(c=>ids.includes(c.studentId)&&c.date>=a&&c.date<=b&&!names.includes(c.name)).forEach(c=>{names.push(c.name);pre.push([c.name,c.max||10]);});
+  const cur=n=>db.checks.find(c=>ids.includes(c.studentId)&&c.date===d&&c.name===n);
+  $('#wcList').innerHTML='<div class="wc-row hint"><span>Bài / phần</span><span>Điểm</span><span></span><span>Ghi chú</span></div>'
+    +pre.map(([n,m])=>{const c=cur(n);return `<div class="wc-row" data-n="${esc(n)}" data-m="${m}"><b>${esc(n)}</b><input type="number" step="0.5" min="0" class="sc" inputmode="decimal" value="${c?esc(c.score):''}"><span class="mx">/ ${m}</span><input type="text" class="nt" value="${c?esc(c.note||''):''}"></div>`;}).join('')
+    +`<div class="wc-row" data-new="1"><input type="text" class="nm" placeholder="Bài khác…"><input type="number" step="0.5" min="0" class="sc"><input type="number" class="mxi" value="10" title="Thang điểm"><input type="text" class="nt"></div>`;
+}
+const W_CHIPS=['Tuần này con đi học đầy đủ, làm BTVN nghiêm túc.','Con tiến bộ rõ ở Part 5: đã biết gạch từ khoá và tìm câu trong truyện.','Con còn chép thừa từ / sai chính tả ở Part 5, tuần sau cô luyện thêm.',
+  'Con làm Part 3 tốt hơn, chọn từ theo loại từ đúng hơn.','Listening/Reading của con tăng so với tuần trước, tiếp tục giữ nhịp nhé.','Writing con cần viết đủ ý và kiểm tra lại ngữ pháp.',
+  'Speaking con trả lời tự tin hơn, cần nói dài hơn 2–3 câu.','PH nhắc con làm đủ BTVN và đọc lại sổ lỗi mỗi tối giúp cô ạ.','Tuần sau có bài kiểm tra/thi thử, PH nhắc con ngủ sớm giúp cô ạ.'];
+$('#wChips').innerHTML=W_CHIPS.map(t=>`<button type="button">${esc(t)}</button>`).join('');
+$$('#wChips button').forEach(b=>b.onclick=()=>{const t=$('#wCmt');t.value=t.value?t.value+'\n'+b.textContent:b.textContent;wDirty=true;drawTW();});
+let wDirty=false;
+$('#wCmt').addEventListener('input',()=>{wDirty=true;drawTW();});
+const wRepId=()=>twSid+'_W'+twMon();
+function loadW(){const r=db.reports.find(x=>x.id===wRepId());$('#wCmt').value=r?r.cmt:'';wDirty=false;}
+function saveW(quiet){if(!stu(twSid))return;const id=wRepId(),cmt=$('#wCmt').value.trim();let r=db.reports.find(x=>x.id===id);
+  if(!r){r={id,studentId:twSid,month:'W'+twMon()};db.reports.push(r);}r.cmt=cmt;SYNC.touch('reports',r);persist();wDirty=false;if(!quiet)toast('Đã lưu nhận xét tuần');}
+$('#wSave').onclick=()=>saveW();
+const twGo=fn=>{if(wDirty)saveW(true);fn();loadW();renderWC();drawTW();};
+$('#wFind').addEventListener('input',()=>twGo(()=>{twLink=null;fillTW();}));
+$('#wStudent').onchange=()=>twGo(()=>{twSid=$('#wStudent').value;twLink=null;fillTW();});
+$('#wNext').onclick=()=>twGo(()=>{const o=$$('#wStudent option').map(x=>x.value),i=o.indexOf(twSid);if(o.length){twSid=o[(i+1)%o.length];twLink=null;fillTW();}});
+$('#wLink').onchange=()=>twGo(()=>{twLink=$('#wLink').value;});
+$('#wDay').onchange=()=>twGo(()=>{});
+$('#wPrev').onclick=()=>twGo(()=>{$('#wDay').value=addD(twMon(),-7);});
+$('#wFwd').onclick=()=>twGo(()=>{$('#wDay').value=addD(twMon(),7);});
+$('#wcDate').onchange=renderWC;
+$('#wcSave').onclick=()=>{
+  const d=$('#wcDate').value,a=twMon(),ids=twIds();if(!d||d<a||d>addD(a,6)){toast('Ngày làm bài phải nằm trong tuần đang chọn');return;}
+  let n=0,del=0,bad=0;
+  $$('#wcList .wc-row[data-n],#wcList .wc-row[data-new]').forEach(r=>{
+    const name=r.dataset.n||r.querySelector('.nm').value.trim(),max=+(r.dataset.m||r.querySelector('.mxi').value)||10,v=r.querySelector('.sc').value.trim(),note=r.querySelector('.nt').value.trim();
+    if(!name)return;const old=db.checks.find(c=>ids.includes(c.studentId)&&c.date===d&&c.name===name);
+    if(v===''){if(old){SYNC.remove('checks',old.id);db.checks=db.checks.filter(x=>x!==old);del++;}return;}
+    if(+v<0||+v>max){bad++;return;}
+    const c=old||{id:uid(),studentId:twSid};Object.assign(c,{date:d,name,score:+v,max,note});if(!old)db.checks.push(c);SYNC.touch('checks',c);n++;});
+  persist();renderWC();drawTW();toast(bad?`⚠️ ${bad} điểm lớn hơn thang điểm – chưa lưu ô đó`:`Đã lưu ${n} điểm`+(del?`, xoá ${del}`:''));
+};
+function renderTW(){fillTW();if(!$('#wDay').value)$('#wDay').value=today();if(!wDirty)loadW();renderWC();drawTW();}
+const scTx=c=>c?`<span class="hw">${esc(c.score)}</span>/${esc(c.max)}${band(c.name||'',c.score,c.max)}`:'—';
+const trend=(c,p)=>{if(!c||!p)return '';const x=c.score/(c.max||10),y=p.score/(p.max||10);return x>y+1e-9?'<span class="up">↑</span>':x<y-1e-9?'<span class="dn">↓</span>':'<span class="eq">=</span>';};
+function weekSheet(){
+  const D=weekData();if(!D)return '';
+  const {s,a,b,sess,prog,done,tot,exam,ten,next,learn}=D,L=window.LOGO||'',cmt=$('#wCmt').value.trim(),[ay]=[a.slice(0,4)];
+  const left=exam?Math.round((new Date(exam+'T00:00:00')-new Date(today()+'T00:00:00'))/864e5):null;
+  const multi=D.ids.length>1,tag=id=>{if(!multi)return '';const x=stu(id);return x&&x.cls?` <small>(${esc(x.cls)})</small>`:'';};
+  const gram=x=>{const l=learn.find(z=>z.d===x.fDate&&z.id===x.studentId);return l?esc(l.k):esc(String(x.fGram||'').split('\n').filter(Boolean).slice(0,2).join(' · '));};
+  const rows=sess.length?`<table class="bc-tbl"><tr><th style="width:74px">Ngày</th><th>Nội dung đã học</th><th style="width:64px">BTVN</th><th style="width:70px">Khảo từ</th></tr>`
+    +sess.map(x=>`<tr><td class="c">${esc(thu(x.fDate))} ${dmS(x.fDate)}${tag(x.studentId)}</td>`+(x.abs?`<td colspan="3"><b class="dn">Nghỉ ${x.abs==='cp'?'có phép':'không phép'}</b>${x.fMakeup?' · học bù '+esc(x.fMakeup):''}</td>`
+      :`<td>${gram(x)}</td><td class="c">${x.hw==='none'?'—':(x.fPct!==''&&x.fPct!=null?`<span class="hw">${+x.fPct}%</span>`:'—')}</td><td class="c">${x.fVScore!==''&&x.fVScore!=null?`<span class="hw">${esc(x.fVScore)}</span>/${esc(x.fVNum||'?')}`:'—'}</td>`)+'</tr>').join('')+'</table>'
+    :'<div class="bc-none">Tuần này con chưa có buổi học nào được ghi phiếu.</div>';
+  const pr=prog.length?`<table class="bc-tbl"><tr><th>Bài / phần</th><th style="width:82px">Đầu vào</th><th style="width:90px">Tuần trước</th><th style="width:96px">Tuần này</th><th style="width:30px"></th></tr>`
+    +prog.map(r=>`<tr><td>${esc(r.n)}${r.cur.note?`<div><span class="hw" style="font-size:13px">${esc(r.cur.note)}</span></div>`:''}</td><td class="c">${scTx(r.first)}</td><td class="c">${scTx(r.prev)}</td><td class="c"><b>${scTx(r.cur)}</b></td><td class="c">${trend(r.cur,r.prev||r.first)}</td></tr>`).join('')+'</table>'
+    :'<div class="bc-none">Tuần này chưa có điểm kiểm tra.</div>';
+  const nx=next.length?`<div class="bw-next">${next.slice(0,6).map(n=>`<div><b class="d">${esc(thu(n.d))} ${dmS(n.d)}</b><span>${/ki[eể]m tra|thi th[uử]/i.test(n.k)?`<span class="kt">${esc(n.k)}</span>`:esc(n.k)}${tag(n.id)}</span></div>`).join('')}</div>`:'';
+  return `<div class="sheet bc bw f-lora">
+   <img class="wm" src="${L}">
+   <div class="in">
+    <div class="sh-top"><img class="logo" src="${L}"><div class="sh-motto">KIÊN TRÌ - YÊU THƯƠNG - TIẾN BỘ</div><div class="sh-tag">MS. MINH THƯ</div></div>
+    <div class="sh-title">📚 BÁO CÁO TUẦN 📚</div>
+    <div class="sh-sub">TUẦN ${dmS(a)} – ${dmS(b)}/${b.slice(0,4)}${ten.length?' · '+esc(ten.join(' + ').toUpperCase()):''}</div>
+    <div class="sh-info">
+      <div><div class="sh-lab">HỌ TÊN HỌC VIÊN | LỚP</div><div class="sw o"><div class="sh-box"><span class="hw">${esc(s.name)}${s.cls?' | '+esc(s.cls):''}</span></div></div></div>
+      <div><div class="sh-lab">LỘ TRÌNH ĐÃ HỌC</div><div class="sw o"><div class="sh-box">${tot?`<span class="hw">${done}</span>&nbsp;<b>/ ${tot} buổi</b>`:'<b>—</b>'}</div></div></div>
+      <div><div class="sh-lab">NGÀY THI (CÒN)</div><div class="sw o"><div class="sh-box" style="white-space:nowrap">${exam?`<span class="hw">${dmS(exam)}</span>&nbsp;<b>(${Math.max(0,left)} ngày)</b>`:'<b>—</b>'}</div></div></div>
+    </div>
+    <div class="sh-h green">CÁC BUỔI HỌC TRONG TUẦN</div>
+    ${rows}
+    <div class="sh-h purple">KIỂM TRA SÁT – CON TIẾN BỘ THẾ NÀO</div>
+    ${pr}
+    ${nx?`<div class="sh-h navy">CÁC BUỔI SẮP TỚI</div>${nx}`:''}
+    <div class="sh-h green">NHẬN XÉT CỦA GIÁO VIÊN</div>
+    <div class="bc-cmt"><div class="tx">${cmt?`<span class="hw">${esc(cmt)}</span>`:'<span class="ph">(Cô viết nhận xét ở ô bên trái)</span>'}</div>${cmt?'<img class="stamp" src="stamp.png" alt="">':''}</div>
+   </div>
+   <div class="sh-foot"><div><span>THÔNG TIN LIÊN HỆ</span><span>SĐT: 0966.101.957 (Ms. Minh Thư)</span><span>GROW WITH ENGLISH</span></div></div>
+  </div>`;
+}
+function drawTW(){
+  const D=weekData();
+  $('#wInfo').innerHTML=D?`Tuần ${dmS(D.a)} – ${dmS(D.b)}: ${D.sess.length} buổi · ${D.ck.length} điểm kiểm tra${D.tot?` · lộ trình ${D.done}/${D.tot}`:' · <span style="color:#b23">em chưa có lộ trình trên máy này</span>'}${D.exam?` · thi ${dmS(D.exam)}`:''}`:'';
+  const ex=$('#bwExport');ex.innerHTML=weekSheet();fitCmt(ex);$('#bwPrev').innerHTML=ex.innerHTML;fitPrevW();
+}
+function fitPrevW(){const wrap=$('#bwPrevWrap'),el=$('#bwPrev');wrap.style.width='';const w=wrap.clientWidth;if(!w)return;
+  const sh=el.firstElementChild?el.firstElementChild.offsetHeight:0;let k=w/630;
+  if(innerWidth>900&&sh){const card=wrap.closest('.card'),other=card.offsetHeight-wrap.offsetHeight;k=Math.max(.45,Math.min(k,(innerHeight-76-12-other)/sh));wrap.style.width=630*k+'px';}
+  el.style.transform=`scale(${k})`;wrap.style.height=sh*k+'px';}
+addEventListener('resize',()=>{if(tab==='tw')fitPrevW();});
+const wPng=()=>{const s=stu(twSid);return `BaoCaoTuan_${fileSafe(s?s.name:'HS')}_${twMon()}.png`;};
+async function makeWPNG(){
+  if(!window.html2canvas){toast('Chưa tải được công cụ chụp ảnh – kiểm tra mạng internet');throw new Error('no html2canvas');}
+  if(!stu(twSid)){toast('Chọn học sinh trước đã ạ');throw new Error('no student');}
+  if(wDirty)saveW(true);await document.fonts.ready;drawTW();
+  const c=await html2canvas($('#bwExport .sheet'),{scale:2,backgroundColor:'#ffffff',logging:false});
+  return new Promise(res=>c.toBlob(res,'image/png'));
+}
+$('#wDown').onclick=async()=>{try{download(await makeWPNG(),wPng());}catch(e){console.error(e);}};
+$('#wCopy').onclick=async()=>{if(!stu(twSid)){toast('Chọn học sinh trước đã ạ');return;}try{
+  await navigator.clipboard.write([new ClipboardItem({'image/png':makeWPNG()})]);toast('Đã sao chép ảnh – vào nhóm Zalo bấm Ctrl+V');openZalo();
+}catch(e){console.error(e);toast('Trình duyệt không cho sao chép ảnh – đã tải ảnh về máy');try{download(await makeWPNG(),wPng());openZalo();}catch(_){}}};
+$('#wShare').onclick=async()=>{try{const b=await makeWPNG(),f=new File([b],wPng(),{type:'image/png'});
+  if(navigator.canShare&&navigator.canShare({files:[f]}))await navigator.share({files:[f]});
+  else{download(b,wPng());toast('Máy này không hỗ trợ chia sẻ trực tiếp – đã tải ảnh về');}}catch(e){if(e.name!=='AbortError')console.error(e);}};
+
 /* ---------- Đồng bộ + khởi động ---------- */
 const SYNC=createSync({app:'bao-cao',cols:['students','sessions','tests','checks','reports'],get:c=>db[c],set:(c,a)=>db[c]=a,save:persist,onChange:()=>{
   // đang gõ dở trong bảng điểm thì không vẽ lại (mất số đang gõ)
@@ -267,5 +441,8 @@ const SYNC=createSync({app:'bao-cao',cols:['students','sessions','tests','checks
   renderAll();}});
 $('#appLogo').src=window.LOGO||'';
 $('#gMonth').value=lastMon=today().slice(0,7);
+// mở thẳng báo cáo tuần từ tab Lộ trình: bao-cao.html#tw=<mã HS>
+{const m=location.hash.match(/^#tw(?:=(.+))?/);if(m){if(m[1])twSid=decodeURIComponent(m[1]);tab='tw';
+  $$('nav.tabs button').forEach(x=>x.classList.toggle('on',x.dataset.v==='tw'));$$('.view').forEach(v=>v.classList.toggle('on',v.id==='v-tw'));}}
 renderAll();
 document.fonts&&document.fonts.ready.then(()=>{if(tab==='pt')drawPT();});

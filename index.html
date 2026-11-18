@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lora:ital,wght@0,700;1,600&display=swap" rel="stylesheet">
 <script src="logo.js?v=202611111700"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<link rel="stylesheet" href="style.css?v=202611172300">
+<link rel="stylesheet" href="style.css?v=202611181000">
 </head>
 <body>
 <header class="app">
@@ -298,6 +298,7 @@
 
 <script src="ngu-phap-unit.js?v=202611171400"></script>
 <script src="lo-trinh-unit.js?v=202611172130"></script>
+<script src="lo-trinh-luyen-thi.js?v=202611181400"></script>
 <script src="sync.js?v=202611051400"></script>
 <script>
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
@@ -1008,7 +1009,7 @@ function planLine(sid,day){
   if(!it){const ds=planDates(sid);it=p.items.find(x=>!isDone(x)&&ds[x.id]===day);}
   if(!it)return '';
   const tx=String(it.lop||it.gram||'').split('\n').map(t=>t.trim()).filter(Boolean)[0]||'';
-  return `<div class="lich-plan"><button type="button" class="chip ${kind(it.k)}" data-plan="${sid}" title="Mở lộ trình của em">🧭 Unit ${esc(it.u)} · B${it.s} – ${esc(it.k)}</button>${tx?` <small>${esc(tx)}</small>`:''}</div>`;
+  return `<div class="lich-plan"><button type="button" class="chip ${kind(it.k)}" data-plan="${sid}" title="Mở lộ trình của em">🧭 ${esc(uL(it.u))} · B${it.s} – ${esc(it.k)}</button>${tx?` <small>${esc(tx)}</small>`:''}</div>`;
 }
 function renderLich(){
   if(!$('#lDay').value)$('#lDay').value=today();
@@ -1136,6 +1137,7 @@ const DEF_TPL=[
 const PF=['k','gram','vNum','next','nvNum','prep'];
 const tplOf=()=>lich.tpl&&lich.tpl.length?lich.tpl:DEF_TPL;
 const planOf=sid=>(lich.plans=lich.plans||{})[sid];
+const uL=u=>/^\d/.test(String(u))?'Unit '+u:String(u); // Unit 5 / Tuần 1 (lộ trình luyện thi)
 const isDone=it=>!!(it.ses&&db.sessions.some(x=>x.id===it.ses));
 const isoOf=x=>x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');
 const dm=iso=>{const[d,m]=dmy(iso);return d+'/'+m;};
@@ -1182,14 +1184,14 @@ function planDates(sid){
   for(let i=0,g=0;i<pend.length&&g<1000;g++){const iso=isoOf(d);if(dowOf(iso) in o)res[pend[i++].id]=iso;d.setDate(d.getDate()+1);}
   return res;
 }
-const nextTest=sid=>{const p=planOf(sid);if(!p)return '';const ds=planDates(sid),it=p.items.find(x=>!isDone(x)&&kind(x.k)==='kt');return it?`${it.k} Unit ${it.u}${ds[it.id]?' – '+thuOf(ds[it.id])+' '+dm(ds[it.id]):''}`:'';};
+const nextTest=sid=>{const p=planOf(sid);if(!p)return '';const ds=planDates(sid),it=p.items.find(x=>!isDone(x)&&kind(x.k)==='kt');return it?`${it.k} – ${uL(it.u)}${ds[it.id]?' – '+thuOf(ds[it.id])+' '+dm(ds[it.id]):''}`:'';};
 function addAlert(sid,t,it){(lich.alerts=lich.alerts||[]).unshift({id:uid(),sid,t,it:it||'',at:today()});lich.alerts=lich.alerts.slice(0,60);
   const b=$('#navPlan');b.textContent='🧭 Lộ trình ('+lich.alerts.length+')';}
 // Nhập phiếu: điền bài tiếp theo của lộ trình
 function planFillFor(r){
   planFill=null;const p=planOf(r.studentId);if(!p)return;const it=p.items.find(x=>!isDone(x));if(!it)return;
-  r.fGram=it.gram;r.fVUnit=it.vNum?'Unit '+it.u:'';r.fVNum=it.vNum||'';r.fNext=it.next;
-  r.fNVUnit=it.nvNum?'Unit '+it.u:'';r.fNVNum=it.nvNum||'';r.fPrep=it.prep;
+  const pv=p.items[p.items.indexOf(it)-1];/* vU = chủ đề từ học ở buổi đó → khảo đầu buổi sau */r.fGram=it.gram;r.fVUnit=it.vNum?((pv&&pv.vU)||it.vU||'Unit '+it.u):'';r.fVNum=it.vNum||'';r.fNext=it.next;
+  r.fNVUnit=it.nvNum?(it.vU||'Unit '+it.u):'';r.fNVNum=it.nvNum||'';r.fPrep=it.prep;
   planFill={sid:r.studentId,id:it.id};
 }
 function renderPlanTag(){
@@ -1197,7 +1199,7 @@ function renderPlanTag(){
   if(!it){el.style.display='none';return;}
   const n=p.items.filter(x=>x.u===it.u).length;
   const D=t=>esc(t).replace(/\n/g,'<br>');
-  el.innerHTML=`🧭 <b>Theo lộ trình:</b> Unit ${esc(it.u)} · buổi ${it.s}/${n} – ${esc(it.k)}${it.npd?`<br><b>Các mục ngữ pháp:</b> ${esc(it.npd)}`:''}`
+  el.innerHTML=`🧭 <b>Theo lộ trình:</b> ${esc(uL(it.u))} · buổi ${it.s}/${n} – ${esc(it.k)}${it.npd?`<br><b>Các mục ngữ pháp:</b> ${esc(it.npd)}`:''}`
     +(it.lop?`<div class="pt-d"><div><b>🔧 Khảo + sửa đầu giờ</b><br>${D(it.fix||'—')}</div><div><b>📖 Trên lớp (cô sửa ngay)</b><br>${D(it.lop)}</div><div><b>🏠 BTVN</b><br>${D(it.btvn||'—')}</div></div>`:'')
     +` <small>(cô sửa nội dung thoải mái; khác lộ trình web sẽ hỏi lại)</small>`;el.style.display='block';
 }
@@ -1205,10 +1207,10 @@ const normT=s=>String(s||'').replace(/\s+/g,' ').trim();
 function planAfterSave(rec,pf){
   if(!pf||pf.sid!==rec.studentId)return;const p=planOf(pf.sid),it=p&&p.items.find(x=>x.id===pf.id);if(!it)return;
   const s=stu(rec.studentId);
-  if(rec.abs){addAlert(pf.sid,`${s.name} nghỉ ${dm(rec.fDate)} → lộ trình lùi 1 buổi, bài "${it.k}" (Unit ${it.u}) dời sang buổi sau.`+(nextTest(pf.sid)?` Kiểm tra tiếp theo: ${nextTest(pf.sid)}.`:''));}
+  if(rec.abs){addAlert(pf.sid,`${s.name} nghỉ ${dm(rec.fDate)} → lộ trình lùi 1 buổi, bài "${it.k}" (${uL(it.u)}) dời sang buổi sau.`+(nextTest(pf.sid)?` Kiểm tra tiếp theo: ${nextTest(pf.sid)}.`:''));}
   else{it.ses=rec.id;it.date=rec.fDate;
     if(normT(rec.fGram)!==normT(it.gram)||normT(rec.fNext)!==normT(it.next)||normT(rec.fPrep)!==normT(it.prep))
-      addAlert(pf.sid,`Phiếu ${dm(rec.fDate)} của ${s.name} khác lộ trình (Unit ${it.u} · ${it.k}).`,it.id);}
+      addAlert(pf.sid,`Phiếu ${dm(rec.fDate)} của ${s.name} khác lộ trình (${uL(it.u)} · ${it.k}).`,it.id);}
   planFill=null;saveLich();
 }
 // ---- vẽ tab Lộ trình (bố cục gọn 2026-11-17): bảng tổng các em → bấm 1 em → lộ trình chi tiết ----
@@ -1244,9 +1246,9 @@ function renderPlan(){
       const {p,ds,pend,nos,ktK,nxt}=f,n=pend.length;
       const kt=pend.find(it=>kind(it.k)==='kt'||ktK(nos[it.id]));
       const uN=nxt?p.items.filter(x=>x.u===nxt.u):[],uD=uN.filter(isDone).length;
-      return `<tr data-s="${s.id}"${on}>${nm}<td>${nxt?`Unit ${esc(nxt.u)} <small>· ${uD}/${uN.length} buổi</small>`:'<small>đã học hết</small>'}</td>`
+      return `<tr data-s="${s.id}"${on}>${nm}<td>${nxt?`${esc(uL(nxt.u))} <small>· ${uD}/${uN.length} buổi</small>`:'<small>đã học hết</small>'}</td>`
         +`<td>${nxt?`<b>${wd(ds[nxt.id])||'—'}</b> <small>B${nos[nxt.id]}</small><div class="pb-k">${esc(nxt.k)}</div>`:'—'}</td>`
-        +`<td>${kt?`${wd(ds[kt.id])||'—'}<div class="pb-k">${kind(kt.k)==='kt'?esc(kt.k):'KT '+ktK(nos[kt.id])+' khóa'}</div>`:'—'}</td>`
+        +`<td>${kt?`${wd(ds[kt.id])||'—'}<div class="pb-k">${kind(kt.k)==='kt'?esc(kt.k):'KT '+ktK(nos[kt.id])+' khóa'}</div>`:'—'}${p.exam?`<div class="pb-thi">🎯 Thi ${wd(p.exam)}</div>`:''}</td>`
         +`<td class="${n<=2?'pb-end':''}">${n} buổi</td></tr>`;}).join('')+'</table></div>';
   $$('#pBoard tr[data-s]').forEach(r=>r.onclick=()=>{pSel=r.dataset.s;renderPlan();$('#pDetail').scrollIntoView({behavior:'smooth',block:'start'});});
   // 3) ô chọn em (để tạo lộ trình cho em chưa có lịch)
@@ -1261,14 +1263,20 @@ function renderPlanBody(){
   if(!p){$('#pSum').innerHTML='<span class="hint">Chưa có lộ trình</span>';
     const lastU=(String((latestSess(sid)||{}).fVUnit||'').match(/\d+/)||[])[0];
     $('#pBody').innerHTML=`<div class="plan-new"><p class="hint">Ghi các Unit sẽ học (VD: 5, 6, 7) → <b>Xem gợi ý</b> → xem từng buổi → bấm <b>Chọn</b>.</p>
-      <div class="lich-add"><input id="pUnits" placeholder="VD: 5, 6, 7" value="${lastU?esc(lastU):''}"><button class="btn" id="pMake">🔍 Xem gợi ý lộ trình</button></div><div id="pSug"></div></div>`;
+      <div class="lich-add"><input id="pUnits" placeholder="VD: 5, 6, 7" value="${lastU?esc(lastU):''}"><button class="btn" id="pMake">🔍 Xem gợi ý lộ trình</button></div><div id="pSug"></div>
+      ${Object.keys(window.LT_THI||{}).length?`<p class="hint" style="margin-top:12px"><b>🎯 Hoặc chọn lộ trình luyện thi:</b></p><div class="thi-l">${Object.entries(LT_THI).map(([k,x])=>`<button type="button" class="btn g sm" data-thi="${k}">${esc(x.ten)}</button>`).join('')}</div><div id="pThi"></div>`:''}</div>`;
+    $$('#pBody [data-thi]').forEach(b=>b.onclick=()=>thiUI($('#pThi'),sid,b.dataset.thi));
     $('#pMake').onclick=()=>{const u=$('#pUnits').value.split(/[,;]+/).map(x=>x.trim().replace(/^unit\s*/i,'')).filter(Boolean);
       if(!u.length){toast('Ghi ít nhất 1 Unit');return;}
       sugUI($('#pSug'),sid,u,items=>{lich.plans[sid]={items};saveLich();renderPlan();toast('Đã chọn lộ trình '+u.length+' Unit cho '+s.name);});};
     return;}
   const {ds,pend,T,nos,ktK,nxt}=planInfo(sid),last=latestSess(sid),endD=pend.length?ds[pend[pend.length-1].id]:'';
   // tóm tắt 1 dòng
-  $('#pSum').innerHTML=`<b>Buổi ${last?esc(last.fNo):0}/${T} của khóa</b>${nxt?` · buổi tới <b>${wd(ds[nxt.id])||'chưa xếp ngày'}</b>`:''}${endD?` · dự kiến xong ${wd(endD)}`:''}${!lich.days[sid]?' · <span style="color:#b23">chưa có lịch học</span>':''}`;
+  // ngày thi (lộ trình luyện thi): còn mấy buổi trước thi, cảnh báo nếu lộ trình xong sau ngày thi
+  const ex=p.exam||'',nBf=ex?pend.filter(it=>ds[it.id]&&ds[it.id]<ex).length:0;
+  $('#pSum').innerHTML=`<b>Buổi ${last?esc(last.fNo):0}/${T} của khóa</b>${nxt?` · buổi tới <b>${wd(ds[nxt.id])||'chưa xếp ngày'}</b>`:''}${endD?` · dự kiến xong ${wd(endD)}`:''}${!lich.days[sid]?' · <span style="color:#b23">chưa có lịch học</span>':''}`
+    +(p.thi||ex?`<div class="thi-d">🎯 Ngày thi <input type="date" id="pExam" value="${esc(ex)}">${ex?` · còn <b>${nBf}</b> buổi trước thi`+(endD&&endD>=ex?` <span class="thi-w">⚠️ lộ trình còn ${pend.length-nBf} buổi rơi vào/sau ngày thi → bớt buổi hoặc thêm buổi/tuần</span>`:''):' <small>(chưa ghi)</small>'} <a class="btn g" href="bao-cao.html#tw=${sid}" style="padding:4px 10px;margin-left:6px">📅 Báo cáo tuần cho PH</a></div>`:'');
+  if($('#pExam'))$('#pExam').onchange=e=>{p.exam=e.target.value;saveLich();renderPlan();};
   const L=t=>String(t||'').split('\n').map(x=>x.trim()).filter(Boolean).map(esc).join('<br>');
   // chi tiết 1 buổi: 3 cột (lộ trình chi tiết) hoặc nội dung / BTVN (khung chung)
   const det=it=>`<div class="pi-g">`+(it.lop!==undefined
@@ -1280,7 +1288,7 @@ function renderPlanBody(){
     const its=p.items.map((it,i)=>({it,i})).filter(x=>x.it.u===u),dn=its.filter(x=>isDone(x.it)),lt=ltOf(sid,u);
     const sw=!dn.length&&lt&&its.every(x=>x.it.src!=='ct')
       ?`<div class="plan-sw">💡 Có lộ trình chi tiết ${lt.buoi.length} buổi cho Unit ${esc(u)} <button class="btn sm" data-sw="${esc(u)}">Xem gợi ý</button><div class="sw-box"></div></div>`:'';
-    html+=`<div class="plan-u"><span>Unit ${esc(u)}${lt&&its.some(x=>x.it.src==='ct')?` · ${esc(lt.ten)}`:''}</span><small>${dn.length}/${its.length} buổi</small></div>${sw}`;
+    html+=`<div class="plan-u"><span>${esc(uL(u))}${lt&&its.some(x=>x.it.src==='ct')?` · ${esc(lt.ten)}`:''}</span><small>${dn.length}/${its.length} buổi</small></div>${sw}`;
     // các buổi đã học gom 1 dòng, bấm mới xem
     if(dn.length)html+=`<details class="pi-done"><summary>✓ Đã học ${dn.length} buổi: ${dn.map(x=>`B${x.it.s}${x.it.date?' ('+dm(x.it.date)+')':''}`).join(', ')}</summary>`
       +dn.map(({it})=>`<div class="pi-row done"><span class="pi-no">Buổi ${nos[it.id]||'?'}</span><span class="pi-dt">${it.date?wd(it.date):''}</span><span class="chip ${kind(it.k)}">B${it.s} · ${esc(it.k)}</span></div>`).join('')+'</details>';
@@ -1307,6 +1315,19 @@ function renderPlanBody(){
     $('#pAddBox').scrollIntoView({behavior:'smooth',block:'center'});};
   $('#pAddR').onclick=()=>{const u=(p.items[p.items.length-1]||{}).u||'';p.items.push({id:uid(),u,s:'+',k:'Ôn tập phần yếu',gram:'Ôn tập phần còn yếu',vNum:'',next:'',nvNum:'',prep:''});saveLich();renderPlan();};
   $('#pDel').onclick=()=>{if(!confirm('Xoá cả lộ trình của '+s.name+'? (Phiếu đã lưu vẫn giữ nguyên)'))return;delete lich.plans[sid];saveLich();renderPlan();};
+}
+// lộ trình luyện thi (lo-trinh-luyen-thi.js): xem trước theo tuần, ghi ngày thi, bấm Chọn mới áp dụng
+function thiItems(key){const x=LT_THI[key];return x.buoi.map((b,j)=>{const it={id:uid(),u:b.u,s:j+1,src:'thi'};['k','fix','lop','btvn','gram','next','prep','vNum','nvNum','vU'].forEach(f=>it[f]=b[f]??'');return it;});}
+function thiUI(box,sid,key){
+  const x=LT_THI[key],its=thiItems(key),D=t=>String(t||'').split('\n').filter(Boolean).map(esc).join('<br>');
+  const wk=[...new Set(its.map(i=>i.u))];
+  box.innerHTML=`<div class="sug"><div class="sug-u"><div class="sug-h">🎯 ${esc(x.ten)}</div><p class="hint">${esc(x.mo)}<br><b>Tài liệu:</b> ${esc(x.tl)}</p>
+    <div class="lich-add"><label class="f" style="margin:0">Ngày thi</label><input type="date" id="thiDate" style="width:auto"></div>`
+    +wk.map(w=>`<details><summary>${esc(w)}: ${its.filter(i=>i.u===w).map(i=>esc(i.k)).join(' · ')}</summary><ol class="sug-pv" start="${its.findIndex(i=>i.u===w)+1}">`
+      +its.filter(i=>i.u===w).map(i=>`<li><b>${esc(i.k)}</b><div class="sug-r"><span>🔧 Khảo + sửa</span>${D(i.fix)||'—'}</div><div class="sug-r"><span>📖 Trên lớp</span>${D(i.lop)}</div><div class="sug-r"><span>🏠 BTVN</span>${D(i.btvn)||'—'}</div></li>`).join('')+'</ol></details>').join('')
+    +`</div><div class="btns"><button class="btn" data-a="pick">✅ Chọn lộ trình này (${its.length} buổi)</button><button class="btn g" data-a="x">Huỷ</button></div></div>`;
+  box.querySelector('[data-a=x]').onclick=()=>box.innerHTML='';
+  box.querySelector('[data-a=pick]').onclick=()=>{lich.plans[sid]={items:its,thi:key,exam:$('#thiDate').value||''};saveLich();renderPlan();toast('Đã chọn lộ trình luyện thi cho '+stu(sid).name);};
 }
 // gợi ý lộ trình cho từng Unit: cô xem trước từng buổi, chọn kiểu (chi tiết / khung chung) rồi bấm Chọn mới áp dụng
 function sugUI(box,sid,units,onPick){

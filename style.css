@@ -375,3 +375,9 @@ details.card.tools h4{margin:14px 0 4px;font-size:14px;color:var(--orange)}
 .pi-prep{margin-top:6px;font-size:13px;color:#1F4E79}
 .pi-done{margin:2px 0 4px;font-size:13px;color:#3E8E3F}
 .pi-done summary{cursor:pointer}
+/* lộ trình luyện thi + ngày thi (2026-11-18) */
+.thi-l{display:flex;flex-wrap:wrap;gap:6px}
+.thi-d{margin-top:4px;font-size:13.5px}
+.thi-d input{width:auto;display:inline-block;padding:2px 6px;font-size:13px}
+.thi-w{color:#B23;font-weight:700}
+.pb-thi{font-size:12px;color:#C55A11;font-weight:700}

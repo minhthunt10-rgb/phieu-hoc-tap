@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lora:ital,wght@0,700;1,600&display=swap" rel="stylesheet">
 <script src="logo.js?v=202611111700"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<link rel="stylesheet" href="style.css?v=202611151000">
+<link rel="stylesheet" href="style.css?v=202611181000">
 <style>
 .topbar{display:flex;flex-wrap:wrap;gap:10px;align-items:end;margin-bottom:12px}
 .topbar>div{min-width:150px}
@@ -24,7 +24,18 @@ table.gs tr.st:hover td{background:#FFFAF4}
 .ks{display:flex;gap:6px}.ks select{flex:1;min-width:0}.ks .btn{padding:8px 10px;white-space:nowrap}
 #bcPrevWrap{width:100%;overflow:hidden;border-radius:6px;box-shadow:0 4px 18px rgba(0,0,0,.12);background:#fff}
 #bcPrev{transform-origin:top left}
-#bcExport{position:fixed;left:-10000px;top:0}
+#bcExport,#bwExport{position:fixed;left:-10000px;top:0}
+#bwPrevWrap{width:100%;overflow:hidden;border-radius:6px;box-shadow:0 4px 18px rgba(0,0,0,.12);background:#fff}
+#bwPrev{transform-origin:top left}
+.wc-row{display:grid;grid-template-columns:minmax(0,1.7fr) 70px 46px minmax(0,1.2fr);gap:8px;align-items:center;padding:5px 0;border-bottom:1px solid var(--line)}
+.wc-row input{padding:6px 8px}.wc-row .mx{font-size:13px;color:#666}
+/* ===== Báo cáo tuần (630px) ===== */
+.bw .bc-tbl td{font-size:12.5px}
+.bw .up{color:#2E7D32;font-weight:800}.bw .dn{color:#C2410C;font-weight:800}.bw .eq{color:#777;font-weight:800}
+.bw .kt{color:#C62828;font-weight:800}
+.bw-next{border:1.5px solid #333;border-radius:12px;background:#fff;padding:8px 14px;font-size:13px;line-height:1.55}
+.bw-next div{display:flex;gap:10px}.bw-next b.d{min-width:84px;color:#2E4A7D}
+.bw .bc-cmt{height:118px}
 
 /* ===== Phiếu báo cáo tháng (630px, cùng bộ khung phiếu buổi) ===== */
 .bc .wm{top:300px}
@@ -75,6 +86,7 @@ table.gs tr.st:hover td{background:#FFFAF4}
   <button data-v="gs" class="on">👀 Giám sát</button>
   <button data-v="kt">📝 Điểm kiểm tra</button>
   <button data-v="pt">📄 Phiếu tháng</button>
+  <button data-v="tw">📅 Báo cáo tuần</button>
   <a href="index.html">✏️ Phiếu học tập</a>
   <a href="khao-tu.html">🔤 Khảo từ</a>
 </nav>
@@ -142,11 +154,55 @@ table.gs tr.st:hover td{background:#FFFAF4}
   </div>
  </div>
 </section>
+
+<!-- ================= BÁO CÁO TUẦN (kiểm tra sát – gửi phụ huynh mỗi tuần) ================= -->
+<section class="view" id="v-tw">
+ <div class="grid2">
+  <div>
+   <div class="card">
+    <h3>Học sinh + tuần</h3>
+    <input type="search" id="wFind" placeholder="🔍 Gõ tên để tìm học sinh…" autocomplete="off" style="margin-bottom:6px">
+    <div class="ks"><select id="wStudent"></select><button class="btn g" id="wNext" type="button">HS tiếp ▶</button></div>
+    <label class="f" style="margin-top:8px">Gộp chung với hồ sơ (cùng 1 em học 2 lớp)</label>
+    <select id="wLink"></select>
+    <label class="f" style="margin-top:8px">Tuần (chọn 1 ngày bất kỳ trong tuần)</label>
+    <div class="ks"><button class="btn g" id="wPrev" type="button">◀ Tuần trước</button><input type="date" id="wDay"><button class="btn g" id="wFwd" type="button">Tuần sau ▶</button></div>
+    <div id="wInfo" class="hint" style="margin-top:8px"></div>
+   </div>
+   <div class="card">
+    <h3>🎯 Điểm kiểm tra sát trong tuần</h3>
+    <div class="row"><div><label class="f">Ngày làm bài</label><input type="date" id="wcDate"></div></div>
+    <div id="wcList"></div>
+    <div class="btns"><button class="btn" id="wcSave">💾 Lưu điểm</button></div>
+    <p class="hint">Mỗi tuần cô ghi điểm từng phần em hay sai (để trống = tuần này không làm). Báo cáo tự so với <b>đầu vào</b> và <b>tuần trước</b>. Điểm cũng hiện trên phiếu tháng.</p>
+   </div>
+   <div class="card sec4">
+    <h3>Nhận xét tuần này</h3>
+    <textarea id="wCmt" rows="4" placeholder="Tuần này con tiến bộ ở Part 5…"></textarea>
+    <div class="chips" id="wChips"></div>
+    <div class="btns"><button class="btn" id="wSave">💾 Lưu nhận xét</button></div>
+   </div>
+  </div>
+  <div class="sticky">
+   <div class="card">
+    <h3>Xem trước báo cáo tuần</h3>
+    <div id="bwPrevWrap"><div id="bwPrev"></div></div>
+    <div class="btns">
+      <button class="btn n" id="wShare">📤 Gửi Zalo (điện thoại)</button>
+      <button class="btn" id="wCopy">📋 Sao chép ảnh + mở nhóm Zalo</button>
+      <button class="btn g" id="wDown">⬇️ Tải ảnh</button>
+    </div>
+    <p class="hint">Lộ trình, ngày thi và buổi tuần sau lấy từ tab Lộ trình trên máy này.</p>
+   </div>
+  </div>
+ </div>
+</section>
 </main>
 
-<div id="bcExport"></div>
+<div id="bcExport"></div><div id="bwExport"></div>
 <div class="toast" id="toast"></div>
 <script src="sync.js?v=202611051400"></script>
-<script src="bao-cao.js?v=202611141000"></script>
+<script src="lo-trinh-luyen-thi.js?v=202611181400"></script>
+<script src="bao-cao.js?v=202611181600"></script>
 </body>
 </html>
