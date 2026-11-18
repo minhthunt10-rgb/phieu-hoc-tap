@@ -381,3 +381,10 @@ details.card.tools h4{margin:14px 0 4px;font-size:14px;color:var(--orange)}
 .thi-d input{width:auto;display:inline-block;padding:2px 6px;font-size:13px}
 .thi-w{color:#B23;font-weight:700}
 .pb-thi{font-size:12px;color:#C55A11;font-weight:700}
+/* 🥤 Uống nước – chỉ máy cô */
+.nuoc-box{margin-top:10px;border:1.5px dashed #4FA3D9;background:#EEF7FD;border-radius:12px;padding:8px 12px;font-size:13.5px}
+.nuoc-box.used{border-color:#E8A33C;background:#FFF6E8}
+.nuoc-ck{display:flex;align-items:center;gap:8px;font-weight:700;color:#1E6FA8;cursor:pointer;font-size:15px}
+.nuoc-ck input{width:20px;height:20px;margin:0}
+.nuoc-note{margin-top:4px;color:#444}.nuoc-note b{font-weight:600;color:#1E6FA8}
+.nuoc-note .ok{color:#3E8E3F;font-weight:600}.nuoc-note .warn{color:#C2410C;font-weight:600}.nuoc-note .muted{color:#888;font-style:italic}

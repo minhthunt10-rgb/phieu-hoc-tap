@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lora:ital,wght@0,700;1,600&display=swap" rel="stylesheet">
 <script src="logo.js?v=202611111700"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<link rel="stylesheet" href="style.css?v=202611181000">
+<link rel="stylesheet" href="style.css?v=202611181800">
 </head>
 <body>
 <header class="app">
@@ -60,6 +60,11 @@
       <label class="f">Con đã học bù vào buổi</label>
       <input type="text" id="fMakeup" placeholder="VD: Thứ 7 15/11 – để trống nếu chưa bù">
       <p class="hint">Buổi nghỉ vẫn tính 1 buổi của khóa và được lưu để cuối tháng tổng hợp báo phụ huynh.</p>
+    </div>
+    <!-- Uống nước: chỉ máy cô (lưu trong lich, không lên phiếu, không đồng bộ) -->
+    <div id="nuocBox" class="nuoc-box" style="display:none">
+      <label class="nuoc-ck"><input type="checkbox" id="nuocCk"> 🥤 Uống nước hôm nay</label>
+      <div id="nuocNote" class="nuoc-note"></div>
     </div>
    </div>
 
@@ -430,7 +435,7 @@ function clearFind(){if($('#fFind').value){$('#fFind').value='';fillStudentSelec
 // gõ % hoàn thành: từ 80% trở lên tự tích Hoàn thành, dưới 80% tích Chưa hoàn thành (cô chốt)
 $('#fPct').addEventListener('input',()=>{const v=$('#fPct').value;if(v===''||($('input[name=fHw]:checked')||{}).value==='none')return;
   $(`input[name=fHw][value=${+v>=80?'done':'not'}]`).checked=true;});
-$$('#v-nhap input, #v-nhap textarea').forEach(el=>el.addEventListener('input',updatePreview));
+$$('#v-nhap input, #v-nhap textarea').forEach(el=>{if(el.id!=='nuocCk')el.addEventListener('input',updatePreview);});
 // bấm nhanh mức hoàn thành (chạy cùng luật 80%: tự tích ô + con dấu)
 $$('#pctChips button').forEach(b=>b.onclick=()=>{$('#fPct').value=parseInt(b.textContent);$('#fPct').dispatchEvent(new Event('input'));});
 $$('#v-nhap input[type=radio]').forEach(el=>el.addEventListener('change',()=>{
@@ -731,7 +736,7 @@ function startFill(sid,no){ // từ tab Học sinh: bổ sung phiếu buổi "no
 // ô bài khảo từ: trống hoặc có số / mã đề (Unit 5, C17-T1-P1); chỉ "Unit" là thiếu
 const unitOk=v=>{v=String(v||'').trim();return !v||/\d/.test(v);};
 function checkUnits(){$$('.unit-warn').forEach(w=>{const el=$('#'+w.dataset.for),bad=!unitOk(el.value);el.classList.toggle('bad',bad);w.style.display=bad?'block':'none';});}
-function updatePreview(){ktCheck();checkUnits();renderPrevHw();const h=sheetHTML(readForm());$('#preview').innerHTML=h;$('#exportHolder').innerHTML=h;fitText();fitPreview();preRender();}
+function updatePreview(){ktCheck();checkUnits();renderPrevHw();if(window.renderNuoc)renderNuoc();const h=sheetHTML(readForm());$('#preview').innerHTML=h;$('#exportHolder').innerHTML=h;fitText();fitPreview();preRender();}
 // chữ ít thì phóng to cho vừa ô, chữ nhiều thì thu nhỏ để không tràn
 function fitText(){$$(".sheet .fit").forEach(el=>{
   if(!el.clientWidth)return; // ô đang ẩn (tab khác) – đo sẽ sai
@@ -990,6 +995,30 @@ const saveLich=()=>{try{localStorage.setItem(LKEY,JSON.stringify(lich));}catch(e
 // mở trang với đuôi #lich một lần → máy này hiện tab Lịch học
 if(location.hash==='#lich'&&!lich.on){lich.on=true;saveLich();}
 if(lich.on)$('#navLich').style.display='';
+// 🥤 Uống nước – mỗi HS 1 tháng 1 lần; lich.nuoc[sid] = ['2026-11-18', …] (chỉ máy cô)
+window.renderNuoc=()=>{
+  const box=$('#nuocBox'), id=$('#fStudent').value, d=$('#fDate').value||today();
+  if(!lich.on||!id){box.style.display='none';return;} box.style.display='';
+  const l=(lich.nuoc||{})[id]||[], m=d.slice(0,7), inM=l.filter(x=>x.slice(0,7)===m).sort();
+  $('#nuocCk').checked=l.includes(d);
+  const f=x=>{const[dd,mm]=dmy(x);return dd+'/'+mm;}, other=inM.filter(x=>x!==d);
+  const last=l.filter(x=>x.slice(0,7)<m).sort().pop();
+  let t='<b>Ghi chú: mỗi học sinh 1 tháng uống 1 lần.</b> ';
+  if(l.includes(d))t+='<span class="ok">✓ Đã tích uống ngày '+f(d)+'.</span>'+(other.length?' <span class="warn">⚠️ Tháng này em đã uống thêm ngày '+other.map(f).join(', ')+'.</span>':'');
+  else if(inM.length)t+='<span class="warn">⚠️ Tháng '+(+m.slice(5))+' em đã uống ngày '+inM.map(f).join(', ')+' – không uống nữa nhé.</span>';
+  else t+='<span class="ok">Tháng '+(+m.slice(5))+' em chưa uống.</span>'+(last?' <span class="muted">(lần trước: '+f(last)+'/'+last.slice(0,4)+')</span>':'');
+  box.classList.toggle('used',!l.includes(d)&&inM.length>0);
+  $('#nuocNote').innerHTML=t;
+};
+$('#nuocCk').onchange=e=>{const id=$('#fStudent').value;if(!id)return;const d=$('#fDate').value||today();
+  lich.nuoc=lich.nuoc||{};let l=lich.nuoc[id]||[];
+  if(e.target.checked){const m=d.slice(0,7),inM=l.filter(x=>x.slice(0,7)===m&&x!==d);
+    if(inM.length&&!confirm(stu(id).name+' đã uống nước trong tháng này rồi. Vẫn tích thêm?')){e.target.checked=false;return;}
+    if(!l.includes(d))l.push(d);}
+  else l=l.filter(x=>x!==d);
+  if(l.length)lich.nuoc[id]=l.sort();else delete lich.nuoc[id];
+  saveLich();renderNuoc();toast(e.target.checked?'Đã ghi '+stu(id).name+' uống nước':'Đã bỏ tích uống nước');};
+renderNuoc();
 const dowOf=iso=>(new Date(iso+'T00:00:00').getDay()+6)%7;
 // ô lịch "Trâm 10 (ca 1)", "LAN ANH VIP 4", "HUY IELTS 11 (ca 2) - TEST" → học sinh khớp tên + khối
 function matchCell(cell){
@@ -1121,7 +1150,7 @@ $('#lMissN').addEventListener('change',renderLich);
 const nmKey=n=>String(n||'').normalize('NFC').toLowerCase().replace(/\s+/g,' ').trim();
 $('#lExport').onclick=()=>{
   // kèm lộ trình từng em + khung mẫu (cùng nằm trên máy cô)
-  const rows=db.students.filter(s=>lich.days[s.id]||(lich.plans||{})[s.id]).map(s=>({name:s.name,cls:s.cls||'',days:lich.days[s.id]||null,plan:(lich.plans||{})[s.id]||null}));
+  const rows=db.students.filter(s=>lich.days[s.id]||(lich.plans||{})[s.id]||(lich.nuoc||{})[s.id]).map(s=>({name:s.name,cls:s.cls||'',days:lich.days[s.id]||null,plan:(lich.plans||{})[s.id]||null,nuoc:(lich.nuoc||{})[s.id]||null}));
   if(!rows.length){toast('Chưa có lịch để xuất');return;}
   const done={};Object.entries(lich.done||{}).forEach(([d,o])=>{done[d]=Object.keys(o).map(id=>(stu(id)||{}).name).filter(Boolean);});
   download(new Blob([JSON.stringify({kind:'lich-hoc',rows,done,tpl:lich.tpl||null},null,1)],{type:'application/json'}),`LichHoc_${today()}.json`);
@@ -1129,12 +1158,12 @@ $('#lExport').onclick=()=>{
 $('#lImport').onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();
   rd.onload=()=>{try{const o=JSON.parse(rd.result);if(o.kind!=='lich-hoc'||!Array.isArray(o.rows))throw 0;
     const find=(n,c)=>{const l=db.students.filter(s=>nmKey(s.name)===nmKey(n));return l.find(s=>(s.cls||'')===c)||l[0];};
-    const days={},plans={},miss=[];o.rows.forEach(r=>{const s=find(r.name,r.cls);if(!s){miss.push(r.name+(r.cls?' – '+r.cls:''));return;}
-      if(r.days)days[s.id]=r.days;if(r.plan)plans[s.id]=r.plan;});
+    const days={},plans={},nuoc={},miss=[];o.rows.forEach(r=>{const s=find(r.name,r.cls);if(!s){miss.push(r.name+(r.cls?' – '+r.cls:''));return;}
+      if(r.days)days[s.id]=r.days;if(r.plan)plans[s.id]=r.plan;if(r.nuoc)nuoc[s.id]=r.nuoc;});
     if(!Object.keys(days).length&&!Object.keys(plans).length){toast('Chưa ghép được học sinh nào – đợi đồng bộ xong danh sách HS rồi nhập lại');return;}
     if(Object.keys(lich.days).length&&!confirm(`Nhập lịch của ${Object.keys(days).length} học sinh? Lịch hiện có trên trình duyệt này sẽ được thay.`))return;
     const done={};Object.entries(o.done||{}).forEach(([d,ns])=>{done[d]={};ns.forEach(n=>{const s=find(n,'');if(s)done[d][s.id]=1;});});
-    lich={...lich,on:true,days,done,plans:{...(lich.plans||{}),...plans}};if(o.tpl)lich.tpl=o.tpl;
+    lich={...lich,on:true,days,done,plans:{...(lich.plans||{}),...plans},nuoc:{...(lich.nuoc||{}),...nuoc}};if(o.tpl)lich.tpl=o.tpl;
     saveLich();$('#navLich').style.display='';$('#navPlan').style.display='';renderLich();
     toast(`Đã nhập lịch của ${Object.keys(days).length} học sinh`+(miss.length?` – ${miss.length} em chưa có trong danh sách`:''));
     if(miss.length)$('#lMsg').innerHTML=`<p class="hint" style="color:#b23">⚠️ Chưa có trong danh sách học sinh nên chưa nhập lịch: ${miss.map(esc).join('; ')}</p>`;
