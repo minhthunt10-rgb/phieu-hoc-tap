@@ -31,9 +31,14 @@ table.gs tr.st:hover td{background:#FFFAF4}
 .wc-row input{padding:6px 8px}.wc-row .mx{font-size:13px;color:#666}
 /* ===== Báo cáo tháng (.rm, đầu XANH BIỂN) + báo cáo tuần (.rw, đầu CAM) – cùng khung phiếu học tập mẫu C (đầu XANH LÁ)
    → 3 loại phiếu cùng một bộ nhưng nhìn màu đầu phiếu là phân biệt được ===== */
-.sheet.c2.rw{--g:#D9601F;--g2:#A9420E;--o:#3F7F32;--lt:#FCE3CF;--lt2:#FFF3E8}
+/* báo cáo tuần: CAM ĐÀO NHẠT (cô chọn mẫu 4, 2026-11-19): nền đầu phiếu cam pastel, chữ nâu cam đậm cho khỏi chìm */
+.sheet.c2.rw{--g:#B8602A;--g2:#7A3A12;--o:#3F7F32;--y:#F8AE7C;--lt:#FDDCC6;--lt2:#FFF5EE}
+/* chữ trên nền cam: nâu sẫm + viền sáng để không chìm (cô nhắc 2026-11-19) */
+.sheet.c2.rw .sh-title{color:#4A1A02;text-shadow:0 0 6px rgba(255,255,255,.9),0 2px 0 rgba(255,255,255,.8)}
+.sheet.c2.rw .sh-motto{color:#4A1A02;font-weight:800;text-shadow:0 0 5px rgba(255,255,255,.95)}
+.sheet.c2.rw .sh-sub{color:#4A1A02;font-weight:800;text-shadow:0 0 5px rgba(255,255,255,.95)}.sheet.c2.rw .sh-sub::before,.sheet.c2.rw .sh-sub::after{background:#4A1A02}
 .sheet.c2.rm{--g:#1F5FA0;--g2:#163F6E;--o:#F47C35;--lt:#D5E5F6;--lt2:#EEF5FC}
-.sheet.c2.rw::before{background:linear-gradient(115deg,#8E340A 0%,#B8480F 35%,#E06A26 70%,#F59A45 100%)}
+.sheet.c2.rw::before{background:linear-gradient(115deg,#FFC39A 0%,#FFEBDD 100%)}
 .sheet.c2.rm::before{background:linear-gradient(115deg,#0F2E52 0%,#163F6E 35%,#1F5FA0 70%,#3D86C6 100%)}
 .sheet.c2.rw .sh-tag{background:#3F7F32}
 .sheet.c2.rm .sh-badge{color:#163F6E;border-color:var(--o);font-size:17px}
@@ -65,10 +70,10 @@ table.gs tr.st:hover td{background:#FFFAF4}
 .sheet.c2.rw .sh-sub,.sheet.c2.rm .sh-sub{letter-spacing:1.2px;font-size:11.5px}
 .sheet.c2.rw .sw::before,.sheet.c2.rm .sw::before{background:var(--lt)}
 .sheet.c2.rw .sw.o::before,.sheet.c2.rm .sw.o::before{background:var(--y)}
-.sheet.c2.rw .sh-foot div{background:linear-gradient(120deg,#A9420E,#D9601F 60%,#F08A3E)}
+.sheet.c2.rw .sh-foot div{background:linear-gradient(120deg,#FFD3B4,#FFEFE4);color:#4A1A02;font-weight:800}
 .sheet.c2.rm .sh-foot div{background:linear-gradient(120deg,#163F6E,#1F5FA0 60%,#3D86C6)}
-.sheet.c2.rw .sh-h.n1,.sheet.c2.rw .sh-h.n3{background:linear-gradient(90deg,#A9420E,#E06A26 55%,#F59A45)}
-.sheet.c2.rw .sh-h.n1::before,.sheet.c2.rw .sh-h.n3::before{color:#A9420E}
+.sheet.c2.rw .sh-h.n1,.sheet.c2.rw .sh-h.n3{background:linear-gradient(90deg,#FFC9A4,#FFE6D4);color:#4A1A02;border:1.5px solid #E9925A}
+.sheet.c2.rw .sh-h.n1::before,.sheet.c2.rw .sh-h.n3::before{color:#fff;background:#C25E22}
 .sheet.c2.rw .sh-h.n2,.sheet.c2.rw .sh-h.n4{background:linear-gradient(90deg,#1F5A1B,#3F7F32 50%,#78B84E)}
 .sheet.c2.rw .sh-h.n2::before,.sheet.c2.rw .sh-h.n4::before{color:#1F5A1B}
 .sheet.c2.rm .sh-h.n1,.sheet.c2.rm .sh-h.n3{background:linear-gradient(90deg,#0F2E52,#1F5FA0 55%,#4A93D1)}
