@@ -447,8 +447,10 @@ function weekSheet(){
     +sess.map(x=>`<tr><td class="c">${esc(thu(x.fDate))} ${dmS(x.fDate)}${tag(x.studentId)}${x.bu?'<div style="font-size:10.5px;font-weight:700;color:var(--g2)">học bù</div>':''}</td>`+(x.abs?`<td colspan="3"><b class="dn">Nghỉ ${x.abs==='cp'?'có phép':'không phép'}</b>${x.fMakeup?' · học bù '+esc(x.fMakeup):''}</td>`
       :`<td>${gram(x)}</td><td class="c">${x.hw==='none'?'—':(x.fPct!==''&&x.fPct!=null?`<span class="hw">${+x.fPct}%</span>`:'—')}</td><td class="c">${x.fVScore!==''&&x.fVScore!=null?`<span class="hw">${esc(x.fVScore)}</span>/${esc(x.fVNum||'?')}`:'—'}</td>`)+'</tr>').join('')+'</table>'
     :'<div class="bc-none">Tuần này con chưa có buổi học nào được ghi phiếu.</div>';
-  const pr=prog.length?`<table class="bc-tbl"><tr><th>Bài / phần</th><th style="width:82px">Đầu vào</th><th style="width:90px">Tuần trước</th><th style="width:96px">Tuần này</th><th style="width:30px"></th></tr>`
-    +prog.map(r=>`<tr><td>${esc(r.n)}${r.cur.note?`<div><span class="hw" style="font-size:13px">${esc(r.cur.note)}</span></div>`:''}</td><td class="c">${scTx(r.first)}</td><td class="c">${scTx(r.prev)}</td><td class="c"><b>${scTx(r.cur)}</b></td><td class="c">${trend(r.cur,r.prev||r.first)}</td></tr>`).join('')+'</table>'
+  // mục 2 "Điểm kiểm tra" (cô sửa 2026-11-19): cột Đầu vào / Tuần trước chỉ hiện khi có điểm, tiêu đề cột to + căn giữa
+  const hF=prog.some(r=>r.first),hP=prog.some(r=>r.prev);
+  const pr=prog.length?`<table class="bc-tbl bw-kt"><tr><th>Bài kiểm tra</th>${hF?'<th style="width:96px">Đầu vào</th>':''}${hP?'<th style="width:104px">Tuần trước</th>':''}<th style="width:110px">${hF||hP?'Tuần này':'Điểm'}</th></tr>`
+    +prog.map(r=>`<tr><td>${esc(r.n)}${r.cur.note?`<div><span class="hw" style="font-size:13px">${esc(r.cur.note)}</span></div>`:''}</td>${hF?`<td class="c">${scTx(r.first)}</td>`:''}${hP?`<td class="c">${scTx(r.prev)}</td>`:''}<td class="c"><b>${scTx(r.cur)}</b></td></tr>`).join('')+'</table>'
     :'<div class="bc-none">Tuần này chưa có điểm kiểm tra.</div>';
   const nx=next.length?`<div class="bw-next">${next.slice(0,6).map(n=>`<div><b class="d">${esc(thu(n.d))} ${dmS(n.d)}</b><span>${/ki[eể]m tra|thi th[uử]/i.test(n.k)?`<span class="kt">${esc(n.k)}</span>`:esc(n.k)}${tag(n.id)}</span></div>`).join('')}</div>`:'';
   return `<div class="sheet c2 rw bc bw f-lora">
@@ -464,7 +466,7 @@ function weekSheet(){
     </div>
     <div class="sh-h n1">CÁC BUỔI HỌC TRONG TUẦN</div>
     ${rows}
-    <div class="sh-h n2">KIỂM TRA SÁT – CON TIẾN BỘ</div>
+    <div class="sh-h n2">ĐIỂM KIỂM TRA</div>
     ${pr}
     ${nx?`<div class="sh-h n3">CÁC BUỔI SẮP TỚI</div>${nx}`:''}
     <div class="sh-h n${nx?4:3}">NHẬN XÉT CỦA GIÁO VIÊN</div>
