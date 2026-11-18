@@ -83,8 +83,7 @@
       <div><label class="f">/ Thang điểm</label><input type="number" id="fKtMax" min="1"></div>
     </div>
     <label class="f">Nhận xét bài kiểm tra</label>
-    <textarea id="fKtCmt" placeholder="VD: Con làm tốt phần từ vựng, phần ngữ pháp còn sai thì quá khứ đơn"></textarea>
-    <div class="chips" id="ktChips"></div>
+    <textarea id="fKtCmt"></textarea>
    </div>
 
    <div class="card sec1">
@@ -107,15 +106,18 @@
     <label class="f">Ngữ pháp</label>
     <textarea id="fGram" placeholder="VD: Sửa BTVN + Tổng ôn kiến thức GHK1 (U1+2+3)"></textarea>
     <div class="chips" data-for="fGram" data-list="gram" data-sep="&#10;"></div>
-    <label class="sc-on"><input type="checkbox" id="fScOn"> ✍️ <b>Nhập điểm</b> <span class="hint">(dòng điểm hiện chữ đỏ, nền vàng trên phiếu và tự vào điểm tháng)</span></label>
+    <label class="sc-on"><input type="checkbox" id="fScOn"> ✍️ <b>Nhập điểm</b> <span class="hint">(dòng điểm hiện chữ đỏ, nền vàng trên phiếu và tự vào Báo cáo khóa)</span></label>
     <div id="scBox" class="sc-box" style="display:none">
      <div class="row">
       <div style="grid-column:1/-1"><label class="f">Nội dung điểm (cô tự ghi)</label><input type="text" id="fScName" placeholder="Điểm ngữ pháp lần 1 của tháng">
        <div class="chips" id="scChips"><button type="button">Điểm ngữ pháp lần 1 của tháng</button><button type="button">Điểm từ vựng lần 1 của tháng</button><button type="button">Điểm kiểm tra lần 1 của tháng</button><button type="button">Điểm ngữ pháp lần 2 của tháng</button><button type="button">Điểm từ vựng lần 2 của tháng</button><button type="button">Điểm kiểm tra lần 2 của tháng</button></div></div>
       <div><label class="f">Điểm</label><input type="text" inputmode="decimal" id="fScVal" placeholder="7"></div>
       <div><label class="f">Thang điểm</label><input type="text" inputmode="decimal" id="fScMax" placeholder="10"></div>
-      <div><label class="f">Ghi thêm (nếu có)</label><input type="text" id="fScNote" placeholder="25/30"></div>
+      <div><label class="f">Ghi thêm trên phiếu (nếu có)</label><input type="text" id="fScNote" placeholder="25/30"></div>
      </div>
+     <label class="f">Nhận xét bài kiểm tra <span class="hint">(không in trên phiếu – chỉ hiện trong Báo cáo khóa/tuần)</span></label>
+     <textarea id="fScCmt" placeholder="VD: Con làm tốt phần từ vựng, phần ngữ pháp còn sai thì quá khứ đơn"></textarea>
+     <div class="chips" id="ktChips"></div>
     </div>
     <div class="row">
       <div><label class="f">Khảo từ vựng (bài)</label><input type="text" id="fVUnit" placeholder="Unit 2+3 / C17-T1-P1"><div class="unit-warn hint" data-for="fVUnit">Ghi số Unit (VD Unit 5) hoặc mã đề (C17-T1-P1)</div></div>
@@ -349,7 +351,7 @@ $$('nav.tabs button').forEach(b=>b.onclick=()=>{
 
 /* ---------- Form ---------- */
 let editingId=null, lastSaved='', planFill=null; // planFill = {sid,id} bài lộ trình đang điền vào phiếu
-const FIELDS=['fDate','fNo','fTotal','fPct','fHwCmt','fGram','fVUnit','fVNum','fVScore','fAttCmt','fNext','fNVNum','fNVUnit','fPrep','fKtScore','fKtMax','fKtCmt','fKtName','fMakeup','fScName','fScVal','fScMax','fScNote','fBuFor'];
+const FIELDS=['fDate','fNo','fTotal','fPct','fHwCmt','fGram','fVUnit','fVNum','fVScore','fAttCmt','fNext','fNVNum','fNVUnit','fPrep','fKtScore','fKtMax','fKtCmt','fKtName','fMakeup','fScName','fScVal','fScMax','fScNote','fScCmt','fBuFor'];
 function readForm(){
   const r={studentId:$('#fStudent').value};
   FIELDS.forEach(f=>r[f]=$('#'+f).value.trim?$('#'+f).value.trim():$('#'+f).value);
@@ -540,7 +542,9 @@ function sheetHTML(r){
    Cuối khóa: kiểm tra buổi T, nhắc giao ôn từ buổi T-1. Quên thì các buổi sau vẫn nhắc (khung đỏ).
    Phiếu nào có dòng "ôn tập kiểm tra" thì buổi sau hiện ô nhập điểm + nhận xét. */
 const KT_RE=/kiểm tra định kỳ|ôn tập kiểm tra|ôn kiểm tra|kiểm tra (giữa|cuối) khóa/i;
-const hasKt=x=>x&&x.fKtScore!==''&&x.fKtScore!=null;
+const KT_SC=/kiểm tra (giữa|cuối) khóa/i; // điểm kiểm tra định kỳ nay nhập ở ô vàng ✍️ Nhập điểm (cô chốt 2026-11-18)
+const hasKt=x=>!!x&&((x.fKtScore!==''&&x.fKtScore!=null)||(hasSc(x)&&KT_SC.test(x.fScName||'')));
+const ktN=x=>(x&&x.fKtScore!==''&&x.fKtScore!=null&&x.fKtName)||(x&&x.fScName)||'';
 // dòng điểm cô tự ghi trong ô Ngữ pháp: "Điểm ngữ pháp lần 1 của tháng: 7đ (25/30)" – chữ đỏ nền vàng, tự vào điểm tháng
 const hasSc=x=>!!(x&&x.scOn&&String(x.fScVal??'').trim()!=='');
 const scText=x=>`${String(x.fScName||'Điểm kiểm tra').replace(/[:\s]+$/,'')}: ${String(x.fScVal).replace('.',',')}đ${x.fScMax&&+x.fScMax!==10?'/'+x.fScMax:''}${x.fScNote?' ('+x.fScNote+')':''}`;
@@ -558,27 +562,32 @@ function khoaSess(sid,no,date,skip=editingId){ // các buổi trước của kh�
   return {prev:out,before:ss[0]};
 }
 function ktCheck(){
-  const r=readForm(),box=$('#ktRemind'),sc=$('#ktScore'),hint=$('#ktScoreHint');
+  const r=readForm(),box=$('#ktRemind');
   const N=noMax(r.fNo),T=+r.fTotal;
-  const showSc=(name,html)=>{if(name&&!(hasKt(r)&&$('#fKtName').value))$('#fKtName').value=name;
-    hint.innerHTML=hasKt(r)?`✓ Đã nhập điểm <b>${esc($('#fKtName').value||'kiểm tra')}</b>. Điểm tự vào <b>Báo cáo tháng</b> (không ghi trên phiếu).`:html;sc.style.display='block';};
-  box.style.display='none';sc.style.display=hasKt(r)?'block':'none';
-  if(!r.studentId||!N||!T||T<4){if(hasKt(r))showSc('Kiểm tra định kỳ','');return;}
+  // nhắc nhập điểm kiểm tra → nút điền sẵn ô vàng ✍️ Nhập điểm (nhận xét nằm trong ô vàng, không in trên phiếu)
+  const fillBtn=name=>`<button type="button" class="btn" id="ktFill" data-n="${esc(name)}">✍️ Nhập điểm ${esc(name)}</button>`;
+  const bindFill=()=>{const b=$('#ktFill');if(b)b.onclick=()=>{const c=$('#fScOn');if(!c.checked){c.checked=true;$('#scBox').style.display='block';}
+    $('#fScName').value=b.dataset.n;updatePreview();$('#scBox').scrollIntoView({behavior:'smooth',block:'center'});$('#fScVal').focus();};};
+  const showSc=(name,html)=>{box.className='kt-remind'+(hasKt(r)?' ok':'');
+    box.innerHTML=hasKt(r)?`✓ Đã nhập điểm <b>${esc(ktN(r)||'kiểm tra')}</b> – điểm + nhận xét tự vào <b>Báo cáo khóa</b>.`:html+'<br>'+fillBtn(name);
+    box.style.display='block';bindFill();};
+  $('#ktScore').style.display='none';box.style.display='none';
+  if(hasKt(r)){showSc('','');return;}
+  if(!r.studentId||!N||!T||T<4)return;
   const K=Math.ceil(T/2),{prev,before}=khoaSess(r.studentId,N,r.fDate);
   // bài đã giao mà chưa nhập điểm (kể cả giao ở buổi cuối khóa trước)
   let gi=-1,si=-1;prev.forEach((x,i)=>{if(KT_RE.test(ktTxt(x)))gi=i;if(hasKt(x))si=i;});
   let giao=null;
-  if(gi>=0&&(gi>si||(gi===si&&ktKind(ktTxt(prev[gi]).split('\n').find(l=>KT_RE.test(l)))!==ktKind(prev[gi].fKtName))))giao=prev[gi];
+  if(gi>=0&&(gi>si||(gi===si&&ktKind(ktTxt(prev[gi]).split('\n').find(l=>KT_RE.test(l)))!==ktKind(ktN(prev[gi])))))giao=prev[gi];
   if(!prev.length&&N===1&&before&&KT_RE.test(ktTxt(before))&&!hasKt(before))giao=before;
-  const done=k=>prev.some(x=>hasKt(x)&&ktKind(x.fKtName)===k);
+  const done=k=>prev.some(x=>hasKt(x)&&ktKind(ktN(x))===k);
   // 1) buổi trước đã giao ôn → hôm nay nhập điểm
   if(giao){const line=(ktTxt(giao).split('\n').find(l=>KT_RE.test(l))||''),k=ktKind(line),m=line.match(/buổi (\d+)\s*[–-]\s*(\d+)/);
     const rg=m?`${m[1]}–${m[2]}`:`1–${giao.fNo}`,[gd,gm]=dmy(giao.fDate);
-    showSc(`Kiểm tra ${k} khóa (buổi ${rg})`,`Buổi ${esc(giao.fNo)} (${gd}/${gm}) cô đã giao ôn <b>kiểm tra ${k} khóa</b> (nội dung buổi ${rg}). Hôm nay nhập <b>điểm + nhận xét</b> để báo phụ huynh.`);
+    showSc(`Kiểm tra ${k} khóa (buổi ${rg})`,`📝 Buổi ${esc(giao.fNo)} (${gd}/${gm}) cô đã giao ôn <b>kiểm tra ${k} khóa</b> (nội dung buổi ${rg}). Hôm nay nhập <b>điểm + nhận xét</b> ở ô vàng ✍️ Nhập điểm.`);
     return;}
   // 2) bài kiểm tra cần giao tiếp theo
   const tg=!done('giữa')&&N<T-1?{k:'giữa',at:K}:!done('cuối')?{k:'cuối',at:T}:null;
-  if(hasKt(r))showSc(`Kiểm tra ${tg?tg.k:'cuối'} khóa`,''); // cô tự nhập điểm dù chưa được nhắc
   if(!tg||N<tg.at-1)return;
   if(KT_RE.test(ktTxt(r))){box.className='kt-remind ok';box.innerHTML=`✓ Đã giao ôn kiểm tra ${tg.k} khóa. Buổi sau web sẽ nhắc cô nhập <b>điểm + nhận xét</b>.`;box.style.display='block';return;}
   const lastSc=[...prev].reverse().find(hasKt), from=lastSc?noMax(lastSc.fNo)+1:(tg.k==='giữa'?1:K+1); // chưa ghi đủ phiếu trên web vẫn tính từ đầu khóa / sau giữa khóa
@@ -591,17 +600,16 @@ function ktCheck(){
     Giao HS ôn tập để <b>${nxt}</b> kiểm tra nội dung buổi ${rg}:
     <ul>${items}${all.length<N-from+1?`<li class="hint">Các buổi khác chưa có phiếu trên web.</li>`:''}</ul>
     <button type="button" class="btn" id="ktAdd">➕ Ghi BTVN ôn tập + buổi sau kiểm tra</button>
-    ${N>=T?`<p class="hint" style="margin:8px 0 0">Nếu hôm nay đã cho con kiểm tra luôn thì nhập điểm ở thẻ <b>📝 Kiểm tra</b> phía trên.</p>`:''}`;
-  box.style.display='block';
+    ${N>=T?`<p class="hint" style="margin:8px 0 0">Nếu hôm nay đã cho con kiểm tra cuối khóa luôn thì bấm: ${fillBtn(`Kiểm tra cuối khóa (buổi ${rg})`)}</p>`:''}`;
+  box.style.display='block';bindFill();
   // buổi này: BTVN = ôn tập; buổi sau (ô Lý thuyết cần chuẩn bị) = kiểm tra (cô chốt 2026-11-13)
   $('#ktAdd').onclick=()=>{const add=(id,line)=>{const t=$('#'+id);t.value=t.value.trim()?t.value.trim()+'\n'+line:line;};
     add('fNext',`Ôn tập nội dung buổi ${rg} để kiểm tra ${tg.k} khóa`);
     add('fPrep',`Kiểm tra ${tg.k} khóa (nội dung buổi ${rg})`);updatePreview();};
-  if(N>=T)showSc(`Kiểm tra cuối khóa (buổi ${rg})`,`Hôm nay là buổi cuối khóa. Nếu đã cho con <b>kiểm tra cuối khóa</b> thì nhập điểm + nhận xét ở đây.`);
 }
 const KT_CHIPS=['Con làm bài tốt, nắm chắc kiến thức đã học.','Con làm bài cẩn thận, tiến bộ hơn trước.','Con cần ôn lại từ vựng các Unit đã học.','Con còn sai phần ngữ pháp …, cô sẽ ôn lại cho con.','PH nhắc con ôn bài thêm ở nhà giúp cô ạ.'];
 $('#ktChips').innerHTML=KT_CHIPS.map(t=>`<button type="button">${esc(t)}</button>`).join('');
-$$('#ktChips button').forEach(b=>b.onclick=()=>{const t=$('#fKtCmt');const st=t.value?t.value.length+1:0;t.value=t.value?t.value+' '+b.textContent:b.textContent;
+$$('#ktChips button').forEach(b=>b.onclick=()=>{const t=$('#fScCmt');const st=t.value?t.value.length+1:0;t.value=t.value?t.value+' '+b.textContent:b.textContent;
   const i=t.value.indexOf('…',st);t.focus();if(i>=0)t.setSelectionRange(i,i+1);updatePreview();});
 
 /* ---------- Bổ sung phiếu bị thiếu từ ảnh (cô yêu cầu 2026-11-13) ----------
@@ -668,7 +676,7 @@ function ocrToForm({T,ck}){
   const gl=(T.gram||'').split('\n'),rest=[];
   gl.forEach(l=>{const a=l.match(/ngh\S*\s*(c\S|kh\S*ng)\s*ph\S*p(?:.*?b\S[:\s]*(.*))?/i),k=l.match(/Kiểm tra\s*(giữa|cuối)\s*khóa\s*:?\s*([\d.,]+)\s*\/\s*([\d.,]+)/i);
     if(a){r.abs=/^c/i.test(a[1])?'cp':'kp';r.fMakeup=(a[2]||'').trim();if(r.fMakeup&&/^\d+$/.test(r.fMakeup))warn.push('Ô "học bù vào buổi" đọc chưa rõ – cô sửa lại giúp.');}
-    else if(k){r.fKtScore=k[2].replace(',','.');r.fKtMax=k[3];r.fKtName=`Kiểm tra ${k[1].toLowerCase()} khóa`;}
+    else if(k){r.scOn=true;r.fScVal=k[2];r.fScMax=k[3];r.fScName=`Kiểm tra ${k[1].toLowerCase()} khóa`;}
     else if(/^\s*Đi\S*m\b.*:\s*[\d.,]+\s*đ/i.test(l)){const m=l.match(/^(.*?):\s*([\d.,]+)\s*đ(?:\s*\/\s*([\d.,]+))?(?:\s*\((.*)\))?/i);
       r.scOn=true;r.fScName=m[1].trim();r.fScVal=m[2];r.fScMax=m[3]||'';r.fScNote=(m[4]||'').trim();}
     else rest.push(l);});
@@ -836,7 +844,7 @@ function ktStatus(s){
   const N=nextNo(s),K=Math.ceil(T/2),{prev,before}=khoaSess(s.id,N,'9',null);
   const line=x=>ktTxt(x).split('\n').find(l=>KT_RE.test(l))||'';
   let gi=-1,si=-1;prev.forEach((x,i)=>{if(KT_RE.test(ktTxt(x)))gi=i;if(hasKt(x))si=i;});
-  if(gi>=0&&(gi>si||(gi===si&&ktKind(line(prev[gi]))!==ktKind(prev[gi].fKtName)))){
+  if(gi>=0&&(gi>si||(gi===si&&ktKind(line(prev[gi]))!==ktKind(ktN(prev[gi]))))){
     const g=prev[gi],test=prev.slice(gi+1).find(x=>!hasKt(x));
     return {t:test?'diem':'in',k:ktKind(line(g)),ses:test||g,line:line(g)};
   }
@@ -845,7 +853,7 @@ function ktStatus(s){
     const all=sessOf(s.id),b=all[all.indexOf(prev[0])-1];
     if(b&&KT_RE.test(ktTxt(b))&&!hasKt(b))return {t:'diem',k:ktKind(line(b)),ses:prev[0],line:line(b)};
   }
-  const done=k=>prev.some(x=>hasKt(x)&&ktKind(x.fKtName)===k);
+  const done=k=>prev.some(x=>hasKt(x)&&ktKind(ktN(x))===k);
   const tg=!done('giữa')&&N<T-1?{k:'giữa',at:K}:!done('cuối')?{k:'cuối',at:T}:null;
   if(tg&&N>=tg.at-1)return {t:'dan',k:tg.k,N,late:N>=tg.at};
   return null;
@@ -881,7 +889,7 @@ function renderStudents(){
     if(b.dataset.a==='miss'){startFill(s.id,b.dataset.no);return;}
     if(b.dataset.a==='kt'){const x=db.sessions.find(y=>y.id===b.dataset.ses);if(!x)return; // mở lại phiếu buổi kiểm tra để nhập điểm
       $('#fFind').value='';fillStudentSelects();$('nav.tabs button[data-v=nhap]').click();writeForm(x);setEditing(x.id);updatePreview();
-      setTimeout(()=>{$('#ktScore').scrollIntoView({behavior:'smooth',block:'center'});$('#fKtScore').focus();},150);}
+      setTimeout(()=>{const f=$('#ktFill');if(f)f.click();else{$('#scBox').scrollIntoView({behavior:'smooth',block:'center'});$('#fScVal').focus();}},150);}
     if(b.dataset.a==='go'){$('#fFind').value='';fillStudentSelects();$('#fStudent').value=s.id;prefillFor(s.id,false);$('nav.tabs button[data-v=nhap]').click();}
     if(b.dataset.a==='ed'){editingS=s.id;$('#sName').value=s.name;$('#sClass').value=s.cls||'';$('#sTotal').value=s.total;$('#sDone').value=s.done||0;$('#sParent').value=s.parent||'';$('#sNote').value=s.note||'';
       $('#hsFormTitle').textContent='Sửa thông tin: '+s.name;$('#bCancelS').style.display='';window.scrollTo({top:0,behavior:'smooth'});}

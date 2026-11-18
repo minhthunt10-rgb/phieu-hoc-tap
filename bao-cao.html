@@ -141,6 +141,11 @@ table.gs tr.st:hover td{background:#FFFAF4}
 .bc-cmt .hw{font-size:inherit}
 .bc-cmt .stamp{position:absolute;right:-18px;bottom:-30px;width:100px;pointer-events:none}
 .bc-cmt .ph{color:#aaa;font-style:italic;font-size:13px}
+/* ô Điểm kiểm tra trong khóa */
+.pck{border:1px solid #E5DED3;border-radius:10px;padding:7px 9px;margin-bottom:7px;background:#FFFDF8}
+.pck-h{display:flex;align-items:center;gap:6px;font-size:14px;line-height:1.35}.pck-s{color:#C0392B;white-space:nowrap}
+.pck-del{margin-left:auto;border:0;background:#FDECEA;border-radius:8px;padding:4px 8px;cursor:pointer;font-size:14px;flex:none}
+.pck-n{width:100%;margin-top:5px;font-size:13px;padding:5px 8px}.pck-src{font-size:11.5px;margin-top:2px}
 </style>
 </head>
 <body>
@@ -199,6 +204,11 @@ table.gs tr.st:hover td{background:#FFFAF4}
     <label class="f" style="margin-top:8px">Khóa học</label><select id="pKhoa"></select>
     <p class="hint">Khóa tự tách theo phiếu buổi: buổi số quay về 1 là sang khóa mới. Ô Tháng ở trên không áp cho báo cáo khóa.</p>
     <div id="pInfo" class="hint" style="margin-top:8px"></div>
+   </div>
+   <div class="card">
+    <h3>📝 Điểm kiểm tra trong khóa</h3>
+    <div id="pChecks"></div>
+    <p class="hint" style="margin:6px 0 0">Sửa nhận xét xong bấm ra ngoài là tự lưu. 🗑 xóa dòng điểm bị trùng.</p>
    </div>
    <div class="card sec4">
     <h3>Nhận xét của cô (cả khóa)</h3>
@@ -271,6 +281,6 @@ table.gs tr.st:hover td{background:#FFFAF4}
 <div class="toast" id="toast"></div>
 <script src="sync.js?v=202611051400"></script>
 <script src="lo-trinh-luyen-thi.js?v=202611181400"></script>
-<script src="bao-cao.js?v=202611190900"></script>
+<script src="bao-cao.js?v=202611191000"></script>
 </body>
 </html>

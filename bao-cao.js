@@ -26,6 +26,16 @@ const fileSafe=n=>n.normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/đ/g,'d').r
 const month=()=>$('#gMonth').value||today().slice(0,7);
 const active=()=>db.students.filter(s=>!s.deleted);
 
+/* Gộp điểm cô nhập trên phiếu buổi vào danh sách điểm kiểm tra.
+   kt = thẻ "Kiểm tra định kỳ" cũ, sc = ô vàng ✍️ Nhập điểm (nhận xét = fScCmt, không in trên phiếu).
+   Mỗi dòng nhớ nguồn (src/ref) để sửa nhận xét / xóa ở ô "Điểm kiểm tra trong khóa"; dòng đã xóa thì phiếu có ktHide/scHide. */
+function addSessChecks(cs,ss){
+  const has=(d,n)=>cs.some(c=>c.date===d&&String(c.name).trim().toLowerCase()===n.toLowerCase());
+  ss.forEach(x=>{
+    if(!x.ktHide&&x.fKtScore!==''&&x.fKtScore!=null){const n=x.fKtName||'Kiểm tra định kỳ';if(!has(x.fDate,n))cs.push({date:x.fDate,name:n,score:x.fKtScore,max:x.fKtMax||10,note:x.fKtCmt||'',src:'kt',ref:x});}
+    if(!x.scHide&&x.scOn&&x.fScVal!==''&&x.fScVal!=null){const n=String(x.fScName||'Điểm kiểm tra').replace(/[:\s]+$/,'');if(!has(x.fDate,n))cs.push({date:x.fDate,name:n,score:String(x.fScVal).replace(',','.'),max:x.fScMax||10,note:x.fScCmt||'',src:'sc',ref:x});}});
+  return cs.sort((p,q)=>String(p.date).localeCompare(String(q.date)));
+}
 /* ---------- Tổng hợp 1 HS trong 1 tháng ---------- */
 function summary(s,mon,rng){
   // rng={a,b}: tổng hợp theo khoảng ngày (cả khóa) thay vì theo tháng
@@ -45,16 +55,7 @@ function summary(s,mon,rng){
   if(!ts.length)sess.forEach(x=>{if(!x.abs&&x.fVScore!==''&&x.fVScore!=null&&!isNaN(+x.fVScore)){nTests++;wl['P|'+boDau(x.fVUnit)+'|'+(x.fVNum||'')]={s:+x.fVScore,n:+x.fVNum||0};}});
   Object.values(wl).forEach(v=>{if(typeof v==='boolean'){asked++;if(v)words++;}else{words+=v.s;asked+=v.n;}});
   const att={tot:0,kha:0,cct:0};sess.forEach(x=>{if(!x.abs&&att[x.att]!=null)att[x.att]++;});
-  const checks=db.checks.filter(x=>x.studentId===s.id&&inR(String(x.date||'')));
-  // điểm kiểm tra định kỳ cô nhập ngay trên phiếu buổi học (trang Phiếu học tập)
-  ss.forEach(x=>{if(x.fKtScore===''||x.fKtScore==null)return;const name=x.fKtName||'Kiểm tra định kỳ';
-    if(checks.some(c=>c.date===x.fDate&&String(c.name).trim().toLowerCase()===name.toLowerCase()))return;
-    checks.push({date:x.fDate,name,score:x.fKtScore,max:x.fKtMax||10,note:x.fKtCmt||''});});
-  // điểm cô tích "Nhập điểm" trong ô Ngữ pháp của phiếu buổi (VD "Điểm ngữ pháp lần 1 của tháng: 7đ (25/30)")
-  ss.forEach(x=>{if(!x.scOn||x.fScVal===''||x.fScVal==null)return;const name=String(x.fScName||'Điểm kiểm tra').replace(/[:\s]+$/,'');
-    if(checks.some(c=>c.date===x.fDate&&String(c.name).trim().toLowerCase()===name.toLowerCase()))return;
-    checks.push({date:x.fDate,name,score:String(x.fScVal).replace(',','.'),max:x.fScMax||10,note:x.fScNote||''});});
-  checks.sort((a,b)=>a.date.localeCompare(b.date));
+  const checks=addSessChecks(db.checks.filter(x=>x.studentId===s.id&&inR(String(x.date||''))).map(c=>({...c,src:'c',ref:c})),ss);
   const rep=db.reports.find(x=>x.id===s.id+'_'+mon);
   // buổi ghi "5+6" = học 2 ca trong 1 buổi → tính 2 buổi
   // buổi học bù không tính thêm buổi của khóa → ghi riêng
@@ -259,8 +260,29 @@ function fitCmt(root){root.querySelectorAll('.bc-cmt .tx').forEach(el=>{let s=17
 function drawPT(){
   const s=stu(ptSid),k=curK(),M=s&&k?summary(s,'',{a:k.a,b:k.b}):null;
   $('#pInfo').innerHTML=M?`Khóa ${k.i} (từ ${dmS(k.a)}): ${M.nCa}/${M.total} buổi · BTVN ${M.hwAvg==null?'—':M.hwAvg+'%'} · ${M.asked?M.words+' từ thuộc':'chưa khảo từ'} · ${M.checks.length} bài KT`:'';
+  drawPChecks(M);
   const h=sheetHTML(),ex=$('#bcExport');ex.innerHTML=h;fitCmt(ex);
   $('#bcPrev').innerHTML=ex.innerHTML;fitPrev();
+}
+/* Ô "Điểm kiểm tra trong khóa" (cô yêu cầu 2026-11-18): liệt kê mọi dòng điểm, sửa nhận xét, xóa dòng trùng.
+   Điểm nhập ở trang Báo cáo → xóa hẳn; điểm từ phiếu buổi → chỉ ẩn khỏi báo cáo (phiếu vẫn giữ nguyên). */
+function drawPChecks(M){
+  const box=$('#pChecks');if(!box)return;const cs=M?M.checks:[];
+  if(!cs.length){box.innerHTML='<p class="hint" style="margin:0">Khóa này chưa có điểm kiểm tra.</p>';return;}
+  const SRC={c:'trang Báo cáo',kt:'phiếu (thẻ kiểm tra cũ)',sc:'phiếu – ô ✍️ Nhập điểm'};
+  box.innerHTML=cs.map((c,i)=>`<div class="pck"><div class="pck-h"><b>${dmS(c.date)}</b> · ${esc(c.name)}: <b class="pck-s">${esc(String(c.score).replace('.',','))}/${esc(c.max)}</b>
+    <button type="button" class="pck-del" data-i="${i}" title="Xóa dòng điểm này">🗑</button></div>
+    <input type="text" class="pck-n" data-i="${i}" value="${esc(c.note||'')}" placeholder="Nhận xét (không in trên phiếu)">
+    <div class="hint pck-src">Nguồn: ${SRC[c.src]||''}</div></div>`).join('');
+  const save=c=>{if(c.src==='c')SYNC.touch('checks',c.ref);else SYNC.touch('sessions',c.ref);persist();};
+  box.querySelectorAll('.pck-n').forEach(inp=>inp.onchange=()=>{const c=cs[+inp.dataset.i],v=inp.value.trim();
+    if(c.src==='c')c.ref.note=v;else if(c.src==='kt')c.ref.fKtCmt=v;else c.ref.fScCmt=v;
+    save(c);toast('Đã lưu nhận xét điểm');drawPT();});
+  box.querySelectorAll('.pck-del').forEach(b=>b.onclick=()=>{const c=cs[+b.dataset.i];
+    if(!confirm(`Xóa dòng điểm "${c.name}: ${c.score}/${c.max}" (${dmS(c.date)}) khỏi báo cáo?`+(c.src==='c'?'':'\n(Phiếu buổi học vẫn giữ nguyên, chỉ ẩn khỏi báo cáo.)')))return;
+    if(c.src==='c'){SYNC.remove('checks',c.ref.id);db.checks=db.checks.filter(x=>x!==c.ref);persist();}
+    else{c.ref[c.src==='kt'?'ktHide':'scHide']=1;save(c);}
+    toast('Đã xóa dòng điểm');drawPT();});
 }
 function fitPrev(){const wrap=$('#bcPrevWrap'),el=$('#bcPrev');wrap.style.width='';const w=wrap.clientWidth;if(!w)return;
   const sh=el.firstElementChild?el.firstElementChild.offsetHeight:0;let k=w/630;
@@ -321,11 +343,7 @@ const twIds=()=>[twSid].concat(twLink&&stu(twLink)&&twLink!==twSid?[twLink]:[]);
 const planType=ids=>{const P=LICH().plans||{},k=ids.map(i=>(P[i]||{}).thi||'').join(' ');return /movers/.test(k)?'movers':/ielts/.test(k)?'ielts':'khac';};
 function checksIn(ids,a,b){
   const ss=db.sessions.filter(x=>ids.includes(x.studentId)&&x.fDate>=a&&x.fDate<=b);
-  const cs=db.checks.filter(x=>ids.includes(x.studentId)&&x.date>=a&&x.date<=b).map(c=>({...c}));
-  const has=(d,n)=>cs.some(c=>c.date===d&&String(c.name).trim().toLowerCase()===n.toLowerCase());
-  ss.forEach(x=>{if(x.fKtScore!==''&&x.fKtScore!=null){const n=x.fKtName||'Kiểm tra định kỳ';if(!has(x.fDate,n))cs.push({date:x.fDate,name:n,score:x.fKtScore,max:x.fKtMax||10,note:x.fKtCmt||''});}
-    if(x.scOn&&x.fScVal!==''&&x.fScVal!=null){const n=String(x.fScName||'Điểm kiểm tra').replace(/[:\s]+$/,'');if(!has(x.fDate,n))cs.push({date:x.fDate,name:n,score:String(x.fScVal).replace(',','.'),max:x.fScMax||10,note:x.fScNote||''});}});
-  return cs.sort((p,q)=>p.date.localeCompare(q.date));
+  return addSessChecks(db.checks.filter(x=>ids.includes(x.studentId)&&x.date>=a&&x.date<=b).map(c=>({...c,src:'c',ref:c})),ss);
 }
 function weekData(){
   const s=stu(twSid);if(!s)return null;
