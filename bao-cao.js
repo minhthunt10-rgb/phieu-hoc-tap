@@ -33,10 +33,15 @@ function summary(s,mon){
   const byDate={};ss.forEach(x=>byDate[x.fDate]=x);const days=Object.keys(byDate).sort();const sess=days.map(d=>byDate[d]);
   const hwS=sess.filter(x=>!x.abs&&x.hw!=='none'&&x.fPct!==''&&x.fPct!=null&&!isNaN(+x.fPct));
   const hwAvg=hwS.length?Math.round(hwS.reduce((a,x)=>a+(+x.fPct),0)/hwS.length):null;
-  const ts=db.tests.filter(x=>x.studentId===s.id&&String(x.date||'').startsWith(mon));
-  let words=0,asked=0,nTests=ts.length;
-  if(ts.length){ts.forEach(t=>{words+=+t.score||0;asked+=+t.n||0;});}
-  else sess.forEach(x=>{if(!x.abs&&x.fVScore!==''&&x.fVScore!=null&&!isNaN(+x.fVScore)){words+=+x.fVScore;asked+=+x.fVNum||0;nTests++;}});
+  // số từ thuộc: khảo đi khảo lại cùng 1 Unit không cộng dồn – mỗi từ chỉ tính 1 lần, lấy kết quả lần khảo gần nhất
+  const ts=db.tests.filter(x=>x.studentId===s.id&&String(x.date||'').startsWith(mon)).sort((a,b)=>String(a.date).localeCompare(String(b.date))||String(a.created).localeCompare(String(b.created)));
+  let words=0,asked=0,nTests=0;const wl={};
+  ts.forEach(t=>{nTests++;const u=boDau(t.unit);
+    if(t.items&&t.items.length)t.items.forEach(it=>{wl[u+'|'+boDau(it.en)]=!!it.ok;});
+    else wl['T|'+u+'|'+t.n]={s:+t.score||0,n:+t.n||0};});
+  // chưa có bài trang Khảo từ: dùng điểm khảo trên phiếu (cùng Unit + cùng số từ = khảo lại → lấy lần sau)
+  if(!ts.length)sess.forEach(x=>{if(!x.abs&&x.fVScore!==''&&x.fVScore!=null&&!isNaN(+x.fVScore)){nTests++;wl['P|'+boDau(x.fVUnit)+'|'+(x.fVNum||'')]={s:+x.fVScore,n:+x.fVNum||0};}});
+  Object.values(wl).forEach(v=>{if(typeof v==='boolean'){asked++;if(v)words++;}else{words+=v.s;asked+=v.n;}});
   const att={tot:0,kha:0,cct:0};sess.forEach(x=>{if(!x.abs&&att[x.att]!=null)att[x.att]++;});
   const checks=db.checks.filter(x=>x.studentId===s.id&&String(x.date||'').startsWith(mon));
   // điểm kiểm tra định kỳ cô nhập ngay trên phiếu buổi học (trang Phiếu học tập)
@@ -50,13 +55,16 @@ function summary(s,mon){
   checks.sort((a,b)=>a.date.localeCompare(b.date));
   const rep=db.reports.find(x=>x.id===s.id+'_'+mon);
   // buổi ghi "5+6" = học 2 ca trong 1 buổi → tính 2 buổi
-  const caList=sess.flatMap(x=>Array(Math.max(1,String(x.fNo||"").split("+").filter(p=>/\d/.test(p)).length)).fill(x));
+  // buổi học bù không tính thêm buổi của khóa → ghi riêng
+  const buList=sess.filter(x=>x.bu);
+  const caList=sess.filter(x=>!x.bu).flatMap(x=>Array(Math.max(1,String(x.fNo||"").split("+").filter(p=>/\d/.test(p)).length)).fill(x));
   // buổi nghỉ (có phép / không phép) vẫn tính buổi của khóa
   const nCp=caList.filter(x=>x.abs==='cp').length,nKp=caList.filter(x=>x.abs==='kp').length;
-  return {sess,caList,nCa:caList.length,nCp,nKp,days,hwS,hwAvg,words,asked,nTests,att,checks,cmt:rep?rep.cmt:'',total:+s.total||12};
+  return {sess,caList,buList,nCa:caList.length,nCp,nKp,days,hwS,hwAvg,words,asked,nTests,att,checks,cmt:rep?rep.cmt:'',total:+s.total||12};
 }
 // trung bình mỗi lần khảo: "TB 21/30 (70%)"
-const tbTu=m=>{const n=m.nTests||1,r=x=>Math.round(x*10)/10;return `TB ${r(m.words/n)}/${r(m.asked/n)} (${Math.round(m.words/m.asked*100)}%)`;};
+// tỉ lệ từ thuộc (mỗi từ tính 1 lần, theo lần khảo gần nhất)
+const tbTu=m=>`đúng ${Math.round(m.words/m.asked*100)}%`;
 const attTop=a=>{const n=a.tot+a.kha+a.cct;if(!n)return null;return a.cct>=a.tot&&a.cct>=a.kha?'Cần cải thiện':a.kha>a.tot?'Khá':'Tốt';};
 
 /* ---------- Chọn tháng / lớp ---------- */
@@ -177,41 +185,44 @@ function sheetHTML(){
   const s=stu(ptSid);if(!s)return '';
   const mon=month(),[y,m]=mon.split('-'),M=summary(s,mon),L=window.LOGO||'';
   const cmt=$('#pCmt').value.trim();
-  // ô ngày học: đủ số buổi của gói (8/12), buổi chưa học để ô nét đứt
-  const slots=Math.max(M.total,M.nCa);
-  const days=Array.from({length:slots},(_,i)=>{const x=M.caList[i];if(!x)return `<div class="bc-day off"><span class="n">BUỔI ${i+1}</span></div>`;
-    const[d,mm]=dmy(x.fDate);if(x.abs)return `<div class="bc-day nghi"><span class="n">BUỔI ${i+1}</span><span class="hw">${d}/${mm}</span><span class="w">Nghỉ ${x.abs==='cp'?'có phép':'KP'}${x.fMakeup?' · bù '+esc(x.fMakeup):''}</span></div>`;return `<div class="bc-day"><span class="n">BUỔI ${i+1}</span><span class="hw">${d}/${mm}</span><span class="w">${thu(x.fDate)}</span></div>`;}).join('');
+  const dl=xs=>xs.map(x=>{const[d,mm]=dmy(x.fDate);return d+'/'+mm;}).join(', ');
+  const nghiCp=M.caList.filter(x=>x.abs==='cp'),nghiKp=M.caList.filter(x=>x.abs==='kp'),bu=M.buList;
+  const uniq=xs=>xs.filter((x,i)=>xs.indexOf(x)===i);
+  // chuyên cần gọn: số buổi + (nếu có) ngày nghỉ, buổi học bù
+  const cc=`<div class="bm-cc"><span>Số buổi học: <span class="hw">${two(M.nCa)}</span> / <b>${M.total}</b></span>`
+    +(nghiCp.length?`<span class="no">Nghỉ có phép: <b>${uniq(nghiCp).length}</b> buổi (${dl(uniq(nghiCp))})</span>`:'')
+    +(nghiKp.length?`<span class="no">Nghỉ không phép: <b>${uniq(nghiKp).length}</b> buổi (${dl(uniq(nghiKp))})</span>`:'')
+    +(bu.length?`<span>Học bù: <b>${bu.length}</b> buổi (${dl(bu)})</span>`:'')+'</div>';
   const att=attTop(M.att);
-  const bars=M.hwS.length?`<div class="bc-chart"><div class="t">MỨC HOÀN THÀNH BTVN TỪNG BUỔI</div>
+  const bars=M.hwS.length?`<div class="bc-chart" style="margin-top:0"><div class="t">TRUNG BÌNH ${M.hwAvg}% · ${M.hwS.length} BUỔI</div>
     <div class="bc-bars">${M.hwS.map(x=>`<div class="bc-bar"><span class="v">${+x.fPct}%</span><div class="b${+x.fPct<80?' lo':''}" style="height:${Math.max(3,+x.fPct*.72)}px"></div></div>`).join('')}</div>
-    <div class="bc-lbl">${M.hwS.map(x=>{const[d,mm]=dmy(x.fDate);return `<span>${d}/${mm}</span>`;}).join('')}</div></div>`:'';
+    <div class="bc-lbl">${M.hwS.map(x=>{const[d,mm]=dmy(x.fDate);return `<span>${d}/${mm}</span>`;}).join('')}</div></div>`:'<div class="bc-none">Tháng này chưa có BTVN.</div>';
   const checks=M.checks.length?`<table class="bc-tbl"><tr><th style="width:70px">Ngày</th><th>Bài kiểm tra</th><th style="width:78px">Điểm</th><th>Nhận xét</th></tr>`
     +M.checks.map(c=>{const[d,mm]=dmy(c.date);return `<tr><td class="c">${d}/${mm}</td><td>${esc(c.name)}</td><td class="c"><span class="hw">${esc(c.score)}</span>/${esc(c.max)}</td><td>${c.note?`<span class="hw">${esc(c.note)}</span>`:''}</td></tr>`;}).join('')+'</table>'
     :'<div class="bc-none">Tháng này con chưa có bài kiểm tra định kỳ.</div>';
-  return `<div class="sheet bc f-lora">
+  return `<div class="sheet c2 rm bc f-lora">
    <img class="wm" src="${L}">
    <div class="in">
-    <div class="sh-top"><img class="logo" src="${L}"><div class="sh-motto">KIÊN TRÌ - YÊU THƯƠNG - TIẾN BỘ</div><div class="sh-tag">MS. MINH THƯ</div></div>
-    <div class="sh-title">📚 BÁO CÁO HỌC TẬP 📚</div>
+    <div class="sh-top"><img class="logo" src="logo-c2.png"><div class="sh-motto">KIÊN TRÌ - YÊU THƯƠNG - TIẾN BỘ</div><div class="sh-tag">MS. MINH THƯ</div></div>
+    <div class="sh-title">BÁO CÁO THÁNG</div><div class="sh-badge">${+m}</div>
     <div class="sh-sub">KẾT QUẢ HỌC TẬP THÁNG ${+m}/${y} – GỬI PHỤ HUYNH HỌC VIÊN</div>
     <div class="sh-info">
       <div><div class="sh-lab">HỌ TÊN HỌC VIÊN | LỚP</div><div class="sw o"><div class="sh-box"><span class="hw">${esc(s.name)}${s.cls?' | '+esc(s.cls):''}</span></div></div></div>
       <div><div class="sh-lab">THÁNG</div><div class="sw o"><div class="sh-box"><span class="hw">${two(+m)}</span>&nbsp;<b>/ ${y}</b></div></div></div>
-      <div><div class="sh-lab">SỐ BUỔI ĐI HỌC</div><div class="sw o"><div class="sh-box"><span class="hw">${two(M.nCa)}</span>&nbsp;<b>/</b>&nbsp;<span class="hw">${M.total}</span></div></div></div>
     </div>
-    <div class="sh-h green">CHUYÊN CẦN – CÁC BUỔI CON ĐÃ HỌC</div>
-    <div class="bc-days">${days}</div>
-    <div class="bc-sum">Con đã học <span class="hw">${M.nCa}</span> / ${M.total} buổi trong tháng ${+m}${M.nCp+M.nKp?` (trong đó nghỉ ${[M.nCp?M.nCp+' buổi có phép':'',M.nKp?M.nKp+' buổi không phép':''].filter(Boolean).join(', ')})`:''}</div>
-    <div class="sh-h purple">KẾT QUẢ HỌC TẬP</div>
+    <div class="sh-h n1">KẾT QUẢ HỌC TẬP</div>
     <div class="bc-stats">
-      <div class="sw p"><div class="bc-st"><div class="t">TỪ VỰNG ĐÃ THUỘC</div><div class="big">${M.asked?M.words:'—'}${M.asked?' <small>từ</small>':''}</div><div class="s">${M.asked?`/ ${M.asked} từ · ${M.nTests} lần khảo<br>${tbTu(M)}`:'Chưa khảo từ'}</div></div></div>
+      <div class="sw p"><div class="bc-st"><div class="t">TỪ VỰNG – THUỘC TRUNG BÌNH</div><div class="big">${M.asked?Math.round(M.words/M.asked*100)+'<small>%</small>':'—'}</div><div class="s">${M.asked?`thuộc ${M.words}/${M.asked} từ<br>${M.nTests} lần khảo`:'Chưa khảo từ'}</div></div></div>
       <div class="sw p"><div class="bc-st"><div class="t">HOÀN THÀNH BTVN</div><div class="big">${M.hwAvg==null?'—':M.hwAvg+'<small>%</small>'}</div><div class="s">${M.hwS.length?`trung bình ${M.hwS.length} buổi`:'Chưa có BTVN'}</div></div></div>
       <div class="sw p"><div class="bc-st"><div class="t">TINH THẦN HỌC TẬP</div><div class="big" style="font-size:${att&&att.length>4?24:30}px">${att||'—'}</div><div class="s">${att?[['tot','tốt'],['kha','khá'],['cct','cần cố gắng']].filter(([k])=>M.att[k]).map(([k,t])=>`${M.att[k]} buổi ${t}`).join(' · '):''}</div></div></div>
     </div>
-    ${bars}
-    <div class="sh-h navy">ĐIỂM KIỂM TRA</div>
+    <div class="sh-h n2">ĐIỂM KIỂM TRA</div>
     ${checks}
-    <div class="sh-h green">NHẬN XÉT CỦA GIÁO VIÊN</div>
+    <div class="sh-h n3">MỨC ĐỘ HOÀN THÀNH BTVN</div>
+    ${bars}
+    <div class="sh-h n4">CHUYÊN CẦN</div>
+    ${cc}
+    <div class="sh-h n5">NHẬN XÉT CỦA GIÁO VIÊN</div>
     <div class="bc-cmt"><div class="tx">${cmt?`<span class="hw">${esc(cmt)}</span>`:'<span class="ph">(Cô viết nhận xét ở ô bên trái)</span>'}</div>${cmt?'<img class="stamp" src="stamp.png" alt="">':''}</div>
    </div>
    <div class="sh-foot"><div><span>THÔNG TIN LIÊN HỆ</span><span>SĐT: 0966.101.957 (Ms. Minh Thư)</span><span>GROW WITH ENGLISH</span></div></div>
@@ -379,30 +390,30 @@ function weekSheet(){
   const multi=D.ids.length>1,tag=id=>{if(!multi)return '';const x=stu(id);return x&&x.cls?` <small>(${esc(x.cls)})</small>`:'';};
   const gram=x=>{const l=learn.find(z=>z.d===x.fDate&&z.id===x.studentId);return l?esc(l.k):esc(String(x.fGram||'').split('\n').filter(Boolean).slice(0,2).join(' · '));};
   const rows=sess.length?`<table class="bc-tbl"><tr><th style="width:74px">Ngày</th><th>Nội dung đã học</th><th style="width:64px">BTVN</th><th style="width:70px">Khảo từ</th></tr>`
-    +sess.map(x=>`<tr><td class="c">${esc(thu(x.fDate))} ${dmS(x.fDate)}${tag(x.studentId)}</td>`+(x.abs?`<td colspan="3"><b class="dn">Nghỉ ${x.abs==='cp'?'có phép':'không phép'}</b>${x.fMakeup?' · học bù '+esc(x.fMakeup):''}</td>`
+    +sess.map(x=>`<tr><td class="c">${esc(thu(x.fDate))} ${dmS(x.fDate)}${tag(x.studentId)}${x.bu?'<div style="font-size:10.5px;font-weight:700;color:var(--g2)">học bù</div>':''}</td>`+(x.abs?`<td colspan="3"><b class="dn">Nghỉ ${x.abs==='cp'?'có phép':'không phép'}</b>${x.fMakeup?' · học bù '+esc(x.fMakeup):''}</td>`
       :`<td>${gram(x)}</td><td class="c">${x.hw==='none'?'—':(x.fPct!==''&&x.fPct!=null?`<span class="hw">${+x.fPct}%</span>`:'—')}</td><td class="c">${x.fVScore!==''&&x.fVScore!=null?`<span class="hw">${esc(x.fVScore)}</span>/${esc(x.fVNum||'?')}`:'—'}</td>`)+'</tr>').join('')+'</table>'
     :'<div class="bc-none">Tuần này con chưa có buổi học nào được ghi phiếu.</div>';
   const pr=prog.length?`<table class="bc-tbl"><tr><th>Bài / phần</th><th style="width:82px">Đầu vào</th><th style="width:90px">Tuần trước</th><th style="width:96px">Tuần này</th><th style="width:30px"></th></tr>`
     +prog.map(r=>`<tr><td>${esc(r.n)}${r.cur.note?`<div><span class="hw" style="font-size:13px">${esc(r.cur.note)}</span></div>`:''}</td><td class="c">${scTx(r.first)}</td><td class="c">${scTx(r.prev)}</td><td class="c"><b>${scTx(r.cur)}</b></td><td class="c">${trend(r.cur,r.prev||r.first)}</td></tr>`).join('')+'</table>'
     :'<div class="bc-none">Tuần này chưa có điểm kiểm tra.</div>';
   const nx=next.length?`<div class="bw-next">${next.slice(0,6).map(n=>`<div><b class="d">${esc(thu(n.d))} ${dmS(n.d)}</b><span>${/ki[eể]m tra|thi th[uử]/i.test(n.k)?`<span class="kt">${esc(n.k)}</span>`:esc(n.k)}${tag(n.id)}</span></div>`).join('')}</div>`:'';
-  return `<div class="sheet bc bw f-lora">
+  return `<div class="sheet c2 rw bc bw f-lora">
    <img class="wm" src="${L}">
    <div class="in">
-    <div class="sh-top"><img class="logo" src="${L}"><div class="sh-motto">KIÊN TRÌ - YÊU THƯƠNG - TIẾN BỘ</div><div class="sh-tag">MS. MINH THƯ</div></div>
-    <div class="sh-title">📚 BÁO CÁO TUẦN 📚</div>
+    <div class="sh-top"><img class="logo" src="logo-c2.png"><div class="sh-motto">KIÊN TRÌ - YÊU THƯƠNG - TIẾN BỘ</div><div class="sh-tag">MS. MINH THƯ</div></div>
+    <div class="sh-title">BÁO CÁO TUẦN</div>
     <div class="sh-sub">TUẦN ${dmS(a)} – ${dmS(b)}/${b.slice(0,4)}${ten.length?' · '+esc(ten.join(' + ').toUpperCase()):''}</div>
     <div class="sh-info">
       <div><div class="sh-lab">HỌ TÊN HỌC VIÊN | LỚP</div><div class="sw o"><div class="sh-box"><span class="hw">${esc(s.name)}${s.cls?' | '+esc(s.cls):''}</span></div></div></div>
       <div><div class="sh-lab">LỘ TRÌNH ĐÃ HỌC</div><div class="sw o"><div class="sh-box">${tot?`<span class="hw">${done}</span>&nbsp;<b>/ ${tot} buổi</b>`:'<b>—</b>'}</div></div></div>
       <div><div class="sh-lab">NGÀY THI (CÒN)</div><div class="sw o"><div class="sh-box" style="white-space:nowrap">${exam?`<span class="hw">${dmS(exam)}</span>&nbsp;<b>(${Math.max(0,left)} ngày)</b>`:'<b>—</b>'}</div></div></div>
     </div>
-    <div class="sh-h green">CÁC BUỔI HỌC TRONG TUẦN</div>
+    <div class="sh-h n1">CÁC BUỔI HỌC TRONG TUẦN</div>
     ${rows}
-    <div class="sh-h purple">KIỂM TRA SÁT – CON TIẾN BỘ THẾ NÀO</div>
+    <div class="sh-h n2">KIỂM TRA SÁT – CON TIẾN BỘ</div>
     ${pr}
-    ${nx?`<div class="sh-h navy">CÁC BUỔI SẮP TỚI</div>${nx}`:''}
-    <div class="sh-h green">NHẬN XÉT CỦA GIÁO VIÊN</div>
+    ${nx?`<div class="sh-h n3">CÁC BUỔI SẮP TỚI</div>${nx}`:''}
+    <div class="sh-h n${nx?4:3}">NHẬN XÉT CỦA GIÁO VIÊN</div>
     <div class="bc-cmt"><div class="tx">${cmt?`<span class="hw">${esc(cmt)}</span>`:'<span class="ph">(Cô viết nhận xét ở ô bên trái)</span>'}</div>${cmt?'<img class="stamp" src="stamp.png" alt="">':''}</div>
    </div>
    <div class="sh-foot"><div><span>THÔNG TIN LIÊN HỆ</span><span>SĐT: 0966.101.957 (Ms. Minh Thư)</span><span>GROW WITH ENGLISH</span></div></div>

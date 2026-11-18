@@ -49,6 +49,12 @@
       <label><input type="radio" name="fAbs" value="" checked>Có đi học</label>
       <label><input type="radio" name="fAbs" value="cp">Nghỉ có phép</label>
       <label><input type="radio" name="fAbs" value="kp">Nghỉ không phép</label>
+      <label><input type="radio" name="fAbs" value="bu">Học bù</label>
+    </div>
+    <div id="buMore" style="display:none">
+      <label class="f">Bù cho buổi nghỉ ngày</label>
+      <input type="text" id="fBuFor" placeholder="VD: 12/11 – để trống nếu không cần ghi">
+      <p class="hint">Buổi học bù không tính thêm buổi của khóa (ô Buổi số ghi "Bù"); báo cáo tháng ghi riêng số buổi học bù.</p>
     </div>
     <div id="absMore" style="display:none">
       <label class="f">Con đã học bù vào buổi</label>
@@ -343,13 +349,14 @@ $$('nav.tabs button').forEach(b=>b.onclick=()=>{
 
 /* ---------- Form ---------- */
 let editingId=null, lastSaved='', planFill=null; // planFill = {sid,id} bài lộ trình đang điền vào phiếu
-const FIELDS=['fDate','fNo','fTotal','fPct','fHwCmt','fGram','fVUnit','fVNum','fVScore','fAttCmt','fNext','fNVNum','fNVUnit','fPrep','fKtScore','fKtMax','fKtCmt','fKtName','fMakeup','fScName','fScVal','fScMax','fScNote'];
+const FIELDS=['fDate','fNo','fTotal','fPct','fHwCmt','fGram','fVUnit','fVNum','fVScore','fAttCmt','fNext','fNVNum','fNVUnit','fPrep','fKtScore','fKtMax','fKtCmt','fKtName','fMakeup','fScName','fScVal','fScMax','fScNote','fBuFor'];
 function readForm(){
   const r={studentId:$('#fStudent').value};
   FIELDS.forEach(f=>r[f]=$('#'+f).value.trim?$('#'+f).value.trim():$('#'+f).value);
   r.hw=($('input[name=fHw]:checked')||{}).value; r.att=($('input[name=fAtt]:checked')||{}).value;
   r.scOn=$('#fScOn').checked;
-  r.abs=($('input[name=fAbs]:checked')||{}).value||''; // '' đi học · cp nghỉ có phép · kp nghỉ không phép
+  const a=($('input[name=fAbs]:checked')||{}).value||''; // '' đi học · cp nghỉ có phép · kp nghỉ không phép · bu học bù
+  r.abs=a==='bu'?'':a; r.bu=a==='bu'?1:'';
   return r;
 }
 function writeForm(r){
@@ -358,11 +365,13 @@ function writeForm(r){
   $('#fScOn').checked=!!r.scOn;$('#scBox').style.display=r.scOn?'block':'none';
   ($(`input[name=fHw][value=${r.hw||'done'}]`)).checked=true;
   ($(`input[name=fAtt][value=${r.att||'tot'}]`)).checked=true;
-  ($(`input[name=fAbs][value="${r.abs||''}"]`)).checked=true; $('#absMore').style.display=r.abs?'block':'none';
+  ($(`input[name=fAbs][value="${r.bu?'bu':(r.abs||'')}"]`)).checked=true; $('#absMore').style.display=r.abs?'block':'none'; $('#buMore').style.display=r.bu?'block':'none';
 }
 // phiếu mới nhất = ngày học muộn nhất (bổ sung phiếu buổi cũ không làm lệch buổi tiếp theo)
 const latestSess=sid=>sessOf(sid).slice().sort((a,b)=>((a.fDate||'')+a.created).localeCompare((b.fDate||'')+b.created)).pop();
-function nextNo(s){const l=latestSess(s.id);const last=l?noMax(l.fNo):+(s.done||0);const total=+s.total||12;return last>=total?1:last+1;}
+// buổi học bù không tính vào số buổi của khóa
+const latestReg=sid=>sessOf(sid).filter(x=>!x.bu).sort((a,b)=>((a.fDate||'')+a.created).localeCompare((b.fDate||'')+b.created)).pop();
+function nextNo(s){const l=latestReg(s.id);const last=l?noMax(l.fNo):+(s.done||0);const total=+s.total||12;return last>=total?1:last+1;}
 function prefillFor(id,keepShared){
   const s=stu(id); if(!s)return;
   const cur=readForm(); const last=latestSess(id);
@@ -424,7 +433,10 @@ $$('#v-nhap input, #v-nhap textarea').forEach(el=>el.addEventListener('input',up
 $$('#pctChips button').forEach(b=>b.onclick=()=>{$('#fPct').value=parseInt(b.textContent);$('#fPct').dispatchEvent(new Event('input'));});
 $$('#v-nhap input[type=radio]').forEach(el=>el.addEventListener('change',()=>{
   if(el.name==='fHw'){ if(el.value==='done'&&!$('#fPct').value)$('#fPct').value=100; }
-  if(el.name==='fAbs')$('#absMore').style.display=el.value?'block':'none';
+  if(el.name==='fAbs'){$('#absMore').style.display=el.value&&el.value!=='bu'?'block':'none';$('#buMore').style.display=el.value==='bu'?'block':'none';
+    const no=$('#fNo'),s=stu($('#fStudent').value);
+    if(el.value==='bu'){if(no.value!=='Bù'){no.dataset.was=no.value;no.value='Bù';}}
+    else if(no.value==='Bù')no.value=no.dataset.was||(s?nextNo(s):'');}
   updatePreview();
 }));
 
@@ -504,7 +516,7 @@ function sheetHTML(r){
     </div>
     <div class="sh-h purple n2">MỤC TIÊU/NỘI DUNG BUỔI HỌC</div>
     <div class="sh-2 gv">
-      <div class="sw p"><div class="sh-sbox purple" data-ocr="gram"><div class="t">Ngữ pháp</div><div class="fit" data-max="15" data-force="1"><div class="hw">${r.abs?`${r.abs==='cp'?'Con nghỉ có phép':'Con nghỉ không phép'}${r.fMakeup?' – đã học bù: '+esc(r.fMakeup):''}${r.fGram?'\n':''}`:''}${esc(r.fGram)}${hasSc(r)?(r.abs||r.fGram?'\n':'')+scLine(r):''}</div></div></div></div>
+      <div class="sw p"><div class="sh-sbox purple" data-ocr="gram"><div class="t">Ngữ pháp</div><div class="fit" data-max="15" data-force="1"><div class="hw">${r.abs?`${r.abs==='cp'?'Con nghỉ có phép':'Con nghỉ không phép'}${r.fMakeup?' – đã học bù: '+esc(r.fMakeup):''}${r.fGram?'\n':''}`:''}${r.bu?`Buổi học bù${r.fBuFor?' (cho buổi nghỉ '+esc(r.fBuFor)+')':''}${r.fGram?'\n':''}`:''}${esc(r.fGram)}${hasSc(r)?(r.abs||r.fGram?'\n':'')+scLine(r):''}</div></div></div></div>
       <div class="sw p"><div class="sh-sbox purple" data-ocr="vocab"><div class="t">Từ vựng</div><div class="fit" data-max="15">${vocab}</div></div></div>
     </div>
     <div class="sh-h navy n3">Tinh thần học tập của học viên</div>
@@ -695,7 +707,7 @@ async function ocrFile(f){if(ocrBusy)return;ocrBusy=true;const st=$('#ocrStatus'
   finally{ocrBusy=false;$('#ocrPaste').classList.remove('busy');}}
 // các buổi còn thiếu phiếu trong khóa đang học
 function missingNos(s){
-  const l=latestSess(s.id);if(!l)return [];const top=noMax(l.fNo);if(top<2)return [];
+  const l=latestReg(s.id);if(!l)return [];const top=noMax(l.fNo);if(top<2)return [];
   const {prev}=khoaSess(s.id,top+1,'9',null),have=new Set();prev.forEach(x=>noNums(x.fNo).forEach(n=>have.add(n)));
   const out=[];for(let i=1;i<=top;i++)if(!have.has(i))out.push(i);return out;
 }
@@ -902,7 +914,7 @@ function renderSaved(){
   const att={tot:'Tốt',kha:'Khá',cct:'Cần cải thiện'}, hw={done:'Hoàn thành',not:'Chưa HT',none:'Không có'};
   $('#lTable').innerHTML='<tr><th>Ngày</th><th>Học sinh</th><th>Buổi</th><th>BTVN</th><th>Khảo từ</th><th>Tinh thần</th><th></th></tr>'+
    (list.length?list.map(x=>{const s=stu(x.studentId)||{name:'?'};const[d,m]=dmy(x.fDate);
-    return `<tr><td>${d}/${m}</td><td>${esc(s.name)}</td><td>${esc(x.fNo)}/${esc(x.fTotal)}</td><td>${x.abs?`<b style="color:#B23A12">${x.abs==='cp'?'Nghỉ có phép':'Nghỉ không phép'}</b>${x.fMakeup?`<div class="hint">bù: ${esc(x.fMakeup)}</div>`:''}`:`${hw[x.hw]||''}${x.fPct?` (${esc(x.fPct)}%)`:''}`}</td>
+    return `<tr><td>${d}/${m}</td><td>${esc(s.name)}</td><td>${esc(x.fNo)}/${esc(x.fTotal)}</td><td>${x.abs?`<b style="color:#B23A12">${x.abs==='cp'?'Nghỉ có phép':'Nghỉ không phép'}</b>${x.fMakeup?`<div class="hint">bù: ${esc(x.fMakeup)}</div>`:''}`:`${x.bu?'<b style="color:#1F5FA0">Học bù</b> ':''}${hw[x.hw]||''}${x.fPct?` (${esc(x.fPct)}%)`:''}`}</td>
      <td>${x.fVScore!==''&&x.fVScore!=null?esc(x.fVScore)+'/'+esc(x.fVNum):'—'}</td><td>${att[x.att]||''}</td>
      <td style="white-space:nowrap"><button class="btn" data-a="op" data-id="${x.id}" style="padding:5px 9px">Mở</button>
      <button class="btn r" data-a="del" data-id="${x.id}" style="padding:5px 9px">Xóa</button></td></tr>`;}).join('')

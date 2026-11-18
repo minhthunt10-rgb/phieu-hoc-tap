@@ -29,6 +29,54 @@ table.gs tr.st:hover td{background:#FFFAF4}
 #bwPrev{transform-origin:top left}
 .wc-row{display:grid;grid-template-columns:minmax(0,1.7fr) 70px 46px minmax(0,1.2fr);gap:8px;align-items:center;padding:5px 0;border-bottom:1px solid var(--line)}
 .wc-row input{padding:6px 8px}.wc-row .mx{font-size:13px;color:#666}
+/* ===== Báo cáo tháng (.rm, đầu XANH BIỂN) + báo cáo tuần (.rw, đầu CAM) – cùng khung phiếu học tập mẫu C (đầu XANH LÁ)
+   → 3 loại phiếu cùng một bộ nhưng nhìn màu đầu phiếu là phân biệt được ===== */
+.sheet.c2.rw{--g:#D9601F;--g2:#A9420E;--o:#3F7F32;--lt:#FCE3CF;--lt2:#FFF3E8}
+.sheet.c2.rm{--g:#1F5FA0;--g2:#163F6E;--o:#F47C35;--lt:#D5E5F6;--lt2:#EEF5FC}
+.sheet.c2.rw::before{background:linear-gradient(115deg,#8E340A 0%,#B8480F 35%,#E06A26 70%,#F59A45 100%)}
+.sheet.c2.rm::before{background:linear-gradient(115deg,#0F2E52 0%,#163F6E 35%,#1F5FA0 70%,#3D86C6 100%)}
+.sheet.c2.rw .sh-tag{background:#3F7F32}
+.sheet.c2.rm .sh-badge{color:#163F6E;border-color:var(--o);font-size:17px}
+.sheet.c2.rm .sh-h.n5{background:linear-gradient(90deg,#0F2E52,#1F5FA0 55%,#4A93D1)}.sheet.c2.rm .sh-h.n5::before{content:"5";color:#163F6E}
+.sheet.c2.rm .sh-info{grid-template-columns:1.7fr 1fr}
+.bm-cc{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;justify-content:center;border:1.6px solid var(--g);border-radius:14px;background:#fff;padding:9px 12px;font-size:13px}
+.bm-cc span{background:var(--lt2);border:1px solid var(--lt);border-radius:20px;padding:3px 12px;white-space:nowrap}
+.bm-cc span.no{background:#FFF1E6;border-color:#F8C9A6}
+.bm-cc .hw{font-size:16px}
+.sheet.c2.rm .sh-h.n4.sm,.sheet.c2.rm .sh-h.sm{font-size:13px;padding:4px 18px 4px 5px}
+.sheet.c2.rw .sh-sub,.sheet.c2.rm .sh-sub{letter-spacing:1.2px;font-size:11.5px}
+.sheet.c2.rw .sw::before,.sheet.c2.rm .sw::before{background:var(--lt)}
+.sheet.c2.rw .sw.o::before,.sheet.c2.rm .sw.o::before{background:var(--y)}
+.sheet.c2.rw .sh-foot div{background:linear-gradient(120deg,#A9420E,#D9601F 60%,#F08A3E)}
+.sheet.c2.rm .sh-foot div{background:linear-gradient(120deg,#163F6E,#1F5FA0 60%,#3D86C6)}
+.sheet.c2.rw .sh-h.n1,.sheet.c2.rw .sh-h.n3{background:linear-gradient(90deg,#A9420E,#E06A26 55%,#F59A45)}
+.sheet.c2.rw .sh-h.n1::before,.sheet.c2.rw .sh-h.n3::before{color:#A9420E}
+.sheet.c2.rw .sh-h.n2,.sheet.c2.rw .sh-h.n4{background:linear-gradient(90deg,#1F5A1B,#3F7F32 50%,#78B84E)}
+.sheet.c2.rw .sh-h.n2::before,.sheet.c2.rw .sh-h.n4::before{color:#1F5A1B}
+.sheet.c2.rm .sh-h.n1,.sheet.c2.rm .sh-h.n3{background:linear-gradient(90deg,#0F2E52,#1F5FA0 55%,#4A93D1)}
+.sheet.c2.rm .sh-h.n1::before,.sheet.c2.rm .sh-h.n3::before{color:#163F6E}
+.sheet.c2.rm .sh-h.n2,.sheet.c2.rm .sh-h.n4{background:linear-gradient(90deg,#D4501A,#F47C35 55%,#F9A646)}
+.sheet.c2.rm .sh-h.n2::before,.sheet.c2.rm .sh-h.n4::before{color:#D4501A}
+/* ô nội dung bo tròn, viền theo màu phiếu */
+.sheet.c2.bc .bc-tbl{border-collapse:separate;border-spacing:0;border:1.6px solid var(--g);border-radius:14px;overflow:hidden}
+.sheet.c2.bc .bc-tbl th{background:var(--lt2);color:var(--g2);border:0;border-bottom:1.6px solid var(--g);font-size:11.5px;letter-spacing:.3px;text-transform:uppercase}
+.sheet.c2.bc .bc-tbl td{border:0;border-top:1px solid var(--lt)}
+.sheet.c2.bc .bc-tbl td+td,.sheet.c2.bc .bc-tbl th+th{border-left:1px solid var(--lt)}
+.sheet.c2.bc .bc-tbl tr:nth-child(2) td{border-top:0}
+.sheet.c2.bc .bc-none{border:1.6px dashed var(--g);border-radius:14px;color:#777}
+.sheet.c2.bc .bc-day{border:1.6px solid var(--g);border-radius:10px}
+.sheet.c2.bc .bc-day .n{color:var(--g2)}
+.sheet.c2.bc .bc-day.off{border:1.6px dashed #C9C9C9}.sheet.c2.bc .bc-day.off .n{color:#aaa}
+.sheet.c2.bc .bc-st{border:1.6px solid var(--g);border-radius:14px}
+.sheet.c2.bc .bc-st .t{color:var(--g2)}
+.sheet.c2.bc .bc-chart{border:1.6px solid var(--g);border-radius:14px}
+.sheet.c2.bc .bc-chart .t{color:var(--g2)}
+.sheet.c2.bc .bc-bars{border-bottom-color:var(--g)}
+.sheet.c2.bc .bc-bar .b{background:var(--lt);border-color:var(--g)}
+.sheet.c2.bc .bc-cmt{border:1.6px solid var(--g);border-radius:14px}
+.sheet.c2.bc .bw-next{border:1.6px solid var(--g);border-radius:14px}
+.sheet.c2.bc .bw-next b.d{color:var(--g2)}
+.sheet.c2.bc .bc-sum{color:var(--g2)}
 /* ===== Báo cáo tuần (630px) ===== */
 .bw .bc-tbl td{font-size:12.5px}
 .bw .up{color:#2E7D32;font-weight:800}.bw .dn{color:#C2410C;font-weight:800}.bw .eq{color:#777;font-weight:800}
@@ -203,6 +251,6 @@ table.gs tr.st:hover td{background:#FFFAF4}
 <div class="toast" id="toast"></div>
 <script src="sync.js?v=202611051400"></script>
 <script src="lo-trinh-luyen-thi.js?v=202611181400"></script>
-<script src="bao-cao.js?v=202611181600"></script>
+<script src="bao-cao.js?v=202611182100"></script>
 </body>
 </html>
