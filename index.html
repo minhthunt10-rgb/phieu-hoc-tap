@@ -1101,12 +1101,10 @@ function renderLich(){
         +planLine(s.id,day)
         +(inn.length?'<div>🖨️ '+inn.map(esc).join('; ')+'</div>':'')+(prep.length?'<div>📌 '+prep.map(esc).join('; ')+'</div>':'')+'</div>';}).join('')+'</div>';
   $$('#lPrep [data-plan]').forEach(b=>b.onclick=()=>{pSel=b.dataset.plan;$('#navPlan').click();setTimeout(()=>$('#pDetail').scrollIntoView({behavior:'smooth'}),50);});
+  // mỗi lần bấm mở 1 TAB TRÌNH DUYỆT MỚI (cô yêu cầu 2026-11-22) → tab đó tự vào Nhập phiếu
   $$('#lPrep [data-gp]').forEach(b=>b.onclick=()=>{
-    if(b.dataset.id){const x=db.sessions.find(y=>y.id===b.dataset.id);if(x){$('nav.tabs button[data-v=nhap]').click();ocrHide();writeForm(x);setEditing(x.id);updatePreview();window.scrollTo({top:0});return;}}
-    const sid=b.dataset.gp,s=stu(sid),p=sessOf(sid).filter(x=>x.fDate&&x.fDate<day).sort((a,b)=>(a.fDate+a.created).localeCompare(b.fDate+b.created)).pop();
-    let no=p?noMax(p.fNo)+1:1; if(no>(+s.total||12))no=1;
-    $('nav.tabs button[data-v=nhap]').click();ocrHide();$('#fFind').value='';fillStudentSelects();$('#fStudent').value=sid;prefillFor(sid,false);
-    $('#fDate').value=day;if(day!==today())$('#fNo').value=no;updatePreview();window.scrollTo({top:0});});
+    const h=b.dataset.id?'#mo='+encodeURIComponent(b.dataset.id):'#ghi='+encodeURIComponent(b.dataset.gp)+'@'+day;
+    window.open(location.pathname+h,'_blank');});
   $$('#lPrep .lich-ok input').forEach(c=>c.onchange=()=>{const o=lich.done[day]=lich.done[day]||{};
     if(c.checked)o[c.dataset.s]=1; else delete o[c.dataset.s];
     // chỉ giữ dấu tích 30 ngày gần nhất cho gọn
@@ -1469,7 +1467,20 @@ init();
 // link riêng …/index.html#lich → mở thẳng tab Lịch học, ngày hôm nay (cô yêu cầu)
 const goLich=()=>{if(!lich.on)return;
   if(location.hash==='#lich'){$('#lDay').value=today();$('#navLich').click();window.scrollTo({top:0});}
-  if(location.hash==='#lotrinh'){$('#navPlan').click();window.scrollTo({top:0});}};
+  if(location.hash==='#lotrinh'){$('#navPlan').click();window.scrollTo({top:0});}
+  // tab mới mở từ nút Ghi phiếu ở Lịch học: #ghi=<id HS>@<ngày> hoặc #mo=<id phiếu>
+  const g=/^#ghi=([^@]+)@(\d{4}-\d{2}-\d{2})$/.exec(location.hash), m=/^#mo=(.+)$/.exec(location.hash);
+  if(g||m){history.replaceState(null,'',location.pathname);ghiPhieu(g?decodeURIComponent(g[1]):'',g?g[2]:'',m?decodeURIComponent(m[1]):'');}};
+function ghiPhieu(sid,day,id){
+  if(id){const x=db.sessions.find(y=>y.id===id);if(x){$('nav.tabs button[data-v=nhap]').click();ocrHide();writeForm(x);setEditing(x.id);updatePreview();window.scrollTo({top:0});document.title='✍️ '+((stu(x.studentId)||{}).name||'')+' – Phiếu Học Tập';return;}
+    toast('Không tìm thấy phiếu này');return;}
+  const s=stu(sid);if(!s){toast('Không tìm thấy học sinh');return;}
+  const p=sessOf(sid).filter(x=>x.fDate&&x.fDate<day).sort((a,b)=>(a.fDate+a.created).localeCompare(b.fDate+b.created)).pop();
+  let no=p?noMax(p.fNo)+1:1; if(no>(+s.total||12))no=1;
+  $('nav.tabs button[data-v=nhap]').click();ocrHide();$('#fFind').value='';fillStudentSelects();$('#fStudent').value=sid;prefillFor(sid,false);
+  $('#fDate').value=day;if(day!==today())$('#fNo').value=no;updatePreview();window.scrollTo({top:0});
+  document.title='✍️ '+s.name+' – Phiếu Học Tập';
+}
 if(lich.on&&(lich.alerts||[]).length)$('#navPlan').textContent='🧭 Lộ trình ('+lich.alerts.length+')';
 goLich();window.addEventListener('hashchange',goLich);
 document.fonts&&document.fonts.ready.then(()=>{fitText();fitPreview();});
