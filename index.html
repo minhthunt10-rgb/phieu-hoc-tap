@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lora:ital,wght@0,700;1,600&display=swap" rel="stylesheet">
 <script src="logo.js?v=202611111700"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<link rel="stylesheet" href="style.css?v=202611181830">
+<link rel="stylesheet" href="style.css?v=202611221000">
 </head>
 <body>
 <header class="app">
@@ -1092,11 +1092,21 @@ function renderLich(){
       const ls=p?[p.fNVNum&&String(p.fNVUnit||'').trim()!=='Unit'?`Khảo ${p.fNVNum} từ vựng bài ${p.fNVUnit}`:'',p.fPrep].join('\n').split('\n').map(t=>t.trim()).filter(Boolean):[];
       const inn=ls.filter(t=>IN_RE.test(t)), prep=p?[p.fNVNum&&String(p.fNVUnit||'').trim()!=='Unit'?`Khảo ${p.fNVNum} từ vựng bài ${p.fNVUnit}`:'',...String(p.fPrep||'').split('\n')].map(t=>t.trim()).filter(t=>t&&!IN_RE.test(t)):[];
       // ô tích "Đã soạn đủ" chỉ hiện ở em có tài liệu cần photo (cô chốt)
-      return `<div class="lich-hs${inn.length?' in':''}${ok&&inn.length?' ok':''}">${inn.length?`<label class="lich-ok"><input type="checkbox" data-s="${s.id}"${ok?' checked':''}> Đã soạn đủ</label>`:''}<b>${esc(s.name)}</b>${s.cls?' – '+esc(s.cls):''}${ca?` <span class="pill">${esc(ca)}</span>`:''}`
+      // góc phải: nút ghi phiếu cho mọi em học ngày này (đã có phiếu ngày này thì mở lại phiếu đó) – cô yêu cầu 2026-11-22
+      const had=sessOf(s.id).filter(x=>x.fDate===day).sort((a,b)=>String(a.created).localeCompare(String(b.created))).pop();
+      const gp=had?`<button type="button" class="btn sm lich-gp done" data-gp="${s.id}" data-id="${had.id}" title="Mở lại phiếu đã ghi ngày này">✓ Đã ghi phiếu</button>`
+        :`<button type="button" class="btn sm lich-gp" data-gp="${s.id}" title="Mở Nhập phiếu cho em, ngày đang chọn">✍️ Ghi phiếu</button>`;
+      return `<div class="lich-hs${inn.length?' in':''}${ok&&inn.length?' ok':''}"><div class="lich-r">${gp}${inn.length?`<label class="lich-ok"><input type="checkbox" data-s="${s.id}"${ok?' checked':''}> Đã soạn đủ</label>`:''}</div><b>${esc(s.name)}</b>${s.cls?' – '+esc(s.cls):''}${ca?` <span class="pill">${esc(ca)}</span>`:''}`
         +(p?` <small>(theo phiếu buổi ${esc(p.fNo)}${p.fDate?' – '+dmy(p.fDate)[0]+'/'+dmy(p.fDate)[1]:''})</small>`:' <small>(chưa có phiếu buổi trước)</small>')
         +planLine(s.id,day)
         +(inn.length?'<div>🖨️ '+inn.map(esc).join('; ')+'</div>':'')+(prep.length?'<div>📌 '+prep.map(esc).join('; ')+'</div>':'')+'</div>';}).join('')+'</div>';
   $$('#lPrep [data-plan]').forEach(b=>b.onclick=()=>{pSel=b.dataset.plan;$('#navPlan').click();setTimeout(()=>$('#pDetail').scrollIntoView({behavior:'smooth'}),50);});
+  $$('#lPrep [data-gp]').forEach(b=>b.onclick=()=>{
+    if(b.dataset.id){const x=db.sessions.find(y=>y.id===b.dataset.id);if(x){$('nav.tabs button[data-v=nhap]').click();ocrHide();writeForm(x);setEditing(x.id);updatePreview();window.scrollTo({top:0});return;}}
+    const sid=b.dataset.gp,s=stu(sid),p=sessOf(sid).filter(x=>x.fDate&&x.fDate<day).sort((a,b)=>(a.fDate+a.created).localeCompare(b.fDate+b.created)).pop();
+    let no=p?noMax(p.fNo)+1:1; if(no>(+s.total||12))no=1;
+    $('nav.tabs button[data-v=nhap]').click();ocrHide();$('#fFind').value='';fillStudentSelects();$('#fStudent').value=sid;prefillFor(sid,false);
+    $('#fDate').value=day;if(day!==today())$('#fNo').value=no;updatePreview();window.scrollTo({top:0});});
   $$('#lPrep .lich-ok input').forEach(c=>c.onchange=()=>{const o=lich.done[day]=lich.done[day]||{};
     if(c.checked)o[c.dataset.s]=1; else delete o[c.dataset.s];
     // chỉ giữ dấu tích 30 ngày gần nhất cho gọn
