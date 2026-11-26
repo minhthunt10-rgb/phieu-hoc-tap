@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Cổng học viên – Ms. Minh Thư</title>
+<link rel="icon" href="/favicon.ico?v=202611021041"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#2C6424">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lora:ital,wght@0,700;1,600&display=swap" rel="stylesheet">
+<!-- style.css: dùng chung khung PHIẾU MẪU C (.sheet.c2) với trang Phiếu học tập -->
+<link rel="stylesheet" href="style.css?v=202611221000">
+<style>
+/* Cổng học viên theo Mẫu C: dải xanh đầu trang viền cam, nhãn mục dạng nút có số, ô viền xanh bóng vàng, chân trang xanh */
+:root{--g:#3F7F32;--g2:#2C6424;--g3:#22521C;--o:#F47C35;--o2:#D4501A;--y:#F7CF5E;--mint:#D6EEC6;--mint2:#EEF7E6;
+  --cream:#FBF7F0;--ink:#2b2b2b;--muted:#6b6b6b;--red:#C62828;--line:#E6DED2}
+html,body{background:var(--cream)}
+body{min-height:100vh;display:flex;flex-direction:column}
+.hw{font-family:'Lora',serif;font-style:italic;font-weight:600;color:var(--red)}
+
+/* ---- dải đầu trang ---- */
+.p-hero{position:relative;overflow:hidden;color:#fff;background:linear-gradient(115deg,var(--g3) 0%,var(--g2) 35%,var(--g) 70%,#58A23E 100%);
+  border-bottom:5px solid var(--o);border-radius:0 0 50% 50%/0 0 26px 26px;
+  padding:calc(18px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 26px max(16px,env(safe-area-inset-left,0px))}
+.p-hero::after{content:"";position:absolute;right:-60px;top:-70px;width:220px;height:220px;border-radius:50%;border:26px solid rgba(255,255,255,.07);pointer-events:none}
+.p-hero .in{max-width:560px;margin:0 auto;position:relative;z-index:1}
+.p-row{display:flex;align-items:center;gap:12px}
+.p-logo{flex:none;width:84px;height:84px;border-radius:50%;background:var(--y);padding:3px;border:4px solid #fff;object-fit:cover}
+.p-motto{font-size:12px;letter-spacing:1.4px;color:#FFF6D6;font-weight:700}
+.p-tag{display:inline-block;margin-top:6px;background:var(--o);border:2px solid #fff;border-radius:20px;padding:3px 11px;font-size:11.5px;font-weight:800;letter-spacing:1px}
+.p-title{font-weight:800;font-size:clamp(28px,8vw,38px);letter-spacing:3px;line-height:1.1;text-shadow:0 2px 0 rgba(0,0,0,.18);margin:14px 0 0;text-align:center}
+.p-sub{color:var(--y);font-style:italic;font-weight:700;font-size:11px;letter-spacing:2px;display:flex;align-items:center;justify-content:center;gap:10px;margin-top:8px;text-align:center}
+.p-sub::before,.p-sub::after{content:"";flex:none;width:24px;height:2px;border-radius:2px;background:var(--y)}
+.p-hero.compact{padding-bottom:16px}
+.p-hero.compact .p-logo{width:54px;height:54px;border-width:3px}
+.p-who{flex:1;min-width:0}
+.p-who b{display:block;font-size:18px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.p-who span{font-size:12.5px;color:#FFF6D6}
+.p-out{flex:none;background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.6);color:#fff;border-radius:20px;padding:6px 12px;font-weight:700;font-size:12.5px;cursor:pointer}
+.p-kids{display:flex;gap:8px;overflow-x:auto;margin-top:12px}
+.p-kid{flex:none;border:2px solid #fff;background:transparent;color:#fff;border-radius:20px;padding:5px 14px;font-weight:700;font-size:13.5px;cursor:pointer}
+.p-kid[aria-pressed="true"]{background:#fff;color:var(--g2)}
+
+/* ---- thân trang ---- */
+.p-main{flex:1;width:100%;max-width:560px;margin:0 auto;padding:18px max(16px,env(safe-area-inset-right,0px)) 30px max(16px,env(safe-area-inset-left,0px))}
+.p-h{width:max-content;max-width:100%;margin:22px auto 12px;padding:5px 20px 5px 6px;border-radius:30px;color:#fff;font-weight:800;font-size:14px;letter-spacing:1.3px;text-transform:uppercase;display:flex;align-items:center;gap:10px}
+.p-h i{font-style:normal;flex:none;width:24px;height:24px;border-radius:50%;background:#fff;font-size:13px;display:inline-flex;align-items:center;justify-content:center}
+.p-h.n1{background:linear-gradient(90deg,#1F5A1B,#3F7F32 50%,#78B84E)}.p-h.n1 i{color:#1F5A1B}
+.p-h.n2{background:linear-gradient(90deg,#D4501A,#F47C35 55%,#F9A646)}.p-h.n2 i{color:#D4501A}
+.p-h.n3{background:linear-gradient(90deg,#2E7A3A,#5FA344 50%,#A3C94A)}.p-h.n3 i{color:#2E7A3A}
+.p-h.n4{background:linear-gradient(90deg,#C2410C,#EA6A24 50%,#F2B33D)}.p-h.n4 i{color:#C2410C}
+.p-h:first-child{margin-top:4px}
+.lab{color:var(--g);font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;margin-bottom:7px}
+/* ô viền xanh + bóng lệch phải-dưới như ô trên phiếu */
+.box{position:relative;background:#fff;border:1.6px solid var(--g);border-radius:14px;padding:12px 14px;box-shadow:5px 5px 0 var(--mint);min-width:0}
+.box.y{border-radius:10px;box-shadow:3px 3px 0 var(--y)}
+.box .t{margin:-12px -14px 10px;padding:6px 12px;border-radius:12px 12px 0 0;background:var(--mint2);color:var(--g2);font-size:12px;font-weight:800;letter-spacing:.3px;text-transform:uppercase;text-align:center}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.stack{display:flex;flex-direction:column;gap:14px}
+.big{font-size:26px;font-weight:800;color:var(--g2);font-variant-numeric:tabular-nums;line-height:1.15}
+.small{font-size:12.5px;color:var(--muted);line-height:1.35}
+.center{text-align:center}
+
+/* ---- đăng nhập ---- */
+.roles{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.role{text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:3px;font:inherit;color:var(--ink);padding:12px}
+.role .ic{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--mint2);color:var(--g2);margin-bottom:4px}
+.role b{font-size:15px;color:var(--g2)}
+.role[aria-pressed="true"]{border-color:var(--o);box-shadow:5px 5px 0 var(--y);background:#FFFBEF}
+.role[aria-pressed="true"] .ic{background:var(--o);color:#fff}
+.fld{display:flex;flex-direction:column}
+.fld input{width:100%;border:1.6px solid var(--g);border-radius:10px;padding:12px 14px;font-size:16px;background:#fff;box-shadow:3px 3px 0 var(--y);font-family:inherit}
+.fld input:focus{outline:none;border-color:var(--o)}
+.pw{position:relative}.pw input{padding-right:60px}
+.pw button{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:0;background:none;color:var(--g);font-weight:700;font-size:13px;cursor:pointer;padding:6px}
+.remember{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
+.remember input{width:18px;height:18px;accent-color:var(--g)}
+.go{border:0;border-radius:30px;padding:14px 18px;font-size:16px;font-weight:800;letter-spacing:1.5px;color:#fff;cursor:pointer;
+  background:linear-gradient(90deg,#D4501A,#F47C35 55%,#F9A646);box-shadow:0 4px 0 rgba(196,65,12,.35);display:flex;justify-content:center;align-items:center;gap:8px}
+.go:disabled{opacity:.6}
+.err{color:var(--red);font-weight:600;font-size:14px;min-height:1.3em;margin:0;text-align:center}
+.help{font-size:13.5px;color:var(--muted);text-align:center;margin:0}
+
+/* ---- danh sách phiếu ---- */
+.tabsP{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 6px}
+.tabsP button{flex:none;border:1.6px solid var(--g);background:#fff;color:var(--g2);border-radius:20px;padding:7px 14px;font-weight:800;font-size:13px;letter-spacing:.4px;cursor:pointer}
+.tabsP button[aria-current="page"]{background:var(--g);color:#fff}
+.ses{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 12px;align-items:center;cursor:pointer;font:inherit;color:inherit;text-align:left;width:100%}
+.ses .d{text-align:center;min-width:46px;border-right:1.6px dashed var(--mint);padding-right:10px}
+.ses .d b{display:block;font-size:20px;color:var(--o2);line-height:1.1;font-variant-numeric:tabular-nums}
+.ses .d small{font-size:11.5px;color:var(--muted);font-weight:700}
+.ses .m b{font-size:14.5px;color:var(--g2)}
+.ses .m div{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ses .arrow{color:var(--o);font-weight:800;font-size:18px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.chip{display:inline-flex;align-items:center;border-radius:20px;padding:2px 9px;font-size:12px;font-weight:700;white-space:nowrap;margin:0}
+.chip.g{background:var(--mint2);color:var(--g2)}.chip.o{background:#FDE5D3;color:#B4440F}.chip.r{background:#FBE0E0;color:var(--red)}.chip.n{background:#EEF0F4;color:#4a5568}
+.quote{margin:0;font-family:'Lora',serif;font-style:italic;font-weight:600;color:var(--red);font-size:16px;line-height:1.5}
+.when{font-size:12px;color:var(--muted);font-weight:700;margin-top:6px}
+.score{font-size:20px;font-weight:800;color:var(--red);font-family:'Lora',serif;font-style:italic;text-align:right;white-space:nowrap}
+.score small{font-family:'Be Vietnam Pro',sans-serif;font-style:normal;font-size:12px;color:var(--muted);font-weight:600}
+.empty{text-align:center;color:var(--muted);font-size:14px;padding:10px 0}
+.spark{width:100%;height:auto;display:block}
+.spark text{fill:var(--muted);font-size:10px;font-family:'Be Vietnam Pro',sans-serif}
+.att3 .opt{display:flex;flex-direction:column;align-items:center;gap:2px}
+.att3 .opt b{font-size:22px;color:var(--g2)}
+.att3 .opt span{font-size:11.5px;font-weight:800;letter-spacing:.6px;color:var(--g2)}
+
+/* ---- xem phiếu đầy đủ ---- */
+.ov{display:block;position:fixed;inset:0;z-index:50;background:rgba(20,35,18,.92);overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding:calc(12px + env(safe-area-inset-top,0px)) max(10px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-left,0px))}
+.ov-bar{max-width:630px;margin:0 auto 10px;display:flex;gap:8px;align-items:center}
+.ov-bar span{flex:1;color:#fff;font-weight:700;font-size:14px;text-align:center}
+.ov-bar button{border:2px solid #fff;background:transparent;color:#fff;border-radius:20px;padding:6px 12px;font-weight:800;font-size:13px;cursor:pointer}
+.ov-bar button:disabled{opacity:.35}
+.ov-bar .x{background:var(--o);border-color:var(--o)}
+.sheet-wrap{max-width:630px;margin:0 auto;position:relative;overflow:hidden;border-radius:6px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.sheet-wrap .sheet{transform-origin:0 0}
+
+/* ---- chân trang ---- */
+.p-foot{background:linear-gradient(120deg,var(--g2),var(--g) 60%,#5FA344);border-top:5px solid var(--o);color:#fff;font-weight:700;font-size:11.5px;letter-spacing:.4px;
+  padding:12px max(16px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.p-foot div{max-width:560px;margin:0 auto;display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 14px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--g2);color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;z-index:60;max-width:calc(100% - 32px);text-align:center;opacity:1;pointer-events:auto}
+[hidden]{display:none!important}
+:focus-visible{outline:3px solid var(--o);outline-offset:2px}
+@media (max-width:340px){.grid{grid-template-columns:1fr}.roles{gap:8px}}
+.tabsP{scrollbar-width:none;margin-bottom:4px}.tabsP::-webkit-scrollbar{display:none}
+@media (max-width:420px){.p-motto{font-size:11px;letter-spacing:.6px}.p-sub{letter-spacing:1px;font-size:10.5px}}
+</style>
+</head>
+<body>
+
+<!-- ================= ĐĂNG NHẬP ================= -->
+<div id="login">
+  <header class="p-hero">
+    <div class="in">
+      <div class="p-row">
+        <img class="p-logo" src="logo-c2.png" alt="Logo Ms. Minh Thư – Grow with English">
+        <div><div class="p-motto">KIÊN TRÌ - YÊU THƯƠNG - TIẾN BỘ</div><span class="p-tag">MS. MINH THƯ</span></div>
+      </div>
+      <h1 class="p-title">CỔNG HỌC VIÊN</h1>
+      <div class="p-sub">XEM PHIẾU HỌC TẬP VÀ TIẾN ĐỘ CỦA CON</div>
+    </div>
+  </header>
+  <main class="p-main">
+    <form id="fLogin" class="stack" novalidate>
+      <div class="p-h n1"><i>1</i>Đăng nhập bằng</div>
+      <div class="roles">
+        <button type="button" class="box role" id="rPh" aria-pressed="true">
+          <span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M11 18h2"/></svg></span>
+          <b>Số điện thoại</b><span class="small">Dành cho phụ huynh</span>
+        </button>
+        <button type="button" class="box role" id="rHs" aria-pressed="false">
+          <span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></span>
+          <b>Tài khoản</b><span class="small">Dành cho học sinh</span>
+        </button>
+      </div>
+      <div class="p-h n2"><i>2</i>Thông tin đăng nhập</div>
+      <div class="fld"><div class="lab" id="uLab">Số điện thoại phụ huynh</div>
+        <input id="uIn" inputmode="tel" autocomplete="username" placeholder="VD: 0912 345 678"></div>
+      <div class="fld"><div class="lab">Mật khẩu</div>
+        <div class="pw"><input id="pIn" type="password" autocomplete="current-password" placeholder="Mật khẩu cô Minh Thư gửi"><button type="button" id="pEye">Hiện</button></div></div>
+      <label class="remember"><input type="checkbox" id="remember" checked> Ghi nhớ trên máy này</label>
+      <p class="err" id="err" role="alert"></p>
+      <button class="go" type="submit" id="goBtn">ĐĂNG NHẬP
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+      <p class="help">Chưa có hoặc quên mật khẩu? Phụ huynh nhắn Zalo cho cô Minh Thư để được cấp lại.</p>
+    </form>
+  </main>
+</div>
+
+<!-- ================= TRANG CỦA CON ================= -->
+<div id="app" hidden>
+  <header class="p-hero compact">
+    <div class="in">
+      <div class="p-row">
+        <img class="p-logo" src="logo-c2.png" alt="">
+        <div class="p-who"><b id="whoName"></b><span id="whoSub"></span></div>
+        <button class="p-out" id="out" type="button">Đăng xuất</button>
+      </div>
+      <div class="p-kids" id="kids" hidden></div>
+    </div>
+  </header>
+  <main class="p-main">
+    <div class="tabsP" id="tabs" role="tablist"></div>
+    <div id="view" class="stack"></div>
+  </main>
+</div>
+
+<footer class="p-foot"><div><span>THÔNG TIN LIÊN HỆ</span><span>SĐT: 0966.101.957 (Ms. Minh Thư)</span><span>GROW WITH ENGLISH</span></div></footer>
+
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-label="Phiếu học tập">
+  <div class="ov-bar"><button type="button" id="ovPrev">‹ Trước</button><span id="ovTitle"></span><button type="button" id="ovNext">Sau ›</button><button type="button" class="x" id="ovX">Đóng</button></div>
+  <div class="sheet-wrap" id="ovSheet"></div>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="sync.js?v=202611051400"></script>
+<script>
+/* =====================================================================
+   CỔNG HỌC VIÊN – Grow with English (Ms. Minh Thư)
+   PH/HS đăng nhập → Apps Script (lệnh "portal") trả về ĐÚNG phiếu của con.
+   Tài khoản cô đặt ở trang Phiếu học tập › tab Học sinh (3 ô "Cổng học viên").
+   Mở trang với đuôi #demo để xem thử bằng dữ liệu mẫu (không cần mạng).
+   ===================================================================== */
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const esc=t=>String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const dmy=iso=>{if(!iso)return['','',''];const[y,m,d]=String(iso).split('-');return[d,m,y];};
+const two=n=>n===""||n==null?"":String(n).split("+").map(x=>x.trim().padStart(2,"0")).join("+");
+const WD=['CN','T2','T3','T4','T5','T6','T7'];
+const wd=iso=>{const[y,m,d]=String(iso).split('-').map(Number);return y?WD[new Date(y,m-1,d).getDay()]:'';};
+const REM='gwe-cong-hoc-vien';
+const DEMO=location.hash==='#demo';
+let role='ph', data=null, cur=null, tab='tong', ovIdx=-1;
+
+function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,2800);}
+
+/* ---------------- Đăng nhập ---------------- */
+function setRole(r){
+  role=r;$('#rPh').setAttribute('aria-pressed',r==='ph');$('#rHs').setAttribute('aria-pressed',r==='hs');
+  $('#uLab').textContent=r==='ph'?'Số điện thoại phụ huynh':'Tên đăng nhập học sinh';
+  $('#uIn').placeholder=r==='ph'?'VD: 0912 345 678':'VD: tram10';
+  $('#uIn').inputMode=r==='ph'?'tel':'text';$('#err').textContent='';
+}
+$('#rPh').onclick=()=>setRole('ph');$('#rHs').onclick=()=>setRole('hs');
+$('#pEye').onclick=()=>{const p=$('#pIn'),s=p.type==='password';p.type=s?'text':'password';$('#pEye').textContent=s?'Ẩn':'Hiện';};
+
+async function login(kind,user,pin,quiet){
+  const btn=$('#goBtn');btn.disabled=true;$('#err').textContent='';
+  try{
+    let r;
+    if(DEMO)r=demoPortal(kind,user,pin);
+    else{const res=await fetch(SYNC_URL,{method:'POST',body:JSON.stringify({action:'portal',kind,user,pin})});r=await res.json();}
+    if(!r.ok){
+      const msg={wrong:kind==='ph'?'Số điện thoại hoặc mật khẩu chưa đúng. Phụ huynh kiểm tra lại giúp cô nhé.':'Tên đăng nhập hoặc mật khẩu chưa đúng. Em kiểm tra lại nhé.',
+        locked:'Nhập sai quá nhiều lần. Vui lòng thử lại sau 15 phút hoặc nhắn cô Minh Thư.',empty:'Vui lòng nhập đủ thông tin đăng nhập và mật khẩu.'}[r.code]
+        ||'Hệ thống chưa sẵn sàng (cô cần cập nhật Apps Script). Vui lòng thử lại sau.';
+      if(!quiet)$('#err').textContent=msg; else forget();
+      return false;
+    }
+    data=r;data.sessions.sort((a,b)=>((a.fDate||'')+(a.created||'')).localeCompare((b.fDate||'')+(b.created||'')));
+    cur=data.students[0].id;tab='tong';
+    $('#login').hidden=true;$('#app').hidden=false;render();scrollTo(0,0);
+    return true;
+  }catch(e){if(!quiet)$('#err').textContent='Chưa kết nối được. Kiểm tra mạng rồi bấm Đăng nhập lại.';console.warn(e);return false;}
+  finally{btn.disabled=false;}
+}
+const forget=()=>{try{localStorage.removeItem(REM);}catch(e){}};
+$('#fLogin').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const user=$('#uIn').value.trim(),pin=$('#pIn').value.trim();
+  if(!user||!pin){$('#err').textContent='Vui lòng nhập đủ thông tin đăng nhập và mật khẩu.';return;}
+  const ok=await login(role,user,pin);
+  if(ok&&$('#remember').checked){try{localStorage.setItem(REM,JSON.stringify({kind:role,user,pin}));}catch(e){}}
+});
+$('#out').onclick=()=>{forget();data=null;$('#app').hidden=true;$('#login').hidden=false;$('#pIn').value='';scrollTo(0,0);};
+
+/* ---------------- Số liệu ---------------- */
+const sessOf=id=>data.sessions.filter(x=>x.studentId===id);
+const stuOf=id=>data.students.find(s=>s.id===id);
+const hasV=x=>x.fVScore!==''&&x.fVScore!=null&&+x.fVNum>0;
+const hasSc=x=>!!(x&&x.scOn&&String(x.fScVal??'').trim()!=='');
+function stats(id){
+  const ss=sessOf(id), went=ss.filter(x=>!x.abs), hw=went.filter(x=>x.hw&&x.hw!=='none');
+  const pcts=hw.filter(x=>x.fPct!==''&&x.fPct!=null).map(x=>+x.fPct);
+  const att={tot:0,kha:0,cct:0};went.forEach(x=>{if(att[x.att]!=null)att[x.att]++;});
+  return {ss,n:ss.length,went:went.length,cp:ss.filter(x=>x.abs==='cp').length,kp:ss.filter(x=>x.abs==='kp').length,
+    hwDone:hw.filter(x=>x.hw==='done').length,hwN:hw.length,pctAvg:pcts.length?Math.round(pcts.reduce((a,b)=>a+b,0)/pcts.length):null,
+    voc:ss.filter(hasV).map(x=>({x,v:Math.round(+x.fVScore/+x.fVNum*100)})),att};
+}
+
+/* ---------------- Khung trang ---------------- */
+const TABS=[['tong','Tổng quan'],['phieu','Phiếu học tập'],['diem','Điểm số'],['nx','Nhận xét']];
+function render(){
+  const s=stuOf(cur),many=data.students.length>1;
+  $('#whoName').textContent=s.name;
+  $('#whoSub').textContent=(s.cls?s.cls+' · ':'')+(role==='ph'?'Tài khoản phụ huynh':'Tài khoản học sinh');
+  const k=$('#kids');k.hidden=!many;
+  k.innerHTML=data.students.map(x=>`<button type="button" class="p-kid" data-k="${esc(x.id)}" aria-pressed="${x.id===cur}">${esc(x.name.split(' ').slice(-2).join(' '))}</button>`).join('');
+  $$('#kids [data-k]').forEach(b=>b.onclick=()=>{cur=b.dataset.k;render();});
+  $('#tabs').innerHTML=TABS.map(([t,l])=>`<button type="button" role="tab" data-t="${t}" ${t===tab?'aria-current="page"':''}>${l}</button>`).join('');
+  $$('#tabs [data-t]').forEach(b=>b.onclick=()=>{tab=b.dataset.t;render();});
+  const st=stats(cur);
+  $('#view').innerHTML=({tong:vTong,phieu:vPhieu,diem:vDiem,nx:vNx})[tab](s,st);
+  $$('#view [data-open]').forEach(b=>b.onclick=()=>openSheet(+b.dataset.open));
+  $$('#view [data-go]').forEach(b=>b.onclick=()=>{tab=b.dataset.go;render();scrollTo(0,0);});
+}
+
+function spark(pts){ // pts: [nhãn, giá trị 0–100]
+  if(pts.length<2)return '';
+  const W=320,H=108,pl=36,pr=12,pt=14,pb=22,xs=i=>pl+(W-pl-pr)*i/(pts.length-1),ys=v=>pt+(H-pt-pb)*(1-v/100);
+  const P=pts.map((p,i)=>[xs(i),ys(p[1])]),line=P.map(p=>p.map(n=>n.toFixed(1)).join(',')).join(' '),L=P[P.length-1];
+  const grid=[50,80,100].map(v=>`<line x1="${pl}" x2="${W-pr}" y1="${ys(v)}" y2="${ys(v)}" stroke="#E6DED2" stroke-dasharray="3 4"/><text x="${pl-5}" y="${ys(v)+3.5}" text-anchor="end">${v}%</text>`).join('');
+  const step=Math.ceil(pts.length/6),lab=pts.map((p,i)=>(i%step===0||i===pts.length-1)?`<text x="${xs(i)}" y="${H-6}" text-anchor="middle">${esc(p[0])}</text>`:'').join('');
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}" role="img" aria-label="Biểu đồ kết quả khảo từ">${grid}
+   <polygon points="${pl},${ys(0)} ${line} ${L[0]},${ys(0)}" fill="#3F7F32" opacity=".12"/>
+   <polyline points="${line}" fill="none" stroke="#3F7F32" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+   <circle cx="${L[0]}" cy="${L[1]}" r="4.5" fill="#F47C35" stroke="#fff" stroke-width="2"/>${lab}</svg>`;
+}
+const dm=iso=>{const[d,m]=dmy(iso);return d?`${d}/${m}`:'';};
+const hwChip=x=>x.abs?(x.abs==='cp'?'<span class="chip n">Nghỉ có phép</span>':'<span class="chip r">Nghỉ không phép</span>')
+  :x.hw==='done'?`<span class="chip g">BTVN hoàn thành${x.fPct!==''&&x.fPct!=null?' '+esc(x.fPct)+'%':''}</span>`
+  :x.hw==='not'?`<span class="chip o">BTVN chưa xong${x.fPct!==''&&x.fPct!=null?' '+esc(x.fPct)+'%':''}</span>`:'<span class="chip n">Không có BTVN</span>';
+const attChip=x=>x.abs?'':({tot:'<span class="chip g">Tinh thần: Tốt</span>',kha:'<span class="chip o">Tinh thần: Khá</span>',cct:'<span class="chip r">Cần cải thiện</span>'}[x.att]||'');
+
+/* ---------------- Tổng quan ---------------- */
+function vTong(s,st){
+  if(!st.n)return `<div class="box empty">Cô chưa ghi phiếu học tập nào cho ${esc(s.name)}.</div>`;
+  const last=st.ss[st.ss.length-1],lastI=st.n-1;
+  const tot=s.total||last.fTotal||'';
+  const goRate=Math.round(st.went/st.n*100);
+  return `
+  <div class="grid">
+    <div><div class="lab">Buổi gần nhất</div><div class="box y center"><span class="hw" style="font-size:18px">${esc(two(last.fNo))} / ${esc(last.fTotal||tot)}</span><div class="small">${wd(last.fDate)}, ${dm(last.fDate)}</div></div></div>
+    <div><div class="lab">Đi học đầy đủ</div><div class="box y center"><span class="hw" style="font-size:18px">${goRate}%</span><div class="small">${st.went}/${st.n} buổi${st.cp+st.kp?` · nghỉ ${st.cp+st.kp}`:''}</div></div></div>
+  </div>
+  <div class="p-h n1"><i>1</i>Bài tập về nhà</div>
+  <div class="grid">
+    <div class="box"><div class="big">${st.hwN?Math.round(st.hwDone/st.hwN*100)+'%':'—'}</div><div class="small">số buổi hoàn thành BTVN (${st.hwDone}/${st.hwN})</div></div>
+    <div class="box"><div class="big">${st.pctAvg!=null?st.pctAvg+'%':'—'}</div><div class="small">mức độ hoàn thành trung bình</div></div>
+  </div>
+  <div class="p-h n2"><i>2</i>Khảo từ vựng</div>
+  <div class="box">${st.voc.length?`<div class="small" style="margin-bottom:4px">Tỉ lệ từ đúng qua ${st.voc.length} lần khảo · gần nhất <b style="color:var(--red)">${esc(st.voc[st.voc.length-1].x.fVScore)}/${esc(st.voc[st.voc.length-1].x.fVNum)} từ</b></div>${spark(st.voc.map(o=>[dm(o.x.fDate),o.v]))||`<div class="center"><span class="hw" style="font-size:20px">${st.voc[0].v}%</span></div>`}`:'<div class="empty">Chưa có kết quả khảo từ.</div>'}</div>
+  <div class="p-h n3"><i>3</i>Tinh thần học tập</div>
+  <div class="box"><div class="grid3 att3">
+    <div class="opt"><b>${st.att.tot}</b><span>TỐT</span></div><div class="opt"><b>${st.att.kha}</b><span>KHÁ</span></div><div class="opt"><b>${st.att.cct}</b><span>CẦN CẢI THIỆN</span></div>
+  </div></div>
+  <div class="p-h n4"><i>4</i>BTVN buổi kế tiếp</div>
+  <div class="box"><div class="t">Nội dung và vị trí trang tài liệu</div>${last.fNext?`<p class="quote" style="white-space:pre-line">${esc(last.fNext)}</p>`:'<div class="empty">Cô chưa ghi.</div>'}
+    ${last.fNVNum||last.fPrep?`<div class="t" style="margin:12px -14px 10px;border-radius:0">Lý thuyết và bài tập cần chuẩn bị</div><p class="quote" style="white-space:pre-line">${last.fNVNum?`Khảo ${esc(last.fNVNum)} từ vựng bài ${esc(last.fNVUnit||'')}\n`:''}${esc(last.fPrep||'')}</p>`:''}</div>
+  <button type="button" class="go" data-open="${lastI}">XEM PHIẾU BUỔI ${esc(two(last.fNo))}</button>`;
+}
+
+/* ---------------- Danh sách phiếu ---------------- */
+function vPhieu(s,st){
+  if(!st.n)return '<div class="box empty">Chưa có phiếu học tập.</div>';
+  return `<div class="p-h n1"><i>1</i>Phiếu học tập (${st.n})</div>`+st.ss.map((x,i)=>({x,i})).reverse().map(({x,i})=>{
+    const [d,m]=dmy(x.fDate);
+    const sub=x.abs?(x.fMakeup?'Đã học bù: '+x.fMakeup:''):(String(x.fGram||'').split('\n')[0]||(x.fVUnit?'Khảo từ '+x.fVUnit:''));
+    return `<button type="button" class="box ses" data-open="${i}">
+      <div class="d"><b>${d}</b><small>${wd(x.fDate)} · ${m}</small></div>
+      <div class="m"><b>Buổi ${esc(two(x.fNo))}/${esc(x.fTotal)}${x.bu?' · học bù':''}</b><div>${esc(sub)}</div><div class="chips">${hwChip(x)}${attChip(x)}</div></div>
+      <div class="arrow" aria-hidden="true">›</div></button>`;}).join('');
+}
+
+/* ---------------- Điểm số ---------------- */
+function vDiem(s,st){
+  const voc=[...st.voc].reverse().map(o=>`<div class="box ses" style="cursor:default"><div class="d"><b>${dmy(o.x.fDate)[0]}</b><small>${wd(o.x.fDate)} · ${dmy(o.x.fDate)[1]}</small></div><div class="m"><b>Khảo từ ${esc(o.x.fVUnit||'')}</b><div>Buổi ${esc(two(o.x.fNo))}</div></div><div class="score">${esc(o.x.fVScore)}<small>/${esc(o.x.fVNum)}</small></div></div>`);
+  const kt=[];
+  st.ss.forEach(x=>{if(hasSc(x))kt.push({date:x.fDate,name:x.fScName||'Điểm kiểm tra',score:x.fScVal,max:x.fScMax||10,note:x.fScCmt||x.fScNote||''});
+    else if(x.fKtScore!==''&&x.fKtScore!=null)kt.push({date:x.fDate,name:x.fKtName||'Kiểm tra định kỳ',score:x.fKtScore,max:x.fKtMax||10,note:x.fKtCmt||''});});
+  data.checks.filter(c=>c.studentId===cur).forEach(c=>kt.push({date:c.date,name:c.name,score:c.score,max:c.max||10,note:c.note||''}));
+  data.tests.filter(t=>t.studentId===cur).forEach(t=>kt.push({date:t.date,name:'Khảo từ '+(t.unit||''),score:t.score,max:t.n,note:''}));
+  kt.sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+  const ktH=kt.map(k=>`<div class="box"><div class="ses" style="cursor:default"><div class="d"><b>${dmy(k.date)[0]}</b><small>${wd(k.date)} · ${dmy(k.date)[1]}</small></div><div class="m"><b>${esc(k.name)}</b></div><div class="score">${esc(String(k.score).replace('.',','))}<small>/${esc(k.max)}</small></div></div>${k.note?`<p class="quote" style="font-size:14.5px;margin-top:8px">${esc(k.note)}</p>`:''}</div>`);
+  return `<div class="p-h n1"><i>1</i>Bài kiểm tra</div>${ktH.length?ktH.join(''):'<div class="box empty">Chưa có điểm kiểm tra.</div>'}
+    <div class="p-h n2"><i>2</i>Khảo từ vựng trên lớp</div>${voc.length?voc.join(''):'<div class="box empty">Chưa có kết quả khảo từ.</div>'}`;
+}
+
+/* ---------------- Nhận xét ---------------- */
+function vNx(s,st){
+  const rep=data.reports.filter(r=>r.studentId===cur&&String(r.cmt||'').trim()).sort((a,b)=>String(b.month).localeCompare(String(a.month)));
+  const repLabel=m=>/^K/.test(m)?'Báo cáo khóa học':(/^\d{4}-\d{2}$/.test(m)?'Tháng '+m.slice(5)+'/'+m.slice(0,4):'Báo cáo '+m);
+  const cm=[...st.ss].reverse().filter(x=>x.fHwCmt||x.fAttCmt).slice(0,10);
+  return `<div class="p-h n1"><i>1</i>Nhận xét của cô</div>
+    ${rep.length?rep.map(r=>`<div class="box"><div class="t">${esc(repLabel(String(r.month)))}</div><p class="quote" style="white-space:pre-line">${esc(r.cmt)}</p></div>`).join(''):'<div class="box empty">Cô chưa gửi nhận xét tháng.</div>'}
+    <div class="p-h n2"><i>2</i>Nhận xét từng buổi</div>
+    ${cm.length?cm.map(x=>`<button type="button" class="box" data-open="${st.ss.indexOf(x)}" style="text-align:left;cursor:pointer;font:inherit">
+      ${x.fHwCmt?`<p class="quote">${esc(x.fHwCmt)}</p>`:''}${x.fAttCmt?`<p class="quote" style="color:#5E8A52">${esc(x.fAttCmt)}</p>`:''}
+      <div class="when">Buổi ${esc(two(x.fNo))} · ${wd(x.fDate)}, ${dm(x.fDate)} · xem phiếu ›</div></button>`).join(''):'<div class="box empty">Chưa có nhận xét.</div>'}`;
+}
+
+/* ---------------- Phiếu đầy đủ (giống hệt phiếu Mẫu C cô in) ---------------- */
+function sheetHTML(r){
+  const s=stuOf(r.studentId)||{name:'',cls:''};const [d,m,y]=dmy(r.fDate);
+  const ck=on=>`<span class="sh-ck">${on?'<span class="hw" style="font-size:20px;line-height:1">✓</span>':''}</span>`;
+  const circ=on=>`<span class="sh-circ">${on?'<span class="hw" style="font-size:20px;line-height:1">✓</span>':''}</span>`;
+  const stamp=!r.abs&&r.hw!=='none'&&r.fPct!==''&&r.fPct!=null&&+r.fPct>=80;
+  const pct=r.hw==='none'?'—':(r.fPct!==''&&r.fPct!=null?r.fPct:'....');
+  const scText=x=>`${String(x.fScName||'Điểm kiểm tra').replace(/[:\s]+$/,'')}: ${String(x.fScVal).replace('.',',')}đ${x.fScMax&&+x.fScMax!==10?'/'+x.fScMax:''}${x.fScNote?' ('+x.fScNote+')':''}`;
+  const scLine=x=>hasSc(x)?`<span class="sc-hl">${esc(scText(x))}</span>`:'';
+  const vocab=`<span class="hw k k2">Khảo từ vựng</span> <span class="hw">${esc(r.fVUnit)||'<span class="hw k">......</span>'}</span> <span class="hw k k2">(<span class="hw">${esc(r.fVNum)||'....'}</span> từ)</span>`
+    +(r.fVScore!==''&&r.fVScore!=null?`<div class="hw" style="margin-top:4px">Kết quả: ${esc(r.fVScore)}/${esc(r.fVNum)||'?'} từ</div>`:'');
+  const prep=`<span class="hw k k2">Khảo</span> <span class="hw">${esc(r.fNVNum)||'....'}</span> <span class="hw k k2">từ vựng bài</span> <span class="hw">${esc(r.fNVUnit)}</span>`+(r.fPrep?`<div class="hw">${esc(r.fPrep)}</div>`:'');
+  return `<div class="sheet c2 f-lora">
+   <img class="wm" src="logo.png" alt="">
+   <div class="in">
+    <div class="sh-top"><img class="logo" src="logo-c2.png" alt=""><div class="sh-motto">KIÊN TRÌ - YÊU THƯƠNG - TIẾN BỘ</div><div class="sh-tag">MS. MINH THƯ</div></div>
+    <div class="sh-title">PHIẾU HỌC TẬP</div><div class="sh-badge">1</div>
+    <div class="sh-sub">THEO DÕI TIẾN ĐỘ HỌC TẬP VÀ ĐÁNH GIÁ CỦA HỌC VIÊN</div>
+    <div class="sh-info">
+      <div><div class="sh-lab">HỌ TÊN HỌC VIÊN | LỚP</div><div class="sw o"><div class="sh-box"><span class="hw">${esc(s.name)}${s.cls?' | '+esc(s.cls):''}</span></div></div></div>
+      <div><div class="sh-lab">NGÀY HỌC</div><div class="sw o"><div class="sh-box"><span class="hw">${d}</span>&nbsp;<b>/</b>&nbsp;<span class="hw">${m}</span>&nbsp;<b>/ ${y||'2026'}</b></div></div></div>
+      <div><div class="sh-lab">SỐ BUỔI / 1 KHÓA</div><div class="sw o"><div class="sh-box"><span class="hw">${esc(two(r.fNo))}</span>&nbsp;<b>/</b>&nbsp;<span class="hw">${esc(r.fTotal)}</span></div></div></div>
+    </div>
+    <div class="sh-h green n1">KIỂM TRA BÀI TẬP VỀ NHÀ</div>
+    <div class="sh-2">
+      <div><div class="sh-colh">TÌNH TRẠNG BÀI TẬP VỀ NHÀ</div><div class="sh-rbox">
+        <div class="sh-st">Hoàn Thành ${ck(r.hw==='done')}</div>
+        <div class="sh-st">Chưa hoàn thành ${ck(r.hw==='not')}</div>
+        <div class="sh-st">Mức độ hoàn thành <span><span class="hw">${esc(pct)}${r.hw!=='none'&&r.fPct!==''&&r.fPct!=null?'%':''}</span>/100%</span></div>
+      </div></div>
+      <div><div class="sh-colh">NHẬN XÉT BÀI TẬP VỀ NHÀ</div><div class="sh-rbox cmt${stamp?' st':''}"><div class="fit" data-max="19" data-lines="2"><div class="hw">${esc(r.fHwCmt)}</div></div>${stamp?'<img class="stamp" src="stamp.png" alt="">':''}</div></div>
+    </div>
+    <div class="sh-h purple n2">MỤC TIÊU/NỘI DUNG BUỔI HỌC</div>
+    <div class="sh-2 gv">
+      <div class="sw p"><div class="sh-sbox purple"><div class="t">Ngữ pháp</div><div class="fit" data-max="15" data-force="1"><div class="hw">${r.abs?`${r.abs==='cp'?'Con nghỉ có phép':'Con nghỉ không phép'}${r.fMakeup?' – đã học bù: '+esc(r.fMakeup):''}${r.fGram?'\n':''}`:''}${r.bu?`Buổi học bù${r.fBuFor?' (cho buổi nghỉ '+esc(r.fBuFor)+')':''}${r.fGram?'\n':''}`:''}${esc(r.fGram)}${hasSc(r)?(r.abs||r.fGram?'\n':'')+scLine(r):''}</div></div></div></div>
+      <div class="sw p"><div class="sh-sbox purple"><div class="t">Từ vựng</div><div class="fit" data-max="15">${vocab}</div></div></div>
+    </div>
+    <div class="sh-h navy n3">Tinh thần học tập của học viên</div>
+    <div class="sh-att">
+      <div class="sh-note">${r.fAttCmt?`<div class="fit" data-max="15"><span class="hw">${esc(r.fAttCmt)}</span></div>`:'Nhận xét (nếu có)'}</div>
+      <div class="sh-opt">${circ(r.att==='tot')} TỐT</div><div class="sh-opt">${circ(r.att==='kha')} KHÁ</div><div class="sh-opt">${circ(r.att==='cct')} CẦN CẢI THIỆN</div>
+    </div>
+    <div class="sh-h green n4">BTVN BUỔI KẾ TIẾP</div>
+    <div class="sh-2 nx">
+      <div class="sw g"><div class="sh-sbox green"><div class="t">NỘI DUNG VÀ VỊ TRÍ TRANG TÀI LIỆU</div><div class="fit" data-max="15" data-force="1"><div class="hw">${esc(r.fNext)}</div></div></div></div>
+      <div class="sw g"><div class="sh-sbox green"><div class="t">LÝ THUYẾT VÀ BÀI TẬP CẦN CHUẨN BỊ</div><div class="fit" data-max="15" data-force="1">${prep}</div></div></div>
+    </div>
+   </div>
+   <div class="sh-foot"><div><span>THÔNG TIN LIÊN HỆ</span><span>SĐT: 0966.101.957 (Ms. Minh Thư)</span><span>GROW WITH ENGLISH</span></div></div>
+  </div>`;
+}
+/* co chữ vừa ô – cùng cách làm với trang Phiếu học tập */
+function spreadLines(el){
+  if(!el.closest('.sh-sbox'))return;
+  const fi=el.firstElementChild,h=fi.querySelector('.hw'),s=h?parseFloat(getComputedStyle(h).fontSize):parseFloat(el.style.fontSize)||15,H=el.clientHeight;
+  const n=Math.round(fi.offsetHeight/(s*1.4));if(n<2)return;
+  let lh=Math.min(3,Math.max(1.4,(H-2)/n/s));el.style.setProperty('--lh',lh.toFixed(3));
+  while(lh>1.4&&fi.offsetHeight>H){lh=Math.max(1.4,lh-.02);el.style.setProperty('--lh',lh.toFixed(3));}
+}
+function fitOne(el){
+  if(!el.firstElementChild||!el.firstElementChild.classList.contains('fi')){const w=document.createElement('div');w.className='fi';while(el.firstChild)w.appendChild(el.firstChild);el.appendChild(w);}
+  const fi=el.firstElementChild,cs=getComputedStyle(el);
+  const W=el.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight),H=el.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom);
+  const max=+el.dataset.max||20,set=s=>el.style.fontSize=s+'px';
+  el.classList.add('nw');
+  for(let s=max;s>=14;s-=.5){set(s);if(fi.offsetWidth<=W+1&&fi.offsetHeight<=H+1)return;}
+  el.classList.remove('nw');
+  const L=+el.dataset.lines,lh=1.4;
+  if(L)for(const n of [L,L+1])for(let s=max;s>=(n===L?15:14);s-=.5){set(s);if(fi.offsetHeight<=s*lh*n+2&&fi.offsetHeight<=H+1)return;}
+  let s=max;set(s);while(s>9&&fi.offsetHeight>H+1){s-=.5;set(s);}
+}
+function scaleSheet(){
+  const w=$('#ovSheet'),sh=w.firstElementChild;if(!sh)return;
+  const k=Math.min(1,w.clientWidth/630);sh.style.transform=`scale(${k})`;w.style.height=(sh.offsetHeight*k)+'px';
+}
+async function openSheet(i){
+  const ss=sessOf(cur);if(!ss[i])return;ovIdx=i;const x=ss[i];
+  $('#ovTitle').textContent=`Buổi ${two(x.fNo)} · ${dm(x.fDate)}`;
+  $('#ovPrev').disabled=i<=0;$('#ovNext').disabled=i>=ss.length-1;
+  $('#ovSheet').innerHTML=sheetHTML(x);$('#ov').hidden=false;document.body.style.overflow='hidden';
+  try{await document.fonts.ready;}catch(e){}
+  $$('#ovSheet .fit').forEach(el=>{fitOne(el);spreadLines(el);});
+  scaleSheet();$('#ov').scrollTop=0;
+}
+const closeSheet=()=>{$('#ov').hidden=true;document.body.style.overflow='';};
+$('#ovX').onclick=closeSheet;
+$('#ovPrev').onclick=()=>openSheet(ovIdx-1);$('#ovNext').onclick=()=>openSheet(ovIdx+1);
+$('#ov').addEventListener('click',e=>{if(e.target.id==='ov')closeSheet();});
+addEventListener('keydown',e=>{if($('#ov').hidden)return;if(e.key==='Escape')closeSheet();if(e.key==='ArrowLeft'&&ovIdx>0)openSheet(ovIdx-1);if(e.key==='ArrowRight')openSheet(ovIdx+1);});
+addEventListener('resize',scaleSheet);
+
+/* ---------------- Dữ liệu mẫu (#demo) ---------------- */
+function demoPortal(kind,user,pin){
+  const ok=pin==='123456'&&(kind==='ph'?user.replace(/\D/g,'')==='0912345678':['lananh9','khang6'].includes(user.toLowerCase().replace(/\s/g,'')));
+  if(!ok)return{ok:false,code:'wrong'};
+  const A={id:'d1',name:'Nguyễn Lan Anh',cls:'9A',total:12},B={id:'d2',name:'Nguyễn Minh Khang',cls:'6',total:8};
+  const mk=(sid,i,date,o)=>({id:sid+'-'+i,studentId:sid,fDate:date,created:String(i),fTotal:sid==='d1'?12:8,hw:'done',fPct:100,att:'tot',fHwCmt:'',fAttCmt:'',fGram:'',fVUnit:'',fVNum:'',fVScore:'',fNext:'',fNVNum:'',fNVUnit:'',fPrep:'',abs:'',...o});
+  const sa=[
+    mk('d1',1,'2026-10-27',{fNo:1,fPct:85,fHwCmt:'Con làm khá tốt, cần chú ý chia động từ.',fGram:'Thì hiện tại hoàn thành\nLuyện 20 câu',fVUnit:'Unit 4',fVNum:30,fVScore:22,fNext:'Bài 1–4 trang 18',fNVNum:30,fNVUnit:'Unit 4'}),
+    mk('d1',2,'2026-10-31',{fNo:2,fPct:90,fHwCmt:'Con làm bài đầy đủ, chữ viết đẹp.',fGram:'Hiện tại hoàn thành vs quá khứ đơn',fVUnit:'Unit 4',fVNum:30,fVScore:25,att:'kha',fAttCmt:'Hôm nay con hơi mệt',fNext:'Bài 5–8 trang 19'}),
+    mk('d1',3,'2026-11-03',{fNo:3,hw:'not',fPct:60,fHwCmt:'Con còn thiếu bài 7, 8. PH nhắc con bổ sung giúp cô ạ.',fGram:'Câu điều kiện loại 1',fVUnit:'Unit 4',fVNum:30,fVScore:24,fNext:'Bài 1–3 trang 21',fNVNum:30,fNVUnit:'Unit 5'}),
+    mk('d1',4,'2026-11-07',{fNo:4,abs:'cp',fMakeup:'09/11',hw:'none',fPct:''}),
+    mk('d1',5,'2026-11-10',{fNo:5,fPct:95,fHwCmt:'Con làm bài cẩn thận, đúng gần hết. Cô khen!',fGram:'Câu bị động thì hiện tại đơn\nLuyện 20 câu chuyển đổi',fVUnit:'Unit 5',fVNum:30,fVScore:27,fAttCmt:'Hăng hái phát biểu',fNext:'Bài 1–3 trang 24\nViết lại 10 câu bị động',fNVNum:30,fNVUnit:'Unit 6',fPrep:'Ôn bị động thì quá khứ'}),
+    mk('d1',6,'2026-11-14',{fNo:6,fPct:90,fHwCmt:'Con hoàn thành đầy đủ BTVN. Tiếp tục phát huy!',fGram:'Câu bị động thì quá khứ đơn',scOn:true,fScName:'Kiểm tra giữa khóa',fScVal:'8.5',fScMax:10,fScCmt:'Con nắm chắc câu bị động, cần luyện thêm đọc hiểu.',fVUnit:'Unit 6',fVNum:30,fVScore:28,fNext:'Bài 4–6 trang 26'}),
+    mk('d1',7,'2026-11-21',{fNo:7,fPct:100,fHwCmt:'Bài làm rất tốt, không sai câu nào!',fGram:'Câu tường thuật – câu kể',fVUnit:'Unit 6',fVNum:30,fVScore:29,fAttCmt:'Chủ động hỏi bài',fNext:'Bài 1–5 trang 30\nHọc thuộc bảng lùi thì',fNVNum:30,fNVUnit:'Unit 7',fPrep:'Ôn câu tường thuật – câu hỏi'})
+  ];
+  const sb=[
+    mk('d2',1,'2026-11-04',{fNo:1,fPct:100,fHwCmt:'Con làm đầy đủ, rất chăm!',fGram:'Thì hiện tại đơn',fVUnit:'Unit 3',fVNum:20,fVScore:18,fNext:'Bài 1–2 trang 12'}),
+    mk('d2',2,'2026-11-11',{fNo:2,fPct:80,fHwCmt:'Con còn sai một số câu, cô đã chữa trên lớp.',fGram:'Hiện tại tiếp diễn',fVUnit:'Unit 3',fVNum:20,fVScore:15,att:'kha',fNext:'Bài 3–5 trang 13'}),
+    mk('d2',3,'2026-11-18',{fNo:3,abs:'kp',hw:'none',fPct:''}),
+    mk('d2',4,'2026-11-25',{fNo:4,hw:'not',fPct:50,fHwCmt:'Con làm chưa đủ, PH nhắc con bổ sung giúp cô ạ.',fGram:'So sánh hơn của tính từ',fVUnit:'Unit 4',fVNum:20,fVScore:13,att:'cct',fAttCmt:'Con còn nói chuyện riêng',fNext:'Bài 1–4 trang 16',fNVNum:20,fNVUnit:'Unit 4'})
+  ];
+  const kids=kind==='ph'?[A,B]:user.toLowerCase().startsWith('lan')?[A]:[B];
+  const ids=kids.map(k=>k.id);
+  return {ok:true,students:kids,sessions:[...sa,...sb].filter(x=>ids.includes(x.studentId)),tests:[],checks:[],
+    reports:[{id:'r1',studentId:'d1',month:'2026-10',cmt:'Lan Anh tiến bộ rõ ở phần ngữ pháp, khảo từ đều trên 80%. Tháng 11 con cần luyện thêm đọc hiểu để chuẩn bị thi vào 10.'}].filter(r=>ids.includes(r.studentId))};
+}
+
+/* ---------------- Mở trang ---------------- */
+if(DEMO){const h=$('.help');h.innerHTML='<b>Bản xem thử:</b> PH dùng SĐT 0912345678, HS dùng lananh9 hoặc khang6, mật khẩu 123456.';}
+(async()=>{let m=null;try{m=JSON.parse(localStorage.getItem(REM)||'null');}catch(e){}
+  if(m&&m.user&&m.pin){setRole(m.kind);$('#uIn').value=m.user;await login(m.kind,m.user,m.pin,true);}})();
+</script>
+</body>
+</html>

@@ -200,6 +200,11 @@
    <div><label class="f">Phụ huynh (tên gọi trên Zalo)</label><input type="text" id="sParent" placeholder="Mẹ Trâm"></div>
    <div><label class="f">Ghi chú</label><input type="text" id="sNote"></div>
   </div>
+  <div class="row">
+   <div><label class="f">Cổng học viên · Tên đăng nhập HS</label><input type="text" id="sPUser" placeholder="VD: tram10" autocomplete="off"></div>
+   <div><label class="f">SĐT phụ huynh (đăng nhập)</label><input type="text" id="sPPhone" inputmode="tel" placeholder="VD: 0912345678" autocomplete="off"></div>
+   <div><label class="f">Mật khẩu cổng <button type="button" class="btn g" id="sPGen" style="padding:1px 8px;font-size:12px">Tạo</button></label><input type="text" id="sPPin" placeholder="6 số" autocomplete="off"></div>
+  </div>
   <div class="btns"><button class="btn" id="bAddS">➕ Lưu học sinh</button><button class="btn g" id="bCancelS" style="display:none">Hủy sửa</button></div>
   <p class="hint">"Đã học xong buổi số" dùng khi HS đang học giữa khóa (VD đã xong 8 buổi → phiếu tiếp theo tự ghi buổi 9).</p>
  </div>
@@ -898,6 +903,7 @@ function renderStudents(){
       setTimeout(()=>{const f=$('#ktFill');if(f)f.click();else{$('#scBox').scrollIntoView({behavior:'smooth',block:'center'});$('#fScVal').focus();}},150);}
     if(b.dataset.a==='go'){$('#fFind').value='';fillStudentSelects();$('#fStudent').value=s.id;prefillFor(s.id,false);$('nav.tabs button[data-v=nhap]').click();}
     if(b.dataset.a==='ed'){editingS=s.id;$('#sName').value=s.name;$('#sClass').value=s.cls||'';$('#sTotal').value=s.total;$('#sDone').value=s.done||0;$('#sParent').value=s.parent||'';$('#sNote').value=s.note||'';
+      $('#sPUser').value=s.portalUser||'';$('#sPPhone').value=s.portalPhone||'';$('#sPPin').value=s.portalPin||'';
       $('#hsFormTitle').textContent='Sửa thông tin: '+s.name;$('#bCancelS').style.display='';window.scrollTo({top:0,behavior:'smooth'});}
     if(b.dataset.a==='del'){const n=sessOf(s.id).length;
       if(confirm(`Xóa học sinh ${s.name}${n?` và ${n} phiếu đã lưu`:''}? Không khôi phục được (trừ khi có bản sao lưu).`)){
@@ -905,16 +911,21 @@ function renderStudents(){
         db.students=db.students.filter(x=>x.id!==s.id);db.sessions=db.sessions.filter(x=>x.studentId!==s.id);persist();fillStudentSelects();renderStudents();}}
   });
 }
-function resetSForm(){editingS=null;['sName','sClass','sParent','sNote'].forEach(i=>$('#'+i).value='');$('#sTotal').value=12;$('#sDone').value=0;$('#hsFormTitle').textContent='Thêm học sinh';$('#bCancelS').style.display='none';}
+function resetSForm(){editingS=null;['sName','sClass','sParent','sNote','sPUser','sPPhone','sPPin'].forEach(i=>$('#'+i).value='');$('#sTotal').value=12;$('#sDone').value=0;$('#hsFormTitle').textContent='Thêm học sinh';$('#bCancelS').style.display='none';}
 $('#bAddS').onclick=()=>{
   const name=$('#sName').value.trim(); if(!name){toast('Nhập họ tên học sinh');return;}
-  const o={name,cls:$('#sClass').value.trim(),total:+$('#sTotal').value||12,done:+$('#sDone').value||0,parent:$('#sParent').value.trim(),note:$('#sNote').value.trim()};
+  const o={name,cls:$('#sClass').value.trim(),total:+$('#sTotal').value||12,done:+$('#sDone').value||0,parent:$('#sParent').value.trim(),note:$('#sNote').value.trim(),
+    portalUser:$('#sPUser').value.trim().toLowerCase().replace(/\s+/g,''),portalPhone:$('#sPPhone').value.replace(/\D/g,''),portalPin:$('#sPPin').value.trim()};
+  if((o.portalUser||o.portalPhone)&&o.portalPin.length<6){toast('Mật khẩu cổng học viên cần ít nhất 6 ký tự (bấm "Tạo")');return;}
+  const dupU=o.portalUser&&db.students.find(x=>x.id!==editingS&&x.portalUser===o.portalUser);
+  if(dupU){toast('Tên đăng nhập "'+o.portalUser+'" đã dùng cho '+dupU.name);return;}
   let s0; if(editingS)s0=Object.assign(stu(editingS),o); else db.students.push(s0={id:uid(),...o}); SYNC.touch('students',s0);
   persist();fillStudentSelects();renderStudents();toast(editingS?'Đã cập nhật':'Đã thêm '+name);
   const keepCls=o.cls; resetSForm(); $('#sClass').value=keepCls; $('#sName').focus();
   if(db.students.length===1)prefillFor(db.students[0].id,false);
 };
 $('#bCancelS').onclick=resetSForm;
+$('#sPGen').onclick=()=>{const a=new Uint32Array(1);crypto.getRandomValues(a);$('#sPPin').value=String(100000+a[0]%900000);};
 $('#sSearch').oninput=renderStudents;
 
 /* ---------- Phiếu đã lưu ---------- */
