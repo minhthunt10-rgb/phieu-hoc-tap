@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Phiếu thu học phí</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lora:ital,wght@0,700;1,600&display=swap" rel="stylesheet">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<link rel="stylesheet" href="style.css?v=202611261000">
+<style>
+  .seg2{display:flex;gap:6px;flex-wrap:wrap}.seg2 label{border:1px solid #d9d0c2;border-radius:999px;padding:5px 12px;cursor:pointer;font-weight:600;font-size:13px}
+  .seg2 input{margin-right:5px}
+  .days{display:flex;gap:6px;flex-wrap:wrap}.days label{border:1px solid #d9d0c2;border-radius:8px;padding:4px 9px;font-weight:700;font-size:13px;cursor:pointer}
+  .dchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+  .dchips button{border:1px solid #8DBB72;background:#F3F8EF;color:#3F6E2A;border-radius:8px;padding:4px 8px;font-size:12.5px;cursor:pointer}
+  .dchips button.off{border-color:#E8742F;background:#FDE5D3;color:#A8481A;text-decoration:line-through}
+  #prevWrap{overflow:hidden}
+  #sheet{transform-origin:0 0}
+  @media(max-width:900px){.grid2{grid-template-columns:minmax(0,1fr)}}
+  /* PHIẾU */
+  .hp{width:630px;background:#fff;font-family:"Be Vietnam Pro",sans-serif;color:#2F3B2A;border:1px solid #e5e0d6}
+  .hp .hd{background:linear-gradient(115deg,#3F6E2A,#5A923F);display:flex;align-items:center;gap:14px;padding:14px 18px;border-bottom:5px solid #E8742F}
+  .hp .hd img{width:62px;height:62px;border-radius:50%;background:#FFFBF2;border:3px solid #fff;object-fit:cover}
+  .hp .hd .b{flex:1;color:#fff}.hp .hd h1{font:700 22px Lora,serif;margin:0;letter-spacing:.5px}
+  .hp .hd p{font:italic 600 13px Lora,serif;color:#FFE3C2;letter-spacing:2px;margin:2px 0 0}
+  .hp .hd .no{background:#fff;color:#E8742F;border-radius:8px;padding:5px 10px;font:700 13px Lora,serif;white-space:nowrap}
+  .hp h2{text-align:center;font:700 26px Lora,serif;color:#3F6E2A;margin:16px 0 4px}
+  .hp h2+div{width:90px;height:4px;border-radius:3px;background:#E8742F;margin:0 auto 12px}
+  .hp .in{display:grid;grid-template-columns:1.6fr .8fr 1fr;gap:10px;padding:0 20px}
+  .hp .in div{border:2px solid #3F6E2A;border-radius:9px;padding:5px 10px}
+  .hp .in small{display:block;font-size:10.5px;font-weight:700;color:#5A923F}
+  .hp .in b{font:700 15px Lora,serif;color:#3F6E2A}
+  .hp .money{margin:14px 20px 0;border:2px solid #E8742F;border-radius:12px;background:#FFFBF2;padding:10px 14px;position:relative}
+  .hp .money .t{font-size:12px;font-weight:700;color:#E8742F}
+  .hp .money .v{font:700 30px Lora,serif;color:#3F6E2A;line-height:1.2}
+  .hp .money .w{font-style:italic;font-size:13px}
+  .hp .money .r{font-size:13px;margin-top:4px}
+  .hp .money .stamp{position:absolute;right:10px;top:8px;width:110px;opacity:.9}
+  .hp .sch{margin:14px 20px 0;border:2px solid #5A923F;border-radius:12px;overflow:hidden}
+  .hp .sch .cap{background:#5A923F;color:#fff;font:700 14px Lora,serif;padding:6px 12px}
+  .hp .sch .rg{padding:8px 12px 0;font-size:13.5px}.hp .sch .rg b{color:#E8742F}
+  .hp .sch .g{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:8px 12px 12px}
+  .hp .sch .g div{border:1px solid #8DBB72;border-radius:8px;text-align:center;padding:4px 2px;font-size:12px;background:#F3F8EF}
+  .hp .sch .g div i{display:block;font-style:normal;font-weight:800;color:#3F6E2A;font-size:11px}
+  .hp .sch .g div b{font-size:13.5px}
+  .hp .sch .off{padding:0 12px 10px;font-size:12px;font-style:italic;color:#A8481A}
+  .hp .pay{margin:14px 20px 0;display:flex;gap:12px;align-items:center;border:2px solid #E8742F;border-radius:12px;padding:10px 12px}
+  .hp .pay img{width:96px;border-radius:6px}
+  .hp .pay p{margin:2px 0;font-size:13px}.hp .pay .stk{font:700 18px Lora,serif;color:#3F6E2A}
+  .hp .note{margin:12px 20px 0;font-size:12.5px;line-height:1.5}
+  .hp .sg{display:flex;justify-content:flex-end;padding:6px 30px 0;text-align:center;font-size:12.5px}
+  .hp .sg b{display:block;font:700 15px Lora,serif;color:#E8742F;margin-top:26px}
+  .hp .ft{margin-top:14px;background:#3F6E2A;border-top:5px solid #E8742F;color:#fff;display:flex;justify-content:space-between;padding:9px 18px;font:italic 700 13px "Be Vietnam Pro"}
+  .hp .ft b{color:#FFE3C2}
+</style>
+</head>
+<body>
+<header class="app"><img src="logo.png" alt=""><div><h1>Phiếu thu học phí</h1><small>Grow with English – Tiếng Anh Ms. Minh Thư</small></div></header>
+<nav class="tabs"><a href="index.html">← Phiếu học tập</a></nav>
+<main>
+<div class="grid2">
+ <div>
+  <div class="card"><h3>Học viên</h3>
+   <label class="f">Chọn học sinh (lấy từ danh sách web Phiếu học tập)</label>
+   <select id="sel"><option value="">— Gõ tay bên dưới —</option></select>
+   <div class="row"><div><label class="f">Họ tên</label><input type="text" id="name"></div>
+     <div><label class="f">Lớp</label><input type="text" id="cls"></div></div>
+   <label class="f">Loại phiếu</label>
+   <div class="seg2"><label><input type="radio" name="kind" value="thu" checked>Phiếu thu (đã nhận tiền)</label><label><input type="radio" name="kind" value="bao">Thông báo (cần đóng)</label></div>
+  </div>
+  <div class="card"><h3>Số tiền</h3>
+   <div class="row"><div><label class="f">Số tiền (đ)</label><input type="text" id="amt" inputmode="numeric" placeholder="VD: 1.600.000"></div>
+     <div><label class="f" id="dLab">Ngày thu</label><input type="date" id="day"></div></div>
+   <div class="chips" id="quick"></div>
+   <label class="f">Nội dung</label><input type="text" id="what" value="Học phí khóa 12 buổi">
+   <label class="f">Hình thức</label>
+   <div class="seg2"><label><input type="radio" name="how" value="Chuyển khoản" checked>Chuyển khoản</label><label><input type="radio" name="how" value="Tiền mặt">Tiền mặt</label></div>
+  </div>
+  <div class="card"><h3>Lịch 12 buổi kế tiếp</h3>
+   <div class="row"><div><label class="f">Ngày học buổi đầu</label><input type="date" id="start"></div>
+     <div><label class="f">Từ buổi số</label><input type="number" id="from" value="1" min="1"></div>
+     <div><label class="f">Số buổi</label><input type="number" id="cnt" value="12" min="1" max="40"></div></div>
+   <label class="f">Thứ học trong tuần</label><div class="days" id="days"></div>
+   <label class="f">Bấm vào ngày để đánh dấu nghỉ (lịch tự lùi thêm 1 buổi)</label>
+   <div class="dchips" id="dlist"></div>
+   <label class="f">Ghi chú thêm (không bắt buộc)</label><input type="text" id="note" placeholder="VD: Ca 1, 17h30–19h00">
+  </div>
+  <div class="btns"><button class="btn" id="bCopy">📋 Sao chép ảnh gửi Zalo</button><button class="btn o" id="bDown">⬇️ Tải ảnh</button></div>
+ </div>
+ <div class="card"><h3>Xem trước</h3><div id="prevWrap"><div id="sheet"></div></div></div>
+</div>
+</main>
+<div class="toast" id="toast"></div>
+<script>
+const $=s=>document.querySelector(s);
+const toast=t=>{const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),2600);};
+const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const pd=s=>{const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d);};
+const dm=s=>{const d=pd(s);return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0');};
+const dmy=s=>dm(s)+'/'+pd(s).getFullYear();
+const THU=['T2','T3','T4','T5','T6','T7','CN'], dow=d=>(d.getDay()+6)%7;
+let db={students:[],sessions:[]},lich={days:{}},off=new Set();
+try{db={...db,...JSON.parse(localStorage.getItem('gwe-phieu-hoc-tap-v1')||'{}')};}catch(e){}
+try{lich={...lich,...JSON.parse(localStorage.getItem('gwe-lich-hoc-v1')||'{}')};}catch(e){}
+const khoi=s=>{const m=String(s.cls||'').match(/\d+/);return m?+m[0]:99;};
+(db.students||[]).slice().sort((a,b)=>khoi(a)-khoi(b)||a.name.localeCompare(b.name,'vi')).forEach(s=>{const o=document.createElement('option');o.value=s.id;o.textContent=s.name+(s.cls?' – '+s.cls:'');$('#sel').appendChild(o);});
+$('#days').innerHTML=THU.map((t,i)=>`<label><input type="checkbox" value="${i}"> ${t}</label>`).join('');
+$('#day').value=iso(new Date());$('#start').value=iso(new Date());
+[['800.000','1 buổi/tuần'],['1.600.000','VIP'],['2.000.000','Kèm/IELTS'],['4.000.000','Kèm tại nhà']].forEach(([v,t])=>{const b=document.createElement('button');b.textContent=v+' ('+t+')';b.onclick=()=>{$('#amt').value=v;upd();};$('#quick').appendChild(b);});
+
+// Số tiền bằng chữ
+const D=['không','một','hai','ba','bốn','năm','sáu','bảy','tám','chín'];
+function r3(n,full){const h=Math.floor(n/100),t=Math.floor(n%100/10),u=n%10,o=[];
+  if(full||h)o.push(D[h],'trăm');
+  if(t>1){o.push(D[t],'mươi');if(u===1)o.push('mốt');else if(u===5)o.push('lăm');else if(u)o.push(D[u]);}
+  else if(t===1){o.push('mười');if(u===5)o.push('lăm');else if(u)o.push(D[u]);}
+  else if(u){if(full||h)o.push('linh');o.push(D[u]);}
+  return o;}
+function words(n){if(!n)return '';const U=['','nghìn','triệu','tỷ'],g=[];while(n>0){g.push(n%1000);n=Math.floor(n/1000);}
+  let o=[];for(let i=g.length-1;i>=0;i--){if(!g[i])continue;o=o.concat(r3(g[i],i<g.length-1));if(U[i])o.push(U[i]);}
+  const s=o.join(' ')+' đồng';return s[0].toUpperCase()+s.slice(1);}
+const num=()=>+($('#amt').value.replace(/\D/g,''))||0;
+const fmt=n=>n.toLocaleString('vi-VN');
+
+// Khi chọn HS: điền tên/lớp, thứ học từ tab Lịch học, ngày bắt đầu sau buổi cuối
+$('#sel').onchange=()=>{const s=(db.students||[]).find(x=>x.id===$('#sel').value);if(!s){upd();return;}
+  $('#name').value=s.name;$('#cls').value=s.cls||'';
+  const ds=Object.keys((lich.days||{})[s.id]||{}).map(Number);
+  document.querySelectorAll('#days input').forEach(c=>c.checked=ds.includes(+c.value));
+  const last=(db.sessions||[]).filter(x=>x.studentId===s.id&&x.fDate).map(x=>x.fDate).sort().pop();
+  let d=last?pd(last):new Date();if(last)d.setDate(d.getDate()+1);
+  if(ds.length)for(let k=0;k<7&&!ds.includes(dow(d));k++)d.setDate(d.getDate()+1);
+  $('#start').value=iso(d);off.clear();upd();};
+
+function sched(){const ds=[...document.querySelectorAll('#days input:checked')].map(c=>+c.value),n=+$('#cnt').value||12,out=[],skip=[];
+  if(!ds.length||!$('#start').value)return{out,skip};
+  const d=pd($('#start').value);for(let k=0;k<400&&out.length<n;k++){if(ds.includes(dow(d))){const s=iso(d);(off.has(s)?skip:out).push(s);}d.setDate(d.getDate()+1);}
+  return{out,skip};}
+
+let seq=0;
+function upd(){
+  const kind=document.querySelector('[name=kind]:checked').value,how=document.querySelector('[name=how]:checked').value;
+  $('#dLab').textContent=kind==='thu'?'Ngày thu':'Hạn đóng';
+  const {out,skip}=sched(),from=+$('#from').value||1,a=num();
+  $('#dlist').innerHTML=out.concat(skip).sort().map(s=>`<button data-d="${s}" class="${off.has(s)?'off':''}">${THU[dow(pd(s))]} ${dm(s)}</button>`).join('')||'<span class="hint">Chọn thứ học để hiện lịch.</span>';
+  document.querySelectorAll('#dlist button').forEach(b=>b.onclick=()=>{const s=b.dataset.d;off.has(s)?off.delete(s):off.add(s);upd();});
+  const d=new Date(),no='HP-'+String(d.getFullYear()).slice(2)+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')+String(d.getHours()).padStart(2,'0')+String(d.getMinutes()).padStart(2,'0');
+  const cells=out.map((s,i)=>`<div><i>Buổi ${from+i}</i><b>${THU[dow(pd(s))]} ${dm(s)}</b></div>`).join('');
+  const rg=out.length?`Từ <b>buổi ${from}</b> (${THU[dow(pd(out[0]))]} ${dmy(out[0])}) đến <b>buổi ${from+out.length-1}</b> (${THU[dow(pd(out[out.length-1]))]} ${dmy(out[out.length-1])})`:'';
+  $('#sheet').innerHTML=`<div class="hp">
+   <div class="hd"><img src="logo.png"><div class="b"><h1>TIẾNG ANH MS MINH THƯ</h1><p>GROW WITH ENGLISH</p></div><div class="no">${no}</div></div>
+   <h2>${kind==='thu'?'PHIẾU THU HỌC PHÍ':'THÔNG BÁO HỌC PHÍ'}</h2><div></div>
+   <div class="in"><div><small>HỌC VIÊN</small><b>${esc($('#name').value)||'&nbsp;'}</b></div><div><small>LỚP</small><b>${esc($('#cls').value)||'&nbsp;'}</b></div>
+     <div><small>${kind==='thu'?'NGÀY THU':'HẠN ĐÓNG'}</small><b>${$('#day').value?dmy($('#day').value):'&nbsp;'}</b></div></div>
+   <div class="money">${kind==='thu'?'<img class="stamp" src="stamp.png">':''}
+     <div class="t">${kind==='thu'?'ĐÃ NHẬN SỐ TIỀN':'SỐ TIỀN CẦN ĐÓNG'}</div><div class="v">${a?fmt(a)+' đ':'…………… đ'}</div>
+     <div class="w">${a?'Bằng chữ: '+words(a):''}</div>
+     <div class="r">Nội dung: <b>${esc($('#what').value)}</b>${kind==='thu'?' &nbsp;•&nbsp; Hình thức: <b>'+how+'</b>':''}</div></div>
+   <div class="sch"><div class="cap">📅 LỊCH HỌC ${out.length} BUỔI KẾ TIẾP</div><div class="rg">${rg}</div><div class="g">${cells}</div>
+     ${skip.length?`<div class="off">Nghỉ: ${skip.map(s=>THU[dow(pd(s))]+' '+dm(s)).join(', ')} (đã lùi lịch)</div>`:''}
+     ${$('#note').value?`<div class="off" style="color:#3F6E2A">${esc($('#note').value)}</div>`:''}</div>
+   ${kind==='bao'?`<div class="pay"><img src="qr-bidv.png"><div><p>Ngân hàng: <b>BIDV – PGD Bắc Hải</b></p><p>Số TK: <span class="stk">8920852117</span></p><p>Chủ TK: <b>HO KINH DOANH TIENG ANH MS MINH THU</b></p><p><i>Nội dung CK: HP – ${esc($('#name').value)||'Họ tên HV'} – ${esc($('#cls').value)||'Lớp'}</i></p></div></div>`:''}
+   <div class="note">• Buổi nghỉ có báo trước được học bù hoặc trừ vào kỳ sau.<br>• Mọi thắc mắc về học phí xin liên hệ <b>0966.101.957</b> (Zalo).</div>
+   <div class="sg"><div>Giáo viên phụ trách<b>Ms. Minh Thư</b></div></div>
+   <div class="ft"><span>THÔNG TIN LIÊN HỆ</span><span>SĐT: <b>0966.101.957</b></span><span>GROW WITH ENGLISH</span></div></div>`;
+  fit();
+}
+// thu nhỏ bản xem trước cho vừa khung (ảnh xuất vẫn đủ khổ 630px)
+function fit(){const w=$('#prevWrap'),s=$('#sheet'),hp=$('#sheet .hp');if(!hp)return;
+  s.style.transform='';const k=Math.min(1,w.clientWidth/632);s.style.transform=k<1?`scale(${k})`:'';
+  w.style.height=k<1?(hp.offsetHeight*k+2)+'px':'';
+  hp.querySelectorAll('img').forEach(i=>{if(!i.complete)i.addEventListener('load',fit,{once:true});});}
+window.addEventListener('resize',fit);document.fonts.ready.then(fit);
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+$('#amt').addEventListener('blur',()=>{const n=num();$('#amt').value=n?fmt(n):'';});
+document.querySelectorAll('input,select').forEach(e=>{if(e.id!=='sel'){e.addEventListener('input',upd);e.addEventListener('change',upd);}});
+upd();
+async function png(){await document.fonts.ready;const s=$('#sheet'),t=s.style.transform;s.style.transform='';
+  try{const c=await html2canvas($('#sheet .hp'),{scale:2,backgroundColor:'#fff',logging:false});return await new Promise(r=>c.toBlob(r,'image/png'));}
+  finally{s.style.transform=t;}}
+const fname=()=>'HocPhi_'+($('#name').value||'HS').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/đ/g,'d').replace(/Đ/g,'D').replace(/\s+/g,'_')+'.png';
+function down(b){const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=fname();a.click();}
+$('#bDown').onclick=async()=>down(await png());
+$('#bCopy').onclick=async()=>{try{await navigator.clipboard.write([new ClipboardItem({'image/png':png()})]);toast('✓ Đã sao chép ảnh – vào Zalo bấm Ctrl+V');}
+  catch(e){down(await png());toast('Không sao chép được – đã tải ảnh về máy');}};
+</script>
+</body>
+</html>
