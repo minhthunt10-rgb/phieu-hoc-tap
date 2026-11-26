@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lora:ital,wght@0,700;1,600&display=swap" rel="stylesheet">
 <script src="logo.js?v=202611111700"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<link rel="stylesheet" href="style.css?v=202611221000">
+<link rel="stylesheet" href="style.css?v=202611261000">
 </head>
 <body>
 <header class="app">
@@ -22,6 +22,7 @@
   <button data-v="caidat">⚙️ Sao lưu &amp; cài đặt</button>
   <button data-v="lich" id="navLich" style="display:none">📅 Lịch học</button>
   <button data-v="lotrinh" id="navPlan" style="display:none">🧭 Lộ trình</button>
+  <button data-v="cs" id="navCs" style="display:none">📞 Chăm sóc PH</button>
   <a href="bao-cao.html">📊 Báo cáo tháng</a>
 </nav>
 <main>
@@ -65,6 +66,11 @@
     <div id="nuocBox" class="nuoc-box" style="display:none">
       <label class="nuoc-ck"><input type="checkbox" id="nuocCk"> 🥤 Uống nước hôm nay</label>
       <div id="nuocNote" class="nuoc-note"></div>
+    </div>
+    <!-- Chăm sóc PH: chỉ máy cô (lưu trong lich.cs, không lên phiếu, không đồng bộ) -->
+    <div id="csBox" class="nuoc-box cs-box" style="display:none">
+      <label class="nuoc-ck cs-ck"><input type="checkbox" id="csCk"> 📞 Đã gọi chăm sóc PH (tháng này)</label>
+      <div id="csNote" class="nuoc-note"></div>
     </div>
    </div>
 
@@ -309,6 +315,20 @@
   <div class="btns"><button class="btn" id="bSaveCfg">Lưu cài đặt</button></div>
  </div>
 </section>
+
+<!-- ================= CHĂM SÓC PHỤ HUYNH (chỉ máy cô) ================= -->
+<section class="view" id="v-cs">
+ <div class="card">
+  <h3>📞 Chăm sóc phụ huynh</h3>
+  <div id="csSum"></div>
+  <div class="cs-bar">
+   <input type="search" id="csFind" placeholder="🔍 Gõ tên học sinh…" autocomplete="off">
+   <select id="csFil"><option value="chua">Chưa chăm sóc tháng này</option><option value="can">Cần chú ý (có nhắc việc)</option><option value="all">Tất cả học sinh</option></select>
+  </div>
+  <div id="csList"></div>
+  <p class="hint">Mỗi PH nên được chăm sóc <b>1 tháng 1 lần</b>. Web tự nhắc thêm khi em nghỉ 2 buổi liền, BTVN giảm, điểm kiểm tra thấp, sắp hết khóa hoặc lâu chưa có phiếu. Dữ liệu chỉ lưu trên máy này (đi kèm file Xuất lịch).</p>
+ </div>
+</section>
 </main>
 
 <div id="exportHolder"></div>
@@ -355,7 +375,7 @@ const sessOf=id=>db.sessions.filter(x=>x.studentId===id).sort((a,b)=>(a.date+a.c
 $$('nav.tabs button').forEach(b=>b.onclick=()=>{
   $$('nav.tabs button').forEach(x=>x.classList.toggle('on',x===b));
   $$('.view').forEach(v=>v.classList.toggle('on',v.id==='v-'+b.dataset.v));
-  if(b.dataset.v==='luu')renderSaved(); if(b.dataset.v==='hs')renderStudents(); if(b.dataset.v==='caidat')loadCfg(); if(b.dataset.v==='lich')renderLich(); if(b.dataset.v==='lotrinh')renderPlan();
+  if(b.dataset.v==='luu')renderSaved(); if(b.dataset.v==='hs')renderStudents(); if(b.dataset.v==='caidat')loadCfg(); if(b.dataset.v==='lich')renderLich(); if(b.dataset.v==='lotrinh')renderPlan(); if(b.dataset.v==='cs'&&window.renderCs)renderCs();
   if(b.dataset.v==='nhap')updatePreview();
 });
 
@@ -741,7 +761,7 @@ function startFill(sid,no){ // từ tab Học sinh: bổ sung phiếu buổi "no
 // ô bài khảo từ: trống hoặc có số / mã đề (Unit 5, C17-T1-P1); chỉ "Unit" là thiếu
 const unitOk=v=>{v=String(v||'').trim();return !v||/\d/.test(v);};
 function checkUnits(){$$('.unit-warn').forEach(w=>{const el=$('#'+w.dataset.for),bad=!unitOk(el.value);el.classList.toggle('bad',bad);w.style.display=bad?'block':'none';});}
-function updatePreview(){ktCheck();checkUnits();renderPrevHw();if(window.renderNuoc)renderNuoc();const h=sheetHTML(readForm());$('#preview').innerHTML=h;$('#exportHolder').innerHTML=h;fitText();fitPreview();preRender();}
+function updatePreview(){ktCheck();checkUnits();renderPrevHw();if(window.renderNuoc)renderNuoc();if(window.renderCsBox)renderCsBox();const h=sheetHTML(readForm());$('#preview').innerHTML=h;$('#exportHolder').innerHTML=h;fitText();fitPreview();preRender();}
 // chữ ít thì phóng to cho vừa ô, chữ nhiều thì thu nhỏ để không tràn
 function fitText(){$$(".sheet .fit").forEach(el=>{
   if(!el.clientWidth)return; // ô đang ẩn (tab khác) – đo sẽ sai
@@ -1035,6 +1055,89 @@ $('#nuocCk').onchange=e=>{const id=$('#fStudent').value;if(!id)return;const d=$(
   if(l.length)lich.nuoc[id]=l.sort();else delete lich.nuoc[id];
   saveLich();renderNuoc();toast(e.target.checked?'Đã ghi '+stu(id).name+' uống nước':'Đã bỏ tích uống nước');};
 renderNuoc();
+
+/* 📞 Chăm sóc phụ huynh (cô yêu cầu 2026-11-26) – chỉ máy cô, lưu trong lich.cs[sid] = [{id,d,k,nd,ph,todo,han,done,quick}]
+   Mỗi PH 1 tháng 1 lần + web tự nhắc khi có chuyện cần báo PH. Không lên phiếu, không đồng bộ Sheet (ghi chú riêng tư về PH). */
+if(lich.on)$('#navCs').style.display='';
+const CS_K=['Gọi điện','Nhắn Zalo','Gặp trực tiếp'];
+const CS_ND=['Báo tình hình học tháng này','Nhắc con làm BTVN','Báo điểm kiểm tra','Báo sắp hết khóa – gia hạn','Hỏi lý do con nghỉ','Lịch thi / lộ trình','Hỏi góp ý của PH'];
+const csLog=id=>((lich.cs||{})[id]||[]).slice().sort((a,b)=>a.d.localeCompare(b.d));
+const csThis=(id,m=today().slice(0,7))=>csLog(id).filter(x=>x.d.slice(0,7)===m);
+const csDm=x=>{const[d,m]=dmy(x);return d+'/'+m;};
+function csFlags(s){
+  const ss=db.sessions.filter(x=>x.studentId===s.id).sort((a,b)=>String(a.fDate).localeCompare(String(b.fDate))||String(a.created).localeCompare(String(b.created)));
+  const f=[];if(!ss.length)return f;
+  const l2=ss.slice(-2);if(l2.length===2&&l2.every(x=>x.abs))f.push(['warn','Nghỉ 2 buổi gần nhất – hỏi thăm PH']);
+  const hw=ss.filter(x=>!x.abs&&x.hw!=='none'&&x.fPct!==''&&x.fPct!=null&&!isNaN(+x.fPct)).slice(-3);
+  if(hw.length===3){const a=Math.round(hw.reduce((t,x)=>t+(+x.fPct),0)/3);if(a<70)f.push(['warn',`BTVN 3 buổi gần nhất chỉ ${a}%`]);}
+  const sc=ss.filter(x=>x.scOn&&!x.scHide&&String(x.fScVal??'').trim()!=='').pop();
+  if(sc){const v=+String(sc.fScVal).replace(',','.'),mx=+String(sc.fScMax||10).replace(',','.')||10;if(v/mx<.5)f.push(['warn',`Điểm KT gần nhất ${sc.fScVal}/${sc.fScMax||10} (${csDm(sc.fDate)})`]);}
+  const T=+s.total||12,lr=latestReg(s.id),L=lr?noMax(lr.fNo):0,con=T-L;
+  if(L&&con>=0&&con<=2)f.push(['info',con?`Còn ${con} buổi hết khóa – báo PH gia hạn`:'Vừa hết khóa – báo PH gia hạn']);
+  const last=ss[ss.length-1].fDate,days=Math.round((Date.parse(today())-Date.parse(last))/864e5);
+  if(days>=14)f.push(['warn',`${days} ngày chưa có phiếu (buổi cuối ${csDm(last)})`]);
+  csLog(s.id).filter(x=>x.todo&&!x.done).forEach(x=>f.push([x.han&&x.han<=today()?'warn':'todo',`Việc hẹn PH: ${x.todo}${x.han?' (hạn '+csDm(x.han)+')':''}`]));
+  return f;
+}
+function csNav(){const n=db.students.filter(s=>!csThis(s.id).length).length;$('#navCs').textContent='📞 Chăm sóc PH'+(n?' ('+n+')':'');}
+window.renderCsBox=()=>{
+  const box=$('#csBox'),id=$('#fStudent').value;if(!lich.on||!id){box.style.display='none';return;}box.style.display='';
+  const d=$('#fDate').value||today(),m=d.slice(0,7),th=csThis(id,m),s=stu(id),fl=s?csFlags(s):[];
+  $('#csCk').checked=th.length>0;$('#csCk').disabled=th.some(x=>!x.quick||x.d!==d);
+  $('#csNote').innerHTML=(th.length?`<span class="ok">✓ Tháng ${+m.slice(5)} đã chăm sóc PH: ${th.map(x=>csDm(x.d)+' '+x.k.toLowerCase()).join(', ')}.</span>`
+      :`<b>Mỗi PH 1 tháng 1 lần.</b> <span class="warn">Tháng ${+m.slice(5)} chưa chăm sóc PH em này.</span>`)
+    +(fl.length?`<div class="cs-fl">${fl.map(x=>`<span class="cs-f ${x[0]}">${esc(x[1])}</span>`).join('')}</div>`:'')
+    +` <a href="#" id="csGo">Ghi nội dung chi tiết ›</a>`;
+  $('#csGo').onclick=e=>{e.preventDefault();csOpen=id;$('#csFil').value='all';$('#csFind').value=s?s.name:'';$('#navCs').click();};
+};
+$('#csCk').onchange=e=>{const id=$('#fStudent').value;if(!id)return;const d=$('#fDate').value||today();lich.cs=lich.cs||{};let l=lich.cs[id]||[];
+  if(e.target.checked)l.push({id:uid(),d,k:'Gọi điện',nd:'',ph:'',todo:'',han:'',done:0,quick:1});else l=l.filter(x=>!(x.quick&&x.d===d));
+  if(l.length)lich.cs[id]=l;else delete lich.cs[id];saveLich();renderCsBox();csNav();toast(e.target.checked?'Đã ghi chăm sóc PH '+stu(id).name:'Đã bỏ tích chăm sóc PH');};
+let csOpen=null;
+window.renderCs=()=>{
+  const m=today().slice(0,7),q=$('#csFind').value.trim().toLowerCase(),fil=$('#csFil').value;
+  const all=db.students.slice().sort(byKhoi),done=all.filter(s=>csThis(s.id).length).length;
+  $('#csSum').innerHTML=`<div class="cs-sum"><b>Tháng ${+m.slice(5)}:</b> <span class="kt-tag cs-ok">${done}/${all.length} PH đã được chăm sóc</span>${done<all.length?` <span class="kt-tag cs-chua">${all.length-done} PH chưa</span>`:''}</div>`;
+  const rows=all.map(s=>({s,th:csThis(s.id),fl:csFlags(s)})).filter(r=>(!q||r.s.name.toLowerCase().includes(q))&&(fil==='all'||(fil==='chua'?!r.th.length:r.fl.length)));
+  rows.sort((a,b)=>(!!a.th.length-!!b.th.length)||(b.fl.length-a.fl.length));
+  $('#csList').innerHTML=rows.length?rows.map(({s,th,fl})=>{const lg=csLog(s.id),last=lg[lg.length-1];
+    return `<div class="cs-it${th.length?' ok':''}" data-id="${s.id}">
+    <div class="cs-h"><b>${esc(s.name)}</b><span class="hint">${esc(s.cls||'')}${s.parent?' · PH: '+esc(s.parent):''}</span>
+      ${th.length?`<span class="kt-tag cs-ok">✅ Đã chăm sóc ${th.map(x=>csDm(x.d)).join(', ')}</span>`:`<span class="kt-tag cs-chua">⏳ Chưa chăm sóc tháng ${+m.slice(5)}</span>`}</div>
+    ${fl.length?`<div class="cs-fl">${fl.map(x=>`<span class="cs-f ${x[0]}">${esc(x[1])}</span>`).join('')}</div>`:''}
+    ${last?`<div class="cs-last">Lần gần nhất: <b>${csDm(last.d)}/${last.d.slice(0,4)}</b> · ${esc(last.k)}${last.nd?' · '+esc(last.nd):''}${last.ph?' · <i>PH: '+esc(last.ph)+'</i>':''}</div>`:''}
+    <div class="btns"><button type="button" class="btn" data-a="add">📞 Ghi chăm sóc</button>${lg.length?`<button type="button" class="btn g" data-a="his">🕘 Lịch sử (${lg.length})</button>`:''}</div>
+    <div class="cs-form" data-f="add" ${csOpen===s.id?'':'hidden'}>
+      <div class="row"><div><label class="f">Ngày</label><input type="date" class="csD" value="${today()}"></div>
+      <div><label class="f">Hình thức</label><select class="csK">${CS_K.map(k=>`<option>${k}</option>`).join('')}</select></div></div>
+      <label class="f">Nội dung trao đổi</label><textarea class="csNd" rows="2" placeholder="VD: Báo con tiến bộ Part 5, nhắc ôn từ vựng"></textarea>
+      <div class="chips">${CS_ND.map(t=>`<button type="button">${esc(t)}</button>`).join('')}</div>
+      <label class="f">PH phản hồi / mong muốn</label><textarea class="csPh" rows="2" placeholder="VD: PH muốn con luyện thêm nói"></textarea>
+      <div class="row"><div><label class="f">Việc cần làm tiếp (nếu có)</label><input type="text" class="csTd" placeholder="VD: Gửi PH lịch thi thử"></div>
+      <div><label class="f">Hạn</label><input type="date" class="csHan"></div></div>
+      <div class="btns"><button type="button" class="btn" data-a="save">💾 Lưu</button><button type="button" class="btn g" data-a="close">Đóng</button></div>
+    </div>
+    <div class="cs-his" hidden>${lg.slice().reverse().map(x=>`<div class="cs-hi"><b>${csDm(x.d)}/${x.d.slice(0,4)}</b> · ${esc(x.k)}${x.nd?' · '+esc(x.nd):x.quick?' · <i>tích nhanh ở Nhập phiếu</i>':''}${x.ph?'<div><i>PH: '+esc(x.ph)+'</i></div>':''}
+      ${x.todo?`<div><label class="cs-td"><input type="checkbox" data-a="td" data-x="${x.id}" ${x.done?'checked':''}> Việc hẹn: ${esc(x.todo)}${x.han?' (hạn '+csDm(x.han)+')':''}</label></div>`:''}
+      <button type="button" class="cs-del" data-a="del" data-x="${x.id}" title="Xóa lần chăm sóc này">🗑</button></div>`).join('')}</div>
+  </div>`;}).join(''):`<p class="hint">${fil==='chua'?'🎉 Tháng này đã chăm sóc đủ PH.':'Không có học sinh phù hợp.'}</p>`;
+  csOpen=null;csNav();
+  $$('#csList .cs-it').forEach(it=>{const id=it.dataset.id,F=it.querySelector('.cs-form');
+    it.querySelectorAll('.chips button').forEach(b=>b.onclick=()=>{const t=F.querySelector('.csNd');t.value=t.value.trim()?t.value.trim()+'; '+b.textContent:b.textContent;});
+    it.onclick=e=>{const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,l=(lich.cs=lich.cs||{})[id]||[];
+      if(a==='add'){F.hidden=!F.hidden;if(!F.hidden)F.querySelector('.csNd').focus();}
+      if(a==='close')F.hidden=true;
+      if(a==='his'){const h=it.querySelector('.cs-his');h.hidden=!h.hidden;}
+      if(a==='save'){const v=c=>F.querySelector(c).value.trim(),d=v('.csD')||today();
+        const r={id:uid(),d,k:v('.csK'),nd:v('.csNd'),ph:v('.csPh'),todo:v('.csTd'),han:v('.csHan'),done:0};
+        const qi=l.findIndex(x=>x.quick&&x.d.slice(0,7)===d.slice(0,7)); // thay lần tích nhanh trong tháng bằng bản ghi chi tiết
+        if(qi>=0)l.splice(qi,1);l.push(r);lich.cs[id]=l;saveLich();toast('Đã lưu chăm sóc PH '+stu(id).name);renderCs();renderCsBox();}
+      if(a==='td'){const x=l.find(y=>y.id===b.dataset.x);if(x){x.done=b.checked?1:0;saveLich();renderCs();it.ownerDocument.querySelector(`.cs-it[data-id="${id}"] .cs-his`).hidden=false;}}
+      if(a==='del'){const x=l.find(y=>y.id===b.dataset.x);if(!x||!confirm(`Xóa lần chăm sóc ngày ${csDm(x.d)}?`))return;
+        lich.cs[id]=l.filter(y=>y!==x);if(!lich.cs[id].length)delete lich.cs[id];saveLich();renderCs();renderCsBox();}};});
+};
+$('#csFind').oninput=renderCs;$('#csFil').onchange=renderCs;
+if(lich.on)csNav();
 const dowOf=iso=>(new Date(iso+'T00:00:00').getDay()+6)%7;
 // ô lịch "Trâm 10 (ca 1)", "LAN ANH VIP 4", "HUY IELTS 11 (ca 2) - TEST" → học sinh khớp tên + khối
 function matchCell(cell){
@@ -1188,7 +1291,7 @@ $('#lImport').onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new F
     if(Object.keys(lich.days).length&&!confirm(`Nhập lịch của ${Object.keys(days).length} học sinh? Lịch hiện có trên trình duyệt này sẽ được thay.`))return;
     const done={};Object.entries(o.done||{}).forEach(([d,ns])=>{done[d]={};ns.forEach(n=>{const s=find(n,'');if(s)done[d][s.id]=1;});});
     lich={...lich,on:true,days,done,plans:{...(lich.plans||{}),...plans},nuoc:{...(lich.nuoc||{}),...nuoc}};if(o.tpl)lich.tpl=o.tpl;
-    saveLich();$('#navLich').style.display='';$('#navPlan').style.display='';renderLich();
+    saveLich();$('#navLich').style.display='';$('#navPlan').style.display='';$('#navCs').style.display='';renderLich();
     toast(`Đã nhập lịch của ${Object.keys(days).length} học sinh`+(miss.length?` – ${miss.length} em chưa có trong danh sách`:''));
     if(miss.length)$('#lMsg').innerHTML=`<p class="hint" style="color:#b23">⚠️ Chưa có trong danh sách học sinh nên chưa nhập lịch: ${miss.map(esc).join('; ')}</p>`;
   }catch(_){toast('File không phải file lịch học');}};

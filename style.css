@@ -390,3 +390,22 @@ details.card.tools h4{margin:14px 0 4px;font-size:14px;color:var(--orange)}
 .nuoc-note{margin-top:4px;color:#444}.nuoc-note b{font-weight:600;color:#1E6FA8}
 .nuoc-note .ok{color:#3E8E3F;font-weight:600}.nuoc-note .warn{color:#C2410C;font-weight:600}.nuoc-note .muted{color:#888;font-style:italic}
 .kt-tag.nuoc{background:#E3F2FD;color:#1565C0;border:1px solid #90CAF9}
+/* 📞 Chăm sóc phụ huynh (chỉ máy cô) */
+.cs-box{border-color:#E8A33C;background:#FFF8EC}.cs-ck{color:#B45309}
+.cs-bar{display:grid;grid-template-columns:1fr 230px;gap:8px;margin:10px 0}
+@media(max-width:600px){.cs-bar{grid-template-columns:1fr}}
+.cs-sum{font-size:14px}
+.cs-it{border:1.5px solid #F2C79A;background:#FFFDF8;border-radius:12px;padding:10px 12px;margin-bottom:10px}
+.cs-it.ok{border-color:#B9DDB0;background:#F7FCF5}
+.cs-h{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-size:15px}
+.cs-fl{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.cs-f{font-size:12.5px;border-radius:12px;padding:2px 9px;background:#EEF4FB;color:#1F5FA0;border:1px solid #BFD6EE}
+.cs-f.warn{background:#FDECEA;color:#B42318;border-color:#F5B5AE}.cs-f.todo{background:#FFF4D6;color:#8A5A00;border-color:#F2D58A}
+.cs-last{font-size:13px;color:#555;margin-top:6px}
+.cs-it .btns{margin-top:8px}.cs-it .btns .btn{padding:6px 12px;font-size:13.5px}
+.cs-form{margin-top:8px;border-top:1px dashed #E5C9A6;padding-top:8px}
+.cs-his{margin-top:8px;border-top:1px dashed #ddd;padding-top:6px}
+.cs-hi{position:relative;font-size:13px;padding:5px 34px 5px 0;border-bottom:1px dotted #eee}
+.cs-del{position:absolute;right:0;top:4px;border:0;background:#FDECEA;border-radius:8px;cursor:pointer;padding:2px 7px}
+.cs-td{display:inline-flex;gap:6px;align-items:center;color:#8A5A00}
+.kt-tag.cs-ok{background:#E8F5E9;color:#2E7D32;border:1px solid #A5D6A7}.kt-tag.cs-chua{background:#FFF1E6;color:#C2410C;border:1px solid #F8C9A6}
