@@ -219,6 +219,17 @@
   <input type="text" id="sSearch" placeholder="Tìm tên hoặc lớp…">
   <div class="tbl-wrap"><table class="list" id="sTable"></table></div>
  </div>
+ <!-- Tài khoản cổng học viên: chỉ hiện ở trang của cô (PH/HS không thấy) -->
+ <div class="card" id="ptCard"><h3>🔑 Tài khoản cổng học viên <span class="hint" style="font-weight:600">· hocvien.msminhthu.com</span></h3>
+  <div id="ptSum" class="hint" style="margin-bottom:8px"></div>
+  <div style="display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;margin-bottom:8px">
+   <input type="text" id="ptFind" placeholder="Tìm tên hoặc lớp…" style="flex:1 1 220px;width:auto">
+   <label style="display:flex;align-items:center;gap:6px;font-size:14px"><input type="checkbox" id="ptShow"> Hiện mật khẩu</label>
+   <label style="display:flex;align-items:center;gap:6px;font-size:14px"><input type="checkbox" id="ptMissing"> Chỉ bé chưa có tài khoản</label>
+  </div>
+  <div class="tbl-wrap"><table class="list" id="ptTable"></table></div>
+  <p class="hint">Nút <b>Zalo PH</b> / <b>Zalo HS</b> sao chép sẵn tin nhắn có link và thông tin đăng nhập, cô chỉ cần dán vào Zalo. Anh chị em dùng chung SĐT phụ huynh thì nên dùng chung mật khẩu (nút "Tạo" tự lấy mật khẩu của anh/chị/em nếu đã có) để PH đăng nhập 1 lần thấy cả các con.</p>
+ </div>
 </section>
 
 <!-- ================= LỊCH HỌC (chỉ trên máy cô – lưu riêng, không đồng bộ) =================
@@ -899,6 +910,7 @@ function ktTag(s,st){
 // ô BTVN buổi kế tiếp có "Phát …" / "Kiểm tra …" → tài liệu cần in cho buổi sau (cô yêu cầu 2026-11-16)
 const IN_RE=/(^|[^\p{L}])(phát(?!\s+(âm|biểu|huy|triển))|kiểm tra)(?![\p{L}])/iu;
 function renderStudents(){
+  try{renderPortal();}catch(e){} // bảng tài khoản cổng học viên
   const q=$('#sSearch').value.toLowerCase();
   const list=db.students.filter(s=>(s.name+' '+(s.cls||'')).toLowerCase().includes(q)).sort(byKhoi);
   $('#sCount').textContent=db.students.length;
@@ -945,8 +957,55 @@ $('#bAddS').onclick=()=>{
   if(db.students.length===1)prefillFor(db.students[0].id,false);
 };
 $('#bCancelS').onclick=resetSForm;
-$('#sPGen').onclick=()=>{const a=new Uint32Array(1);crypto.getRandomValues(a);$('#sPPin').value=String(100000+a[0]%900000);};
+$('#sPGen').onclick=()=>{
+  // anh chị em cùng SĐT phụ huynh → dùng chung mật khẩu để PH đăng nhập 1 lần thấy cả các con
+  const ph=$('#sPPhone').value.replace(/\D/g,''),sib=ph&&db.students.find(x=>x.id!==editingS&&x.portalPhone===ph&&x.portalPin);
+  if(sib){$('#sPPin').value=sib.portalPin;toast('Dùng chung mật khẩu với '+sib.name+' (cùng SĐT phụ huynh)');return;}
+  const a=new Uint32Array(1);crypto.getRandomValues(a);$('#sPPin').value=String(100000+a[0]%900000);};
 $('#sSearch').oninput=renderStudents;
+
+/* ---------- Bảng tài khoản cổng học viên (hocvien.msminhthu.com) ---------- */
+const PORTAL_URL='https://hocvien.msminhthu.com';
+const ptPhone=p=>String(p||'').replace(/^(\d{4})(\d{3})(\d+)$/,'$1 $2 $3');
+const ptShort=n=>String(n||'').trim().split(/\s+/).slice(-2).join(' ');
+function ptMsgPH(s){
+  const kids=db.students.filter(x=>x.portalPhone===s.portalPhone&&x.portalPin===s.portalPin).map(x=>x.name);
+  return `Chào phụ huynh bé ${kids.join(', ')} ạ. Cô Minh Thư gửi tài khoản Cổng học viên để PH xem phiếu học tập, điểm và nhận xét của con sau mỗi buổi học:\n`
+    +`🌐 ${PORTAL_URL}\n📱 Chọn "Phụ huynh", số điện thoại: ${s.portalPhone}\n🔑 Mật khẩu: ${s.portalPin}\n`
+    +`PH lưu lại tin nhắn này giúp cô nhé. Cảm ơn PH ạ!`;
+}
+function ptMsgHS(s){
+  return `Chào ${ptShort(s.name)}! Đây là tài khoản Cổng học viên của em để xem lại phiếu học tập và điểm:\n`
+    +`🌐 ${PORTAL_URL}\n👤 Chọn "Học sinh", tên đăng nhập: ${s.portalUser}\n🔑 Mật khẩu: ${s.portalPin}\nCố gắng lên nhé! – Cô Minh Thư`;
+}
+async function ptCopy(text,what){
+  try{await navigator.clipboard.writeText(text);toast('Đã sao chép tin nhắn '+what+' – dán vào Zalo');}
+  catch(e){prompt('Sao chép tin nhắn '+what+':',text);}
+}
+function renderPortal(){
+  const tb=$('#ptTable');if(!tb)return;
+  const q=($('#ptFind').value||'').toLowerCase(),show=$('#ptShow').checked,miss=$('#ptMissing').checked;
+  const has=s=>!!(s.portalPin&&(s.portalPhone||s.portalUser));
+  const all=db.students.slice().sort((a,b)=>khoi(a)-khoi(b)||String(a.name).localeCompare(String(b.name),'vi'));
+  const n=all.filter(has).length;
+  $('#ptSum').innerHTML=`<b>${n}/${all.length}</b> bé đã có tài khoản${all.length-n?` · <b style="color:#B23A12">${all.length-n}</b> bé chưa có (PH chưa đăng nhập được)`:''}.`;
+  const list=all.filter(s=>(!q||(s.name+' '+(s.cls||'')).toLowerCase().includes(q))&&(!miss||!has(s)));
+  const pin=p=>p?(show?`<b style="font-family:monospace;font-size:15px;letter-spacing:1px">${esc(p)}</b>`:'••••••'):'<span class="hint">—</span>';
+  tb.innerHTML=`<tr><th>Học sinh</th><th>Lớp</th><th>Tên đăng nhập HS</th><th>SĐT phụ huynh</th><th>Mật khẩu</th><th></th></tr>`+
+    (list.length?list.map(s=>`<tr><td><b>${esc(s.name)}</b>${s.parent?`<div class="hint">${esc(s.parent)}</div>`:''}</td><td>${esc(s.cls)}</td>
+      <td>${s.portalUser?esc(s.portalUser):'<span class="hint">—</span>'}</td><td style="white-space:nowrap">${s.portalPhone?esc(ptPhone(s.portalPhone)):'<span class="hint">—</span>'}</td><td>${pin(s.portalPin)}</td>
+      <td style="white-space:nowrap">${has(s)?`${s.portalPhone?`<button class="btn" data-pt="ph" data-id="${s.id}" style="padding:5px 9px">📋 Zalo PH</button> `:''}${s.portalUser?`<button class="btn o" data-pt="hs" data-id="${s.id}" style="padding:5px 9px">📋 Zalo HS</button> `:''}<button class="btn g" data-pt="ed" data-id="${s.id}" style="padding:5px 9px">Sửa</button>`
+        :`<button class="btn o" data-pt="ed" data-id="${s.id}" style="padding:5px 9px">🔑 Đặt tài khoản</button>`}</td></tr>`).join('')
+      :`<tr><td colspan="6" class="hint" style="text-align:center;padding:14px">${miss?'Bé nào cũng đã có tài khoản 🎉':'Không tìm thấy học sinh.'}</td></tr>`);
+  tb.querySelectorAll('[data-pt]').forEach(b=>b.onclick=()=>{
+    const s=stu(b.dataset.id);if(!s)return;
+    if(b.dataset.pt==='ph')ptCopy(ptMsgPH(s),'cho phụ huynh');
+    if(b.dataset.pt==='hs')ptCopy(ptMsgHS(s),'cho học sinh');
+    if(b.dataset.pt==='ed'){const e=$(`#sTable button[data-a=ed][data-id="${s.id}"]`);
+      if(e){e.click();setTimeout(()=>{const f=s.portalPhone||s.portalUser?$('#sPPin'):$('#sPUser');f.scrollIntoView({behavior:'smooth',block:'center'});f.focus();},350);}}
+  });
+}
+['ptFind','ptShow','ptMissing'].forEach(i=>$('#'+i).addEventListener(i==='ptFind'?'input':'change',renderPortal));
 
 /* ---------- Phiếu đã lưu ---------- */
 function renderSaved(){
