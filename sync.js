@@ -24,8 +24,18 @@ try { if (location.hostname === 'localhost' && localStorage.getItem('gwe-sync-de
       if (d.action === 'submitLink') { if (!x) return done({ ok: false, code: 'nolink' }); if (!x.kq) x.kq = { a: d.a, at: d.at }; return done({ ok: true }); }
       if (d.action === 'linkResults') return done({ ok: true, items: Object.keys(L).filter(k => L[k].kq).map(k => ({ id: k, de: L[k].de, kq: L[k].kq })) });
     }
+    if (/^tg/.test(d.action)) { // tài khoản trợ giảng (giống Apps Script, mật khẩu để nguyên vì chỉ là thử)
+      const T = srv.__tg = srv.__tg || {}, u = String(d.user || '').toLowerCase().replace(/\s+/g, ''), done = o => { localStorage.setItem(DEMO_KEY, JSON.stringify(srv)); return Promise.resolve(o); };
+      if (d.action === 'tgLogin') { const a = T[u]; if (!a || a.pw !== d.pw) return done({ ok: false, code: 'wrong' }); if (!a.on) return done({ ok: false, code: 'off' });
+        return done({ ok: true, user: u, ten: a.ten, token: 'tg:' + u + ':' + '0'.repeat(32) }); }
+      if (d.action === 'tgList') return done({ ok: true, items: Object.keys(T).map(k => ({ user: k, ten: T[k].ten, on: T[k].on, at: T[k].at })) });
+      if (d.action === 'tgSave') { const a = T[u]; if (!a && String(d.pw || '').length < 6) return done({ ok: false, error: 'Mật khẩu cần ít nhất 6 ký tự.' });
+        T[u] = { ten: d.ten || (a && a.ten) || u, pw: d.pw || (a && a.pw), on: d.on !== false, at: a ? a.at : new Date().toISOString() }; return done({ ok: true }); }
+      if (d.action === 'tgDel') { delete T[u]; return done({ ok: true }); }
+    }
     if (d.action === 'pull') {
-      const data = {}; Object.keys(srv).forEach(k => data[k] = Object.values(srv[k]));
+      const tg = /^tg:([^:]+):/.exec(getCode()); if (tg) { const a = (srv.__tg || {})[tg[1]]; if (!a || !a.on) return Promise.resolve({ ok: false, code: 'badcode' }); }
+      const data = {}; Object.keys(srv).forEach(k => { if (k.indexOf('__') !== 0) data[k] = Object.values(srv[k]); });
       return Promise.resolve({ ok: true, data });
     }
     let saved = 0;
@@ -63,6 +73,10 @@ try { if (location.hostname === 'localhost' && localStorage.getItem('gwe-sync-de
     };
     function show(s, txt) { state = s; btn.dataset.s = s; btn.textContent = txt; }
     function askCode() {
+      if (window.TG_MODE) { // máy trợ giảng: không nhập mã nhóm, đăng nhập lại bằng tài khoản
+        alert('Phiên đăng nhập trợ giảng đã hết (cô đã đổi mật khẩu hoặc tắt tài khoản). Vui lòng đăng nhập lại.');
+        location.href = 'tro-giang.html?het=1'; return;
+      }
       const c = (prompt('Nhập MÃ NHÓM cô Minh Thư đưa (chỉ cần nhập 1 lần trên máy này):', getCode()) || '').trim();
       if (!c) return; setCode(c); run(true);
     }
@@ -134,7 +148,8 @@ try { if (location.hostname === 'localhost' && localStorage.getItem('gwe-sync-de
         show('ok', (SYNC_URL ? '☁️ Đã đồng bộ ' : '🧪 Chế độ thử · ') + hhmm(lastOk));
         if (manual) toast(n ? `Đã gửi ${n} thay đổi lên Sheet` : 'Dữ liệu đã khớp với Sheet chung');
       } catch (e) {
-        if (e && e.code === 'badcode') { setCode(''); show('badcode', '🔑 Sai mã nhóm'); if (manual) toast('Sai mã nhóm – bấm nút 🔑 để nhập lại'); }
+        if (e && e.code === 'badcode' && window.TG_MODE) { setCode(''); show('badcode', '🔑 Đăng nhập lại'); askCode(); }
+        else if (e && e.code === 'badcode') { setCode(''); show('badcode', '🔑 Sai mã nhóm'); if (manual) toast('Sai mã nhóm – bấm nút 🔑 để nhập lại'); }
         else { const n = pendingList().n; show('err', n ? `⚠️ ${n} thay đổi chờ gửi` : '⚠️ Chưa nối được Sheet');
           if (manual) toast('Chưa gửi được (mất mạng?) – phiếu vẫn lưu trong máy, có mạng web tự gửi lại'); console.warn(e); }
       } finally {
@@ -156,6 +171,7 @@ try { if (location.hostname === 'localhost' && localStorage.getItem('gwe-sync-de
       /* gọi sau khi xoá 1 bản ghi khỏi mảng của trang */
       remove(col, id) { (dels[col] = dels[col] || {})[id] = Date.now(); keep(); soon(); },
       now: () => run(true),
+      pending: () => pendingList().n,
       get ready() { return pulled; }
     };
   };

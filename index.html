@@ -7,6 +7,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="preload" as="image" href="logo.png"><link rel="preload" as="image" href="logo-c2.png">
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lora:ital,wght@0,700;1,600&display=swap" rel="stylesheet">
 <script src="logo.js?v=202611111700"></script>
+<script>/* Máy trợ giảng đã đăng nhập ở tro-giang.html → chỉ 3 mục: Nhập phiếu · Học sinh · Phiếu đã lưu */
+window.TG_MODE=(()=>{try{return JSON.parse(localStorage.getItem('gwe-tg')||'null');}catch(e){return null;}})();
+if(window.TG_MODE)document.documentElement.classList.add('tg');</script>
+<style>
+html.tg nav.tabs [data-v=caidat],html.tg #navLich,html.tg #navPlan,html.tg #navCs,html.tg nav.tabs a,html.tg #ptCard,html.tg .pt-row,html.tg #tgCard{display:none!important}
+.tg-who{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:14px;color:#2C6424;font-weight:600}
+.tg-who button{border:1px solid #d9b9a3;background:#fff;color:#B4501C;border-radius:999px;padding:5px 12px;font:inherit;font-size:13px;cursor:pointer}
+</style>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <link rel="stylesheet" href="style.css?v=202611271400">
 </head>
@@ -207,7 +215,7 @@
    <div><label class="f">Phụ huynh (tên gọi trên Zalo)</label><input type="text" id="sParent" placeholder="Mẹ Trâm"></div>
    <div><label class="f">Ghi chú</label><input type="text" id="sNote"></div>
   </div>
-  <div class="row">
+  <div class="row pt-row">
    <div><label class="f">Cổng học viên · Tên đăng nhập HS</label><input type="text" id="sPUser" placeholder="VD: tram10" autocomplete="off"></div>
    <div><label class="f">SĐT phụ huynh (đăng nhập)</label><input type="text" id="sPPhone" inputmode="tel" placeholder="VD: 0912345678" autocomplete="off"></div>
    <div><label class="f">Mật khẩu cổng <button type="button" class="btn g" id="sPGen" style="padding:1px 8px;font-size:12px">Tạo</button></label><input type="text" id="sPPin" placeholder="6 số" autocomplete="off"></div>
@@ -326,6 +334,19 @@
   <p class="hint">Link chỉ lưu trong máy này, không đưa lên trang web công khai.</p>
   <div class="btns"><button class="btn" id="bSaveCfg">Lưu cài đặt</button></div>
  </div>
+ <div class="card" id="tgCard">
+  <h3>👥 Tài khoản trợ giảng</h3>
+  <p class="hint">Trợ giảng mở link riêng, đăng nhập bằng tài khoản cô tạo ở đây → chỉ thấy 3 mục <b>Nhập phiếu · Học sinh · Phiếu đã lưu</b>, không cần mã nhóm. Đổi mật khẩu hoặc tắt tài khoản thì máy trợ giảng tự bị đăng xuất.</p>
+  <div class="btns" style="align-items:center"><input type="text" id="tgLink" readonly style="flex:1 1 300px;width:auto"><button class="btn g" id="tgCopyLink">📋 Sao chép link</button></div>
+  <div class="row" style="margin-top:10px">
+   <div><label class="f">Tên trợ giảng (hiện trên web)</label><input type="text" id="tgTen" placeholder="VD: Cô Lan"></div>
+   <div><label class="f">Tên đăng nhập (không dấu)</label><input type="text" id="tgUser" placeholder="VD: lan" autocomplete="off"></div>
+   <div><label class="f">Mật khẩu <button type="button" class="btn g" id="tgGen" style="padding:1px 8px;font-size:12px">Tạo</button></label><input type="text" id="tgPw" placeholder="ít nhất 6 ký tự" autocomplete="off"></div>
+  </div>
+  <div class="btns"><button class="btn" id="tgSave">➕ Tạo / cập nhật tài khoản</button></div>
+  <div id="tgMsg" class="hint"></div>
+  <div class="tbl-wrap"><table class="list" id="tgTable"></table></div>
+ </div>
 </section>
 
 <!-- ================= CHĂM SÓC PHỤ HUYNH (chỉ máy cô) ================= -->
@@ -349,7 +370,7 @@
 <script src="ngu-phap-unit.js?v=202611171400"></script>
 <script src="lo-trinh-unit.js?v=202611172130"></script>
 <script src="lo-trinh-luyen-thi.js?v=202611181400"></script>
-<script src="sync.js?v=202611051400"></script>
+<script src="sync.js?v=202611271800"></script>
 <script>
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const KEY='gwe-phieu-hoc-tap-v1';
@@ -387,7 +408,7 @@ const sessOf=id=>db.sessions.filter(x=>x.studentId===id).sort((a,b)=>(a.date+a.c
 $$('nav.tabs button').forEach(b=>b.onclick=()=>{
   $$('nav.tabs button').forEach(x=>x.classList.toggle('on',x===b));
   $$('.view').forEach(v=>v.classList.toggle('on',v.id==='v-'+b.dataset.v));
-  if(b.dataset.v==='luu')renderSaved(); if(b.dataset.v==='hs')renderStudents(); if(b.dataset.v==='caidat')loadCfg(); if(b.dataset.v==='lich')renderLich(); if(b.dataset.v==='lotrinh')renderPlan(); if(b.dataset.v==='cs'&&window.renderCs)renderCs();
+  if(b.dataset.v==='luu')renderSaved(); if(b.dataset.v==='hs')renderStudents(); if(b.dataset.v==='caidat'){loadCfg();if(window.tgLoad)tgLoad();} if(b.dataset.v==='lich')renderLich(); if(b.dataset.v==='lotrinh')renderPlan(); if(b.dataset.v==='cs'&&window.renderCs)renderCs();
   if(b.dataset.v==='nhap')updatePreview();
 });
 
@@ -510,6 +531,7 @@ function saveCurrent(){
   let rec; const i=editingId?db.sessions.findIndex(x=>x.id===editingId):-1;
   if(i>=0){rec=db.sessions[i]={...db.sessions[i],...r};}
   else{rec={id:uid(),created:String(Date.now()),...r};db.sessions.push(rec);setEditing(rec.id);}
+  if(window.TG_MODE)rec.tg=TG_MODE.ten||TG_MODE.user; // phiếu do trợ giảng ghi
   SYNC.touch('sessions',rec); persist();planAfterSave(rec,pf);lastSaved=stu(r.studentId).name;const[sd,sm]=dmy(r.fDate);const n=$('#saveNote');n.textContent='✓ Đã lưu phiếu ngày '+sd+'/'+sm+' của '+lastSaved+' lúc '+new Date().toTimeString().slice(0,5);n.style.display='block';toast('Đã lưu phiếu của '+lastSaved);ocrHide();return r;
 }
 $('#bSave').onclick=saveCurrent;
@@ -1085,7 +1107,8 @@ let lich={on:false,days:{}}; // days[sid] = {0:'ca 1', 3:''} – 0 = Thứ 2 …
 try{const s=localStorage.getItem(LKEY);if(s)lich={...lich,...JSON.parse(s)};}catch(e){}
 const saveLich=()=>{try{localStorage.setItem(LKEY,JSON.stringify(lich));}catch(e){}};
 // mở trang với đuôi #lich một lần → máy này hiện tab Lịch học
-if(location.hash==='#lich'&&!lich.on){lich.on=true;saveLich();}
+if(window.TG_MODE)lich.on=false; // máy trợ giảng: không có Lịch/Lộ trình/Chăm sóc PH
+else if(location.hash==='#lich'&&!lich.on){lich.on=true;saveLich();}
 if(lich.on)$('#navLich').style.display='';
 // 🥤 Uống nước – mỗi HS 1 tháng 1 lần; lich.nuoc[sid] = ['2026-11-18', …] (chỉ máy cô)
 window.renderNuoc=()=>{
@@ -1709,6 +1732,53 @@ goLich();window.addEventListener('hashchange',goLich);
 document.fonts&&document.fonts.ready.then(()=>{fitText();fitPreview();});
 // công cụ chụp ảnh tải sau (không chặn trang) → tải xong mới dựng sẵn ảnh
 window.addEventListener('load',preRender);
+
+/* ---------- Trợ giảng: tên + Đăng xuất trên đầu trang (máy TG) ---------- */
+if(window.TG_MODE){
+  const w=document.createElement('div');w.className='tg-who';
+  w.innerHTML=`👤 ${esc(TG_MODE.ten||TG_MODE.user)} <button type="button" id="tgOut">Đăng xuất</button>`;
+  $('header.app').insertBefore(w,$('header.app .sync-btn'));
+  $('#tgOut').onclick=async()=>{
+    if(!confirm('Đăng xuất tài khoản trợ giảng trên máy này?'))return;
+    await SYNC.now();const n=SYNC.pending();
+    if(n&&!confirm(`Còn ${n} thay đổi CHƯA gửi lên được (mất mạng?). Đăng xuất bây giờ sẽ MẤT các thay đổi này.\nVẫn đăng xuất?`))return;
+    ['gwe-tg','gwe-sync-code',KEY,'gwe-sync-del-phieu','gwe-sync-known-phieu'].forEach(k=>{try{localStorage.removeItem(k);}catch(e){}});
+    location.href='tro-giang.html';};
+}
+
+/* ---------- Cô: quản lý tài khoản trợ giảng (Sao lưu & cài đặt) ---------- */
+const TG_LINK=new URL('tro-giang.html',location.href).href.replace(/[?#].*$/,'');
+let tgItems=[];
+window.tgLoad=async()=>{if(window.TG_MODE)return;
+  $('#tgLink').value=TG_LINK;const tb=$('#tgTable'),msg=$('#tgMsg');
+  if(SYNC_URL&&!localStorage.getItem('gwe-sync-code')){msg.textContent='Máy này chưa nhập mã nhóm (nút 🔑 góc trên) nên chưa quản lý được tài khoản.';tb.innerHTML='';return;}
+  msg.textContent='Đang tải danh sách…';
+  try{const r=await syncCall({action:'tgList'});
+    if(!r.ok){msg.innerHTML=r.code==='badcode'?'Sai mã nhóm.':'⚠️ Máy chủ chưa có chức năng này – cô cần <b>cập nhật Apps Script</b> (dán file quan-ly-hs.gs mới → Triển khai → Quản lý triển khai → ✏️ → Phiên bản mới).';tb.innerHTML='';return;}
+    tgItems=r.items||[];msg.textContent=tgItems.length?'':'Chưa có tài khoản nào.';
+    tb.innerHTML=tgItems.length?'<tr><th>Tên</th><th>Đăng nhập</th><th>Trạng thái</th><th></th></tr>'+tgItems.map(a=>`<tr><td><b>${esc(a.ten)}</b></td><td>${esc(a.user)}</td>
+      <td>${a.on?'<span style="color:#2E7D32">● Đang dùng</span>':'<span style="color:#999">○ Đã tắt</span>'}</td>
+      <td style="white-space:nowrap"><button class="btn g" data-tg="pw" data-u="${esc(a.user)}" style="padding:5px 9px">🔑 Đổi mật khẩu</button>
+      <button class="btn g" data-tg="on" data-u="${esc(a.user)}" style="padding:5px 9px">${a.on?'⏸ Tắt':'▶ Bật'}</button>
+      <button class="btn g" data-tg="del" data-u="${esc(a.user)}" style="padding:5px 9px;color:#C62828">🗑 Xoá</button></td></tr>`).join(''):'';
+  }catch(e){msg.textContent='⚠️ Chưa nối được máy chủ (mất mạng?)';}};
+const tgGenPw=()=>{const a='abcdefghjkmnpqrstuvwxyz23456789';let s='';const r=crypto.getRandomValues(new Uint8Array(8));r.forEach(x=>s+=a[x%a.length]);return s;};
+$('#tgGen').onclick=()=>{$('#tgPw').value=tgGenPw();};
+$('#tgCopyLink').onclick=()=>{navigator.clipboard.writeText(TG_LINK).then(()=>toast('Đã sao chép link trợ giảng'),()=>{$('#tgLink').select();});};
+const tgDo=async(d,ok)=>{try{const r=await syncCall(d);if(!r.ok){toast(r.error||'Chưa lưu được');return false;}toast(ok);tgLoad();return true;}catch(e){toast('Chưa nối được máy chủ (mất mạng?)');return false;}};
+$('#tgSave').onclick=async()=>{const ten=$('#tgTen').value.trim(),user=$('#tgUser').value.trim().toLowerCase().replace(/\s+/g,''),pw=$('#tgPw').value.trim();
+  if(!user){toast('Nhập tên đăng nhập');return;}
+  const old=tgItems.find(a=>a.user===user);
+  if(!old&&pw.length<6){toast('Mật khẩu cần ít nhất 6 ký tự (bấm "Tạo")');return;}
+  if(old&&!confirm(`Tài khoản "${user}" đã có – cập nhật${pw?' và ĐỔI MẬT KHẨU':''}?`))return;
+  if(await tgDo({action:'tgSave',user,ten:ten||(old&&old.ten)||user,pw,on:true},old?'Đã cập nhật tài khoản':'Đã tạo tài khoản')){
+    if(pw){const t=`Tài khoản ghi phiếu học tập:\n🌐 ${TG_LINK}\n👤 Tên đăng nhập: ${user}\n🔑 Mật khẩu: ${pw}`;
+      navigator.clipboard.writeText(t).then(()=>toast('Đã lưu + sao chép tin nhắn tài khoản – dán vào Zalo gửi trợ giảng'),()=>{});}
+    $('#tgTen').value=$('#tgUser').value=$('#tgPw').value='';}};
+$('#tgTable').onclick=async e=>{const b=e.target.closest('[data-tg]');if(!b)return;const a=tgItems.find(x=>x.user===b.dataset.u);if(!a)return;
+  if(b.dataset.tg==='pw'){$('#tgTen').value=a.ten;$('#tgUser').value=a.user;$('#tgPw').value=tgGenPw();$('#tgPw').focus();toast('Đã tạo mật khẩu mới – bấm "Tạo / cập nhật tài khoản" để lưu');}
+  if(b.dataset.tg==='on')tgDo({action:'tgSave',user:a.user,ten:a.ten,on:!a.on},a.on?'Đã tắt – máy trợ giảng sẽ bị đăng xuất':'Đã bật lại tài khoản');
+  if(b.dataset.tg==='del'&&confirm(`Xoá tài khoản "${a.user}" (${a.ten})? Máy trợ giảng sẽ bị đăng xuất. Phiếu đã ghi vẫn giữ nguyên.`))tgDo({action:'tgDel',user:a.user},'Đã xoá tài khoản');};
 </script>
 </body>
 </html>

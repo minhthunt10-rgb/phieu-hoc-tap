@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Trợ giảng ghi phiếu – Ms. Minh Thư</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="/favicon.ico?v=202611021041"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#1F4D1A">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--brand:#2C6424;--brand-3:#1F4D1A;--accent:#E8742F;--bg:#F4F6F3;--ink:#17251A;--muted:#6A786D;--line:#DDE5D9;--bad:#C62828}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'Be Vietnam Pro',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
+.wrap{min-height:100vh;display:flex;flex-direction:column}
+.top{background:linear-gradient(150deg,var(--brand-3) 0%,var(--brand) 60%,#4C8F37 100%);color:#fff;padding:34px 20px 80px;text-align:center;position:relative;overflow:hidden}
+.top::after{content:"";position:absolute;right:-80px;top:-80px;width:240px;height:240px;border-radius:50%;border:36px solid rgba(255,255,255,.07)}
+.top img{width:84px;height:84px;border-radius:50%;background:#fff;padding:4px;box-shadow:0 0 0 3px #F7CF5E}
+.top h1{margin:12px 0 4px;font-size:24px;letter-spacing:-.01em}
+.top p{margin:0;opacity:.9;font-size:14px}
+.card{background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 8px 28px rgba(23,37,26,.08);
+  width:min(420px,calc(100% - 32px));margin:-56px auto 24px;padding:24px 22px;position:relative}
+.card h2{margin:0 0 4px;font-size:19px}
+.card .sub{margin:0 0 16px;color:var(--muted);font-size:14px}
+label{display:block;font-weight:600;font-size:14px;margin:12px 0 6px}
+input{width:100%;font:inherit;font-size:16px;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;background:#FBFCFA;color:var(--ink)}
+input:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px rgba(44,100,36,.15);background:#fff}
+.pw{position:relative}.pw button{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:0;background:none;color:var(--muted);font:inherit;font-size:13px;cursor:pointer;padding:6px}
+.go{margin-top:18px;width:100%;border:0;border-radius:12px;padding:13px;font:inherit;font-size:16px;font-weight:700;color:#fff;background:var(--brand);cursor:pointer}
+.go:disabled{opacity:.6;cursor:wait}
+.msg{min-height:22px;margin-top:12px;font-size:14px;color:var(--bad);text-align:center}
+.msg.ok{color:var(--brand)}
+.note{color:var(--muted);font-size:13px;text-align:center;margin:0 16px 28px;line-height:1.55}
+</style>
+</head>
+<body>
+<div class="wrap">
+ <div class="top">
+  <img src="logo.png" alt="">
+  <h1>Ghi phiếu học tập</h1>
+  <p>Dành cho trợ giảng · Tiếng Anh Ms. Minh Thư</p>
+ </div>
+ <form class="card" id="f" autocomplete="on">
+  <h2>Đăng nhập</h2>
+  <p class="sub">Dùng tài khoản cô Minh Thư cấp cho bạn.</p>
+  <label for="u">Tên đăng nhập</label>
+  <input id="u" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+  <label for="p">Mật khẩu</label>
+  <div class="pw"><input id="p" name="password" type="password" autocomplete="current-password" required><button type="button" id="eye">Hiện</button></div>
+  <button class="go" id="go">Đăng nhập</button>
+  <div class="msg" id="msg"></div>
+ </form>
+ <p class="note">Sau khi đăng nhập, bạn chỉ thấy 3 mục: Nhập phiếu · Học sinh · Phiếu đã lưu.<br>Quên mật khẩu? Nhắn cô Minh Thư 0966.101.957 (Zalo) để cấp lại.</p>
+</div>
+<script src="sync.js?v=202611271800"></script>
+<script>
+const $=s=>document.querySelector(s), msg=$('#msg');
+const cur=(()=>{try{return JSON.parse(localStorage.getItem('gwe-tg')||'null');}catch(e){return null;}})();
+const hasCode=(()=>{try{return localStorage.getItem('gwe-sync-code')||'';}catch(e){return '';}})();
+if(cur&&/^tg:/.test(hasCode)&&!/het=1/.test(location.search))location.replace('index.html');
+if(/het=1/.test(location.search)){msg.textContent='Phiên đăng nhập đã hết – vui lòng đăng nhập lại.';}
+$('#eye').onclick=()=>{const p=$('#p');p.type=p.type==='password'?'text':'password';$('#eye').textContent=p.type==='password'?'Hiện':'Ẩn';};
+$('#f').onsubmit=async e=>{e.preventDefault();
+  const user=$('#u').value.trim().toLowerCase().replace(/\s+/g,''),pw=$('#p').value;
+  if(!user||!pw)return;
+  // máy đang dùng mã nhóm của cô → hỏi trước khi chuyển sang tài khoản trợ giảng
+  if(hasCode&&!/^tg:/.test(hasCode)&&!confirm('Máy này đang dùng mã nhóm của cô Minh Thư (đầy đủ chức năng).\nĐăng nhập trợ giảng sẽ chuyển máy này sang chế độ chỉ 3 mục. Tiếp tục?'))return;
+  $('#go').disabled=true;msg.className='msg';msg.textContent='Đang kiểm tra…';
+  try{
+    const r=await syncCall({action:'tgLogin',user,pw});
+    if(!r.ok){msg.textContent=r.code==='locked'?'Sai quá nhiều lần – thử lại sau 15 phút.':r.code==='off'?'Tài khoản đang bị tắt – liên hệ cô Minh Thư.':
+      r.code==='wrong'?'Sai tên đăng nhập hoặc mật khẩu.':'Máy chủ chưa sẵn sàng – báo cô Minh Thư giúp nhé.';$('#go').disabled=false;return;}
+    // đổi người dùng trên cùng máy → xoá dữ liệu cũ trong máy, kéo lại từ Sheet
+    if(!cur||cur.user!==r.user)['gwe-phieu-hoc-tap-v1','gwe-sync-del-phieu','gwe-sync-known-phieu'].forEach(k=>{try{if(/^tg:/.test(hasCode)||!hasCode)localStorage.removeItem(k);}catch(e){}});
+    localStorage.setItem('gwe-sync-code',r.token);
+    localStorage.setItem('gwe-tg',JSON.stringify({user:r.user,ten:r.ten}));
+    msg.className='msg ok';msg.textContent='Xin chào '+r.ten+'! Đang mở trang ghi phiếu…';
+    location.replace('index.html');
+  }catch(err){msg.textContent='Chưa kết nối được (mất mạng?) – thử lại nhé.';$('#go').disabled=false;}
+};
+</script>
+</body>
+</html>
