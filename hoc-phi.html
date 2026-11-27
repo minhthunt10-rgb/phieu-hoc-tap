@@ -22,7 +22,7 @@
       width:630px;background:var(--paper);font-family:"Be Vietnam Pro",sans-serif;color:var(--ink);position:relative;padding:10px;font-variant-numeric:lining-nums}
   .hp *{font-variant-numeric:lining-nums}
   .hp .frame{border:1px solid var(--gold);outline:3px double var(--gold2);outline-offset:-7px;background:var(--paper);position:relative}
-  .hp .hd{background:var(--gd);display:flex;align-items:center;gap:14px;padding:16px 22px;border-bottom:2px solid var(--gold)}
+  .hp .hd{background:var(--hdbg,var(--gd));display:flex;align-items:center;gap:14px;padding:16px 22px;border-bottom:2px solid var(--gold)}
   .hp .hd img{width:58px;height:58px;border-radius:50%;background:#FFFBF2;border:2px solid var(--gold2);object-fit:cover}
   .hp .hd .b{flex:1}
   .hp .hd h1{font:800 20px "Be Vietnam Pro",sans-serif;margin:0;letter-spacing:1.2px;color:#fff}
@@ -43,7 +43,18 @@
   .hp .money .w{font-style:italic;font-size:12.5px;color:#55604c;margin-top:2px}
   .hp .money .r{font-size:12.5px;margin-top:8px;padding-top:8px;border-top:1px dashed var(--gold2);color:#55604c}
   .hp .money .r b{color:var(--ink)}
-  .hp .money .paid{position:absolute;top:10px;right:12px;border:1px solid var(--g);color:var(--g);font-size:9.5px;font-weight:800;letter-spacing:1.5px;padding:3px 8px;border-radius:3px}
+  .hp .ttl .sub{font-size:11.5px;font-style:italic;color:#6B705F;margin-top:4px}
+  .hp .thx{font-size:10.5px;font-style:italic;color:var(--o);margin-top:3px}
+  /* Mẫu THÔNG BÁO (xanh): hạn đóng nổi bật */
+  .hp.nt .dd b{color:var(--o)}
+  /* Mẫu PHIẾU THU (cam đất): khác hẳn màu để PH phân biệt */
+  .hp.rc{--gd:#9A4316;--hdbg:#B9521D;--gold:#C98A4B;--gold2:#F0D2B0;--paper:#FFF8F0}
+  .hp.rc .money{border:1.5px solid #3F6E2A;background:#F4F9EF}
+  .hp.rc .money .v{color:#2F5F1F}
+  .hp.rc .money .lab{color:#3F6E2A}
+  .hp.rc .money .r{border-top-color:#C9DDB8}
+  .hp .seal{position:absolute;top:-1px;right:-1px;background:#3F6E2A;color:#fff;font-size:11px;font-weight:800;letter-spacing:1.5px;padding:6px 14px;border-bottom-left-radius:8px}
+  .hp.rc .sch .g div.now{background:#FFF1E4}
   .hp .sch{margin:18px 30px 0}
   .hp .head2{display:flex;align-items:baseline;justify-content:space-between;border-bottom:1px solid var(--gold);padding-bottom:6px}
   .hp .head2 h3{font:800 14.5px "Be Vietnam Pro",sans-serif;color:var(--gd);margin:0;letter-spacing:.5px}
@@ -69,7 +80,7 @@
   .hp .sg{text-align:center;font-size:11px;color:#55604c;padding-bottom:2px}
   .hp .sg .ln{height:40px}
   .hp .sg b{display:block;font:700 16px "Be Vietnam Pro",sans-serif;color:var(--gd);border-top:1px solid var(--gold2);padding-top:5px}
-  .hp .ft{margin-top:18px;background:var(--gd);border-top:2px solid var(--gold);color:var(--gold2);display:flex;justify-content:space-between;padding:9px 22px;font-size:10.5px;letter-spacing:1.8px;font-weight:600}
+  .hp .ft{margin-top:18px;background:var(--hdbg,var(--gd));border-top:2px solid var(--gold);color:var(--gold2);display:flex;justify-content:space-between;padding:9px 22px;font-size:10.5px;letter-spacing:1.8px;font-weight:600}
   .hp .ft b{color:#fff;letter-spacing:1px}
 </style>
 </head>
@@ -85,14 +96,13 @@
    <div class="row"><div><label class="f">Họ tên</label><input type="text" id="name"></div>
      <div><label class="f">Lớp</label><input type="text" id="cls"></div></div>
    <label class="f">Loại phiếu</label>
-   <div class="seg2"><label><input type="radio" name="kind" value="thu" checked>Phiếu thu (đã nhận tiền)</label><label><input type="radio" name="kind" value="bao">Thông báo (cần đóng)</label></div>
+   <div class="seg2"><label><input type="radio" name="kind" value="bao" checked>Thông báo học phí – nhắc đóng (mẫu xanh)</label><label><input type="radio" name="kind" value="thu">Phiếu thu – xác nhận đã đóng (mẫu cam)</label></div>
   </div>
   <div class="card"><h3>Số tiền</h3>
    <div class="row"><div><label class="f">Số tiền – cô tự gõ (đ)</label><input type="text" id="amt" class="num" inputmode="numeric" autocomplete="off" placeholder="Gõ số, VD: 1200000"></div>
      <div><label class="f" id="dLab">Ngày thu</label><input type="date" id="day"></div></div>
    <p class="hint" style="margin:4px 0 0">Gõ bao nhiêu cũng được (1.200.000, 1.350.000…), trang tự thêm dấu chấm và viết ra chữ. Hoặc bấm chọn nhanh:</p>
    <div class="chips" id="quick"></div>
-   <label class="f">Nội dung</label><input type="text" id="what" value="Học phí khóa 12 buổi">
    <label class="f">Hình thức</label>
    <div class="seg2"><label><input type="radio" name="how" value="Chuyển khoản" checked>Chuyển khoản</label><label><input type="radio" name="how" value="Tiền mặt">Tiền mặt</label></div>
   </div>
@@ -176,22 +186,23 @@ function upd(){
   const curTag=cur>=from&&cur<from+out.length?`<div class="cur">Bé đang học <b>buổi ${cur}/${from+out.length-1}</b> · còn ${from+out.length-1-cur} buổi</div>`:'';
   const rg=out.length?`Buổi ${from}: ${THU[dow(pd(out[0]))]} ${dmy(out[0])} → Buổi ${from+out.length-1}: ${THU[dow(pd(out[out.length-1]))]} ${dmy(out[out.length-1])}`:'';
   const thu=kind==='thu';
-  $('#sheet').innerHTML=`<div class="hp"><div class="frame">
+  $('#sheet').innerHTML=`<div class="hp ${thu?'rc':'nt'}"><div class="frame">
    <div class="hd"><img src="logo.png"><div class="b"><h1>TIẾNG ANH MS MINH THƯ</h1><p>GROW WITH ENGLISH</p></div><div class="no">SỐ PHIẾU<b>${no}</b></div></div>
-   <div class="ttl"><small>${thu?'TUITION RECEIPT':'TUITION NOTICE'}</small><h2>${thu?'PHIẾU THU HỌC PHÍ':'THÔNG BÁO HỌC PHÍ'}</h2></div>
+   <div class="ttl"><small>${thu?'PAYMENT RECEIPT':'TUITION NOTICE'}</small><h2>${thu?'PHIẾU THU HỌC PHÍ':'THÔNG BÁO HỌC PHÍ'}</h2>
+     <div class="sub">${thu?'Xác nhận Ms đã nhận đủ học phí của học viên':'Kính mời Quý Phụ huynh hoàn tất học phí trước hạn'}</div></div>
    <div class="orn">◆</div>
    <div class="in"><div><small>HỌC VIÊN</small><b>${esc($('#name').value)||'&nbsp;'}</b></div><div><small>LỚP</small><b>${esc($('#cls').value)||'&nbsp;'}</b></div>
-     <div><small>${thu?'NGÀY THU':'HẠN ĐÓNG'}</small><b>${$('#day').value?dmy($('#day').value):'&nbsp;'}</b></div></div>
-   <div class="money">${thu?'<span class="paid">ĐÃ THANH TOÁN</span>':''}
+     <div class="dd"><small>${thu?'NGÀY ĐÃ ĐÓNG':'HẠN ĐÓNG'}</small><b>${$('#day').value?dmy($('#day').value):'&nbsp;'}</b></div></div>
+   <div class="money">${thu?'<div class="seal">✓ ĐÃ THANH TOÁN</div>':''}
      <span class="lab">${thu?'SỐ TIỀN ĐÃ NHẬN':'SỐ TIỀN CẦN ĐÓNG'}</span><div class="v">${a?fmt(a)+' đ':'…………… đ'}</div>
      <div class="w">${a?words(a):'&nbsp;'}</div>
-     <div class="r">Nội dung: <b>${esc($('#what').value)}</b>${thu?' &nbsp;·&nbsp; Hình thức: <b>'+how+'</b>':''}</div></div>
+     ${thu?`<div class="r">Hình thức: <b>${how}</b></div>`:''}</div>
    ${out.length?`<div class="sch"><div class="head2"><h3>LỊCH HỌC ${out.length} BUỔI KẾ TIẾP</h3><span>${rg}</span></div>${curTag}<div class="g">${cells}</div>
      ${skip.length?`<div class="off">Nghỉ: ${skip.map(s=>THU[dow(pd(s))]+' '+dm(s)).join(', ')} (đã lùi lịch)</div>`:''}
      ${$('#note').value?`<div class="off" style="color:#3F6E2A">${esc($('#note').value)}</div>`:''}</div>`:''}
    ${!thu?`<div class="pay"><img src="qr-bidv.png"><div><span class="lab">THÔNG TIN CHUYỂN KHOẢN</span><p>Ngân hàng: <b>BIDV – PGD Bắc Hải</b></p><p>Số tài khoản: <span class="stk">8920852117</span></p><p>Chủ tài khoản: <b>HO KINH DOANH TIENG ANH MS MINH THU</b></p><p><i>Nội dung CK: HP – ${esc($('#name').value)||'Họ tên HV'} – ${esc($('#cls').value)||'Lớp'}</i></p></div></div>`:''}
    <div class="low"><div class="note"><span class="lab">LƯU Ý</span>• Buổi nghỉ được học bù <b>tối đa 2 buổi/tháng</b>.<br>• Học phí không hoàn lại, chỉ được bảo lưu khi có lý do chính đáng.<br>• Học sinh đi học <b>đúng giờ</b>, hoàn thành <b>đầy đủ bài tập về nhà</b>. Không hoàn thành BTVN quá <b>3 buổi/khóa</b> sẽ bị nhắc nhở; tái diễn liên tục sẽ không nhận học tiếp.<br>• Mọi thắc mắc về học phí xin liên hệ <b>0966.101.957</b> (Zalo).</div>
-     <div class="sg">${thu?'Người thu tiền':'Giáo viên phụ trách'}<div class="ln"></div><b>Ms. Minh Thư</b></div></div>
+     <div class="sg">${thu?'Người thu tiền':'Giáo viên phụ trách'}<div class="ln"></div><b>Ms. Minh Thư</b>${thu?'<div class="thx">Cảm ơn Quý Phụ huynh!</div>':''}</div></div>
    <div class="ft"><span>HOTLINE · ZALO <b>0966.101.957</b></span><span>GROW WITH ENGLISH</span></div></div></div>`;
   fit();
 }
