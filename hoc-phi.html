@@ -246,10 +246,26 @@ async function png(){await document.fonts.ready;const s=$('#sheet'),t=s.style.tr
   try{const c=await html2canvas($('#sheet .hp'),{scale:2,backgroundColor:'#fff',logging:false});return await new Promise(r=>c.toBlob(r,'image/png'));}
   finally{s.style.transform=t;}}
 const fname=()=>'HocPhi_'+($('#name').value||'HS').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/đ/g,'d').replace(/Đ/g,'D').replace(/\s+/g,'_')+'.png';
-function down(b){const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=fname();a.click();}
-$('#bDown').onclick=async()=>down(await png());
-$('#bCopy').onclick=async()=>{try{await navigator.clipboard.write([new ClipboardItem({'image/png':png()})]);toast('✓ Đã sao chép ảnh – vào Zalo bấm Ctrl+V');}
-  catch(e){down(await png());toast('Không sao chép được – đã tải ảnh về máy');}};
+function down(b){const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=fname();document.body.appendChild(a);a.click();setTimeout(()=>a.remove(),500);}
+let lastBlob=null;
+function showImg(b,msg){lastBlob=b;let o=$('#imgBox');
+  if(!o){o=document.createElement('div');o.id='imgBox';
+    o.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(20,30,20,.82);display:flex;flex-direction:column;align-items:center;padding:14px;overflow:auto';
+    o.innerHTML='<div style="background:#fff;border-radius:10px;padding:10px 14px;max-width:560px;width:100%;text-align:center;font:14px/1.5 sans-serif;color:#23441A"><b id="imgMsg"></b><div style="font-size:13px;color:#555;margin-top:4px">Máy tính: chuột phải vào ảnh → <b>Sao chép hình ảnh</b> hoặc <b>Lưu hình ảnh</b>.<br>Điện thoại: <b>nhấn giữ ảnh</b> → Lưu ảnh / Chia sẻ.</div><div style="margin-top:8px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><button class="btn" id="imgShare">📤 Chia sẻ (Zalo)</button><button class="btn o" id="imgSave">⬇️ Tải ảnh</button><button class="btn" id="imgClose" style="background:#777">✕ Đóng</button></div></div><img id="imgOut" alt="Phiếu học phí" style="margin-top:12px;max-width:560px;width:100%;height:auto;background:#fff;border-radius:6px;box-shadow:0 4px 20px rgba(0,0,0,.4)">';
+    document.body.appendChild(o);
+    $('#imgClose').onclick=()=>{o.style.display='none';};
+    $('#imgSave').onclick=()=>down(lastBlob);
+    $('#imgShare').onclick=async()=>{const f=new File([lastBlob],fname(),{type:'image/png'});
+      try{await navigator.share({files:[f],title:'Phiếu học phí'});}catch(e){if(e.name!=='AbortError'){down(lastBlob);toast('Máy không hỗ trợ chia sẻ – đã tải ảnh');}}};}
+  const f=new File([b],fname(),{type:'image/png'});
+  $('#imgShare').style.display=(navigator.canShare&&navigator.canShare({files:[f]}))?'':'none';
+  const r=new FileReader();r.onload=()=>{$('#imgOut').src=r.result;};r.readAsDataURL(b);
+  $('#imgMsg').textContent=msg;o.style.display='flex';}
+$('#bDown').onclick=async()=>{toast('Đang tạo ảnh…');const b=await png();down(b);showImg(b,'✓ Đã tạo ảnh phiếu – nếu máy chưa tự tải, lưu ảnh bên dưới');};
+$('#bCopy').onclick=async()=>{let ok=false;
+  try{if(navigator.clipboard&&window.ClipboardItem){await navigator.clipboard.write([new ClipboardItem({'image/png':png()})]);ok=true;}}catch(e){}
+  if(ok){toast('✓ Đã sao chép ảnh – vào Zalo bấm Ctrl+V');return;}
+  toast('Đang tạo ảnh…');showImg(await png(),'Máy chưa cho sao chép tự động – lấy ảnh bên dưới');};
 </script>
 </body>
 </html>
