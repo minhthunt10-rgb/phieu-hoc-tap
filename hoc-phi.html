@@ -243,7 +243,12 @@ document.querySelectorAll('input.num').forEach(e=>e.addEventListener('input',()=
 document.querySelectorAll('input,select').forEach(e=>{if(e.id!=='sel'){e.addEventListener('input',upd);e.addEventListener('change',upd);}});
 upd();
 async function png(){await document.fonts.ready;const s=$('#sheet'),t=s.style.transform;s.style.transform='';
-  try{const c=await html2canvas($('#sheet .hp'),{scale:2,backgroundColor:'#fff',logging:false});return await new Promise(r=>c.toBlob(r,'image/png'));}
+  try{const c=await Promise.race([html2canvas($('#sheet .hp'),{scale:2,backgroundColor:'#fff',logging:false,imageTimeout:8000}),
+      new Promise((_,j)=>setTimeout(()=>j(new Error('Tạo ảnh quá lâu')),30000))]);
+    const u=c.toDataURL('image/png'),bin=atob(u.split(',')[1]),a=new Uint8Array(bin.length);
+    for(let i=0;i<bin.length;i++)a[i]=bin.charCodeAt(i);
+    return new Blob([a],{type:'image/png'});}
+  catch(e){toast('Lỗi tạo ảnh: '+(e&&e.message||e)+' – cô tải lại trang (Ctrl+F5) rồi thử lại');throw e;}
   finally{s.style.transform=t;}}
 const fname=()=>'HocPhi_'+($('#name').value||'HS').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/đ/g,'d').replace(/Đ/g,'D').replace(/\s+/g,'_')+'.png';
 function down(b){const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=fname();document.body.appendChild(a);a.click();setTimeout(()=>a.remove(),500);}
@@ -259,7 +264,7 @@ function showImg(b,msg){lastBlob=b;let o=$('#imgBox');
       try{await navigator.share({files:[f],title:'Phiếu học phí'});}catch(e){if(e.name!=='AbortError'){down(lastBlob);toast('Máy không hỗ trợ chia sẻ – đã tải ảnh');}}};}
   const f=new File([b],fname(),{type:'image/png'});
   $('#imgShare').style.display=(navigator.canShare&&navigator.canShare({files:[f]}))?'':'none';
-  const r=new FileReader();r.onload=()=>{$('#imgOut').src=r.result;};r.readAsDataURL(b);
+  const im=$('#imgOut');if(im._u)URL.revokeObjectURL(im._u);im._u=URL.createObjectURL(b);im.src=im._u;
   $('#imgMsg').textContent=msg;o.style.display='flex';}
 $('#bDown').onclick=async()=>{toast('Đang tạo ảnh…');const b=await png();down(b);showImg(b,'✓ Đã tạo ảnh phiếu – nếu máy chưa tự tải, lưu ảnh bên dưới');};
 $('#bCopy').onclick=async()=>{let ok=false;
