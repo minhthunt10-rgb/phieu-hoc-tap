@@ -48,28 +48,30 @@
   /* Mẫu THÔNG BÁO (xanh): hạn đóng nổi bật */
   .hp.nt .dd b{color:var(--o)}
   /* Mẫu PHIẾU THU (cam đất): khác hẳn màu để PH phân biệt */
-  /* cam đào – kem – xanh lá (2026-11-27 cô muốn màu phiếu thu đẹp hơn) */
-  .hp.rc{--gd:#7A3A16;--hdbg:linear-gradient(115deg,#F2913F 0%,#E56A2C 55%,#CF5520 100%);--gold:#D9894A;--gold2:#F8D9BE;--paper:#FFFAF5}
-  .hp.rc .frame{background:linear-gradient(180deg,#FFF1E5 0,#FFFAF5 230px)}
-  .hp.rc .hd{border-bottom:3px solid #FCD9B6}
-  .hp.rc .hd img{border-color:#fff}
-  .hp.rc .hd p,.hp.rc .hd .no{color:#FFE9D4}
-  .hp.rc .ft{border-top:3px solid #FCD9B6;color:#FFE9D4}
-  .hp.rc .ttl h2{color:#D85E24}
-  .hp.rc .ttl small{color:#E08A4C}
-  .hp.rc .orn{color:#E8742F}
+  /* XANH NGỌC + vàng đồng – cô chọn 2026-11-27 (chê cam) */
+  .hp.rc{--gd:#1F3634;--hdbg:linear-gradient(115deg,#13706F 0%,#0D5554 100%);--gold:#B08A3E;--gold2:#CFE3E0;--paper:#FBFAF5}
+  .hp.rc .frame{background:linear-gradient(180deg,#E8F4F2 0,#FBFAF5 230px)}
+  .hp.rc .hd{border-bottom:2px solid #E3C77F}
+  .hp.rc .hd img{border-color:#E3C77F}
+  .hp.rc .hd p,.hp.rc .hd .no{color:#E3C77F}
+  .hp.rc .ft{border-top:2px solid #E3C77F;color:#E3C77F}
+  .hp.rc .ttl h2{color:#0F6665}
+  .hp.rc .ttl small{color:#B08A3E}
+  .hp.rc .orn{color:#B08A3E}
+  .hp.rc .sch .cur b,.hp.rc .thx{color:#0F6665}
   .hp.rc .money{border:1.5px solid #6FA552;background:linear-gradient(180deg,#F5FBF0,#EEF7E7);border-radius:6px}
   .hp.rc .money .v{color:#2F6B22}
   .hp.rc .money .lab{color:#4C8A35}
   .hp.rc .money .r{border-top-color:#CFE3C0}
   .hp.rc .seal{background:linear-gradient(115deg,#5A923F,#3F6E2A);border-top-right-radius:5px}
-  .hp.rc .head2{border-bottom-color:#F0B48A}
-  .hp.rc .head2 h3{color:#D85E24}
-  .hp.rc .sch .g div{border-color:#F3D4BA;border-radius:6px}
-  .hp.rc .sch .g div i{color:#E08A4C}
-  .hp.rc .lab{color:#E08A4C}
+  .hp.rc .head2{border-bottom-color:#B08A3E}
+  .hp.rc .head2 h3{color:#0F6665}
+  .hp.rc .sch .g div{border-color:#CFE3E0;border-radius:6px}
+  .hp.rc .sch .g div i{color:#B08A3E}
+  .hp.rc .lab{color:#B08A3E}
   .hp .seal{position:absolute;top:-1px;right:-1px;background:#3F6E2A;color:#fff;font-size:11px;font-weight:800;letter-spacing:1.5px;padding:6px 14px;border-bottom-left-radius:8px}
-  .hp.rc .sch .g div.now{background:#FFF1E4}
+  .hp.rc .sch .g div.now{background:#DDF0EC;border-color:#6FB2A8}
+  .hp.rc .sch .g div.now i,.hp.rc .sch .g div.now b{color:#0D5554}
   .hp .sch{margin:18px 30px 0}
   .hp .head2{display:flex;align-items:baseline;justify-content:space-between;border-bottom:1px solid var(--gold);padding-bottom:6px}
   .hp .head2 h3{font:800 14.5px "Be Vietnam Pro",sans-serif;color:var(--gd);margin:0;letter-spacing:.5px}
@@ -111,7 +113,7 @@
    <div class="row"><div><label class="f">Họ tên</label><input type="text" id="name"></div>
      <div><label class="f">Lớp</label><input type="text" id="cls"></div></div>
    <label class="f">Loại phiếu</label>
-   <div class="seg2"><label><input type="radio" name="kind" value="bao" checked>Thông báo học phí – nhắc đóng (mẫu xanh)</label><label><input type="radio" name="kind" value="thu">Phiếu thu – xác nhận đã đóng (mẫu cam)</label></div>
+   <div class="seg2"><label><input type="radio" name="kind" value="bao" checked>Thông báo học phí – nhắc đóng (mẫu xanh lá)</label><label><input type="radio" name="kind" value="thu">Phiếu thu – xác nhận đã đóng (mẫu xanh ngọc)</label></div>
   </div>
   <div class="card"><h3>Số tiền</h3>
    <div class="row"><div><label class="f">Số tiền – cô tự gõ (đ)</label><input type="text" id="amt" class="num" inputmode="numeric" autocomplete="off" placeholder="Gõ số, VD: 1200000"></div>
