@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lora:ital,wght@0,700;1,600&display=swap" rel="stylesheet">
 <script src="logo.js?v=202611111700"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<link rel="stylesheet" href="style.css?v=202611271200">
+<link rel="stylesheet" href="style.css?v=202611271300">
 </head>
 <body>
 <header class="app">
@@ -1278,14 +1278,19 @@ function renderLich(){
         // ô ghi trước nội dung học hôm nay (cô yêu cầu 2026-11-27) → bấm Ghi phiếu tự điền vào ô Ngữ pháp
         +baiHTML(s.id,day)+'</div>';}).join('')+'</div>';
   // kế hoạch học: bấm nút mới hiện ô nhập, bấm Lưu mới ghi (cô chốt 2026-11-27)
-  $$('#lPrep [data-baiopen]').forEach(b=>b.onclick=()=>{baiEdit=b.dataset.baiopen+'@'+day;renderLich();const t=$(`#lPrep [data-bai="${b.dataset.baiopen}"]`);t&&t.focus();});
+  $$('#lPrep [data-baiopen]').forEach(b=>b.onclick=()=>{baiEdit=b.dataset.baiopen+'@'+day;renderLich();const t=$(`#lPrep [data-bai="${b.dataset.baiopen}"][data-k="g"]`);t&&t.focus();});
   $$('#lPrep [data-baicancel]').forEach(b=>b.onclick=()=>{baiEdit=null;renderLich();});
-  $$('#lPrep [data-baisave]').forEach(b=>b.onclick=()=>{const id=b.dataset.baisave,t=$(`#lPrep [data-bai="${id}"]`);
-    const B=lich.bai=lich.bai||{},o=B[day]=B[day]||{},v=t.value.replace(/\s+$/,'');
-    if(v.trim())o[id]=v; else delete o[id];
+  // câu gợi ý: giống chip ở Nhập phiếu (nối xuống dòng, chỗ "…" được bôi sẵn)
+  $$('#lPrep .lb-chips button').forEach(b=>b.onclick=()=>{const c=b.parentElement,t=c.previousElementSibling;
+    const start=t.value?t.value.length+1:0;t.value=t.value?t.value.replace(/\s+$/,'')+'\n'+b.textContent:b.textContent;
+    const i=t.value.indexOf('…',start);t.focus();if(i>=0)t.setSelectionRange(i,i+1);else t.setSelectionRange(t.value.length,t.value.length);});
+  $$('#lPrep [data-baisave]').forEach(b=>b.onclick=()=>{const id=b.dataset.baisave,r={};
+    $$(`#lPrep [data-bai="${id}"]`).forEach(t=>{const v=t.value.replace(/\s+$/,'');if(v.trim())r[t.dataset.k]=v;});
+    const B=lich.bai=lich.bai||{},o=B[day]=B[day]||{},has=Object.keys(r).length;
+    if(has)o[id]=r; else delete o[id];
     if(!Object.keys(o).length)delete B[day];
     Object.keys(B).sort().slice(0,-30).forEach(k=>delete B[k]); // giữ 30 ngày
-    saveLich();baiEdit=null;renderLich();toast(v.trim()?'Đã lưu kế hoạch học của '+stu(id).name:'Đã xoá kế hoạch học');});
+    saveLich();baiEdit=null;renderLich();toast(has?'Đã lưu kế hoạch học của '+stu(id).name:'Đã xoá kế hoạch học');});
   $$('#lPrep [data-plan]').forEach(b=>b.onclick=()=>{pSel=b.dataset.plan;$('#navPlan').click();setTimeout(()=>$('#pDetail').scrollIntoView({behavior:'smooth'}),50);});
   // mỗi lần bấm mở 1 TAB TRÌNH DUYỆT MỚI (cô yêu cầu 2026-11-22) → tab đó tự vào Nhập phiếu
   $$('#lPrep [data-gp]').forEach(b=>b.onclick=()=>{
@@ -1327,11 +1332,17 @@ function renderLich(){
 }
 // kế hoạch học hôm nay của 1 em trong Lịch học: nút → ô nhập + Lưu; đã lưu thì hiện nội dung + Sửa
 let baiEdit=null;
+// 3 phần: g = nội dung học (→ ô Ngữ pháp), n = giao BTVN (→ BTVN buổi kế tiếp), p = bài buổi sau (→ Lý thuyết và bài tập cần chuẩn bị)
+const BAI_K=[['g','Nội dung học hôm nay','gram','Sửa BTVN + Tổng ôn ngữ pháp Unit …'],['n','Giao BTVN','next','Làm BT … (tr…)'],['p','Bài buổi sau (cần chuẩn bị)','prep','Sửa BT … + ôn tập']];
+const baiGet=(sid,day)=>{const v=((lich.bai||{})[day]||{})[sid];return !v?{}:typeof v==='string'?{g:v}:v;}; // bản cũ chỉ lưu chuỗi = nội dung học
 function baiHTML(sid,day){
-  const v=((lich.bai||{})[day]||{})[sid]||'';
-  if(baiEdit===sid+'@'+day)return `<div class="lich-bai"><span>📝 Kế hoạch học hôm nay</span><textarea rows="3" data-bai="${sid}" placeholder="Mỗi ý 1 dòng – lúc Ghi phiếu sẽ hiện ở mục Mục tiêu / nội dung buổi học">${esc(v)}</textarea>`
+  const v=baiGet(sid,day);
+  if(baiEdit===sid+'@'+day)return `<div class="lich-bai"><span>📝 Kế hoạch học hôm nay</span>`+BAI_K.map(([k,l,list,ph])=>
+      `<label class="lb-l">${l}</label><textarea rows="2" data-bai="${sid}" data-k="${k}" placeholder="VD: ${esc(ph)}">${esc(v[k]||'')}</textarea>`
+      +`<div class="chips lb-chips">${(db.cfg[list]||[]).map(t=>`<button type="button">${esc(t)}</button>`).join('')}</div>`).join('')
     +`<div class="lb-btns"><button type="button" class="btn sm" data-baisave="${sid}">💾 Lưu</button><button type="button" class="btn sm g" data-baicancel="1">Huỷ</button></div></div>`;
-  if(v)return `<div class="lich-bai saved"><span>📝 Kế hoạch học hôm nay <button type="button" class="lb-edit" data-baiopen="${sid}">✏️ Sửa</button></span><div class="lb-txt">${esc(v).replace(/\n/g,'<br>')}</div></div>`;
+  if(Object.keys(v).length)return `<div class="lich-bai saved"><span>📝 Kế hoạch học hôm nay <button type="button" class="lb-edit" data-baiopen="${sid}">✏️ Sửa</button></span>`
+    +BAI_K.filter(([k])=>v[k]).map(([k,l])=>`<div class="lb-txt"><span class="lb-k">${l}:</span> ${esc(v[k]).replace(/\n/g,'; ')}</div>`).join('')+'</div>';
   return `<div class="lich-bai"><button type="button" class="btn sm lb-open" data-baiopen="${sid}">📝 Nhập kế hoạch học hôm nay</button></div>`;
 }
 // học 2 ca trong ngày vẫn chỉ 1 phiếu chung (cô chốt 2026-11-16) → mỗi ngày có lịch cần 1 phiếu
@@ -1686,7 +1697,7 @@ function ghiPhieu(sid,day,id){
   $('nav.tabs button[data-v=nhap]').click();ocrHide();$('#fFind').value='';fillStudentSelects();$('#fStudent').value=sid;prefillFor(sid,false);
   $('#fDate').value=day;if(day!==today())$('#fNo').value=no;
   // nội dung cô ghi trước ở Lịch học cho ngày này → điền vào ô Ngữ pháp
-  const bai=((lich.bai||{})[day]||{})[sid];if(bai)$('#fGram').value=bai;
+  const bai=baiGet(sid,day);if(bai.g)$('#fGram').value=bai.g;if(bai.n)$('#fNext').value=bai.n;if(bai.p)$('#fPrep').value=bai.p;
   updatePreview();window.scrollTo({top:0});
   document.title='✍️ '+s.name+' – Phiếu Học Tập';
 }
