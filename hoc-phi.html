@@ -33,7 +33,7 @@
   .hp .ttl small{display:block;font-size:10px;letter-spacing:5px;color:var(--gold);font-weight:700}
   .hp .ttl h2{font:800 27px "Be Vietnam Pro",sans-serif;color:var(--gd);margin:4px 0 0;letter-spacing:1.5px}
   .hp .orn{display:flex;align-items:center;justify-content:center;gap:10px;margin:8px 0 14px;color:var(--gold);font-size:9px}
-  .hp .orn:before,.hp .orn:after{content:"";width:80px;height:1px;background:linear-gradient(90deg,transparent,var(--gold))}
+  .hp .orn:before,.hp .orn:after{content:"";flex:none;width:80px;height:0;border-top:1px solid var(--gold);opacity:.75}
   .hp .orn:after{transform:scaleX(-1)}
   .hp .in{display:grid;grid-template-columns:1.7fr .7fr 1fr;gap:18px;padding:0 30px}
   .hp .in small,.hp .lab{display:block;font-size:9.5px;font-weight:700;color:var(--gold);letter-spacing:2px}
@@ -268,7 +268,9 @@ document.querySelectorAll('input.num').forEach(e=>e.addEventListener('input',()=
 document.querySelectorAll('input,select').forEach(e=>{if(e.id!=='sel'&&e.id!=='find'){e.addEventListener('input',upd);e.addEventListener('change',upd);}});
 upd();
 async function png(){await document.fonts.ready;const s=$('#sheet'),t=s.style.transform;s.style.transform='';
-  try{const c=await Promise.race([html2canvas($('#sheet .hp'),{scale:2,backgroundColor:'#fff',logging:false,imageTimeout:8000}),
+  try{const c=await Promise.race([html2canvas($('#sheet .hp'),{scale:2,backgroundColor:'#fff',logging:false,imageTimeout:8000,
+        onclone:d=>{d.querySelectorAll('.hp, .hp *').forEach(e=>{const cs=d.defaultView.getComputedStyle(e),r=e.getBoundingClientRect();
+          if(cs.backgroundImage&&cs.backgroundImage!=='none'&&(r.width<2||r.height<2))e.style.backgroundImage='none';});}}),
       new Promise((_,j)=>setTimeout(()=>j(new Error('Tạo ảnh quá lâu')),30000))]);
     const u=c.toDataURL('image/png'),bin=atob(u.split(',')[1]),a=new Uint8Array(bin.length);
     for(let i=0;i<bin.length;i++)a[i]=bin.charCodeAt(i);
