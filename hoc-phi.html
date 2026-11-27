@@ -227,7 +227,7 @@ function upd(){
   const cur=$('#cur').value!==''?+$('#cur').value:auto;
   const cells=out.map((s,i)=>{const n=from+i,c=n===cur?'now':n<cur?'done':'';
     return `<div class="${c}"><i>${n<cur?'✓ ':''}BUỔI ${n}${n===cur?' · ĐANG HỌC':''}</i><b>${THU[dow(pd(s))]} ${dm(s)}</b></div>`;}).join('');
-  const curTag=cur>=from&&cur<from+out.length?`<div class="cur">Bé đang học <b>buổi ${cur}/${from+out.length-1}</b> · còn ${from+out.length-1-cur} buổi</div>`:'';
+  const curTag=cur>=from&&cur<from+out.length?`<div class="cur">Bé đang học <b>buổi ${cur}/${from+out.length-1}</b></div>`:'';
   const rg=out.length?`Buổi ${from}: ${THU[dow(pd(out[0]))]} ${dmy(out[0])} → Buổi ${from+out.length-1}: ${THU[dow(pd(out[out.length-1]))]} ${dmy(out[out.length-1])}`:'';
   const thu=kind==='thu';
   $('#sheet').innerHTML=`<div class="hp ${thu?'rc':'nt'}"><div class="frame">
