@@ -48,11 +48,26 @@
   /* Mẫu THÔNG BÁO (xanh): hạn đóng nổi bật */
   .hp.nt .dd b{color:var(--o)}
   /* Mẫu PHIẾU THU (cam đất): khác hẳn màu để PH phân biệt */
-  .hp.rc{--gd:#9A4316;--hdbg:#B9521D;--gold:#C98A4B;--gold2:#F0D2B0;--paper:#FFF8F0}
-  .hp.rc .money{border:1.5px solid #3F6E2A;background:#F4F9EF}
-  .hp.rc .money .v{color:#2F5F1F}
-  .hp.rc .money .lab{color:#3F6E2A}
-  .hp.rc .money .r{border-top-color:#C9DDB8}
+  /* cam đào – kem – xanh lá (2026-11-27 cô muốn màu phiếu thu đẹp hơn) */
+  .hp.rc{--gd:#7A3A16;--hdbg:linear-gradient(115deg,#F2913F 0%,#E56A2C 55%,#CF5520 100%);--gold:#D9894A;--gold2:#F8D9BE;--paper:#FFFAF5}
+  .hp.rc .frame{background:linear-gradient(180deg,#FFF1E5 0,#FFFAF5 230px)}
+  .hp.rc .hd{border-bottom:3px solid #FCD9B6}
+  .hp.rc .hd img{border-color:#fff}
+  .hp.rc .hd p,.hp.rc .hd .no{color:#FFE9D4}
+  .hp.rc .ft{border-top:3px solid #FCD9B6;color:#FFE9D4}
+  .hp.rc .ttl h2{color:#D85E24}
+  .hp.rc .ttl small{color:#E08A4C}
+  .hp.rc .orn{color:#E8742F}
+  .hp.rc .money{border:1.5px solid #6FA552;background:linear-gradient(180deg,#F5FBF0,#EEF7E7);border-radius:6px}
+  .hp.rc .money .v{color:#2F6B22}
+  .hp.rc .money .lab{color:#4C8A35}
+  .hp.rc .money .r{border-top-color:#CFE3C0}
+  .hp.rc .seal{background:linear-gradient(115deg,#5A923F,#3F6E2A);border-top-right-radius:5px}
+  .hp.rc .head2{border-bottom-color:#F0B48A}
+  .hp.rc .head2 h3{color:#D85E24}
+  .hp.rc .sch .g div{border-color:#F3D4BA;border-radius:6px}
+  .hp.rc .sch .g div i{color:#E08A4C}
+  .hp.rc .lab{color:#E08A4C}
   .hp .seal{position:absolute;top:-1px;right:-1px;background:#3F6E2A;color:#fff;font-size:11px;font-weight:800;letter-spacing:1.5px;padding:6px 14px;border-bottom-left-radius:8px}
   .hp.rc .sch .g div.now{background:#FFF1E4}
   .hp .sch{margin:18px 30px 0}
