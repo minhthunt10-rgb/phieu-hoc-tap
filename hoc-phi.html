@@ -43,6 +43,11 @@
   .hp .sch .g div{border:1px solid #8DBB72;border-radius:8px;text-align:center;padding:4px 2px;font-size:12px;background:#F3F8EF}
   .hp .sch .g div i{display:block;font-style:normal;font-weight:800;color:#3F6E2A;font-size:11px}
   .hp .sch .g div b{font-size:13.5px}
+  .hp .sch .g div.done{background:#fff;border-style:dashed;color:#8a9381}
+  .hp .sch .g div.done i{color:#8a9381}
+  .hp .sch .g div.now{background:#E8742F;border:2px solid #C85A1C;color:#fff;box-shadow:0 2px 0 #C85A1C}
+  .hp .sch .g div.now i{color:#FFE3C2}
+  .hp .sch .cur{margin:6px 12px 0;display:inline-block;background:#FDE5D3;color:#A8481A;border-radius:999px;padding:3px 12px;font-size:13px;font-weight:700}
   .hp .sch .off{padding:0 12px 10px;font-size:12px;font-style:italic;color:#A8481A}
   .hp .pay{margin:14px 20px 0;display:flex;gap:12px;align-items:center;border:2px solid #E8742F;border-radius:12px;padding:10px 12px}
   .hp .pay img{width:96px;border-radius:6px}
@@ -79,7 +84,9 @@
   <div class="card"><h3>Lịch 12 buổi kế tiếp</h3>
    <div class="row"><div><label class="f">Ngày học buổi đầu</label><input type="date" id="start"></div>
      <div><label class="f">Từ buổi số</label><input type="number" id="from" value="1" min="1"></div>
-     <div><label class="f">Số buổi</label><input type="number" id="cnt" value="12" min="1" max="40"></div></div>
+     <div><label class="f">Số buổi</label><input type="number" id="cnt" value="12" min="1" max="40"></div>
+     <div><label class="f">Bé đang học buổi</label><input type="number" id="cur" min="0" placeholder="Tự tính"></div></div>
+   <p class="hint" style="margin:4px 0 0">Buổi hiện tại tự tính theo ngày hôm nay (buổi gần nhất đã tới ngày học). Gõ số khác nếu bé học bù/lệch lịch; gõ 0 để không tô.</p>
    <label class="f">Thứ học trong tuần</label><div class="days" id="days"></div>
    <label class="f">Bấm vào ngày để đánh dấu nghỉ (lịch tự lùi thêm 1 buổi)</label>
    <div class="dchips" id="dlist"></div>
@@ -130,7 +137,7 @@ $('#sel').onchange=()=>{const s=(db.students||[]).find(x=>x.id===$('#sel').value
   const last=(db.sessions||[]).filter(x=>x.studentId===s.id&&x.fDate).map(x=>x.fDate).sort().pop();
   let d=last?pd(last):new Date();if(last)d.setDate(d.getDate()+1);
   if(ds.length)for(let k=0;k<7&&!ds.includes(dow(d));k++)d.setDate(d.getDate()+1);
-  $('#start').value=iso(d);off.clear();upd();};
+  $('#start').value=iso(d);$('#cur').value='';off.clear();upd();};
 
 function sched(){const ds=[...document.querySelectorAll('#days input:checked')].map(c=>+c.value),n=+$('#cnt').value||12,out=[],skip=[];
   if(!ds.length||!$('#start').value)return{out,skip};
@@ -145,7 +152,13 @@ function upd(){
   $('#dlist').innerHTML=out.concat(skip).sort().map(s=>`<button data-d="${s}" class="${off.has(s)?'off':''}">${THU[dow(pd(s))]} ${dm(s)}</button>`).join('')||'<span class="hint">Chọn thứ học để hiện lịch.</span>';
   document.querySelectorAll('#dlist button').forEach(b=>b.onclick=()=>{const s=b.dataset.d;off.has(s)?off.delete(s):off.add(s);upd();});
   const d=new Date(),no='HP-'+String(d.getFullYear()).slice(2)+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')+String(d.getHours()).padStart(2,'0')+String(d.getMinutes()).padStart(2,'0');
-  const cells=out.map((s,i)=>`<div><i>Buổi ${from+i}</i><b>${THU[dow(pd(s))]} ${dm(s)}</b></div>`).join('');
+  // buổi hiện tại: cô gõ tay, không thì lấy buổi gần nhất đã tới ngày (≤ hôm nay)
+  const td=iso(new Date());let auto=0;out.forEach((s,i)=>{if(s<=td)auto=from+i;});
+  $('#cur').placeholder=auto?'Tự tính: '+auto:'Tự tính';
+  const cur=$('#cur').value!==''?+$('#cur').value:auto;
+  const cells=out.map((s,i)=>{const n=from+i,c=n===cur?'now':n<cur?'done':'';
+    return `<div class="${c}"><i>${n<cur?'✓ ':''}Buổi ${n}${n===cur?' • đang học':''}</i><b>${THU[dow(pd(s))]} ${dm(s)}</b></div>`;}).join('');
+  const curTag=cur>=from&&cur<from+out.length?`<div class="cur">📍 Bé đang học buổi ${cur}/${from+out.length-1} – còn ${from+out.length-1-cur} buổi</div>`:'';
   const rg=out.length?`Từ <b>buổi ${from}</b> (${THU[dow(pd(out[0]))]} ${dmy(out[0])}) đến <b>buổi ${from+out.length-1}</b> (${THU[dow(pd(out[out.length-1]))]} ${dmy(out[out.length-1])})`:'';
   $('#sheet').innerHTML=`<div class="hp">
    <div class="hd"><img src="logo.png"><div class="b"><h1>TIẾNG ANH MS MINH THƯ</h1><p>GROW WITH ENGLISH</p></div><div class="no">${no}</div></div>
@@ -156,7 +169,7 @@ function upd(){
      <div class="t">${kind==='thu'?'ĐÃ NHẬN SỐ TIỀN':'SỐ TIỀN CẦN ĐÓNG'}</div><div class="v">${a?fmt(a)+' đ':'…………… đ'}</div>
      <div class="w">${a?'Bằng chữ: '+words(a):''}</div>
      <div class="r">Nội dung: <b>${esc($('#what').value)}</b>${kind==='thu'?' &nbsp;•&nbsp; Hình thức: <b>'+how+'</b>':''}</div></div>
-   <div class="sch"><div class="cap">📅 LỊCH HỌC ${out.length} BUỔI KẾ TIẾP</div><div class="rg">${rg}</div><div class="g">${cells}</div>
+   <div class="sch"><div class="cap">📅 LỊCH HỌC ${out.length} BUỔI KẾ TIẾP</div><div class="rg">${rg}</div>${curTag}<div class="g">${cells}</div>
      ${skip.length?`<div class="off">Nghỉ: ${skip.map(s=>THU[dow(pd(s))]+' '+dm(s)).join(', ')} (đã lùi lịch)</div>`:''}
      ${$('#note').value?`<div class="off" style="color:#3F6E2A">${esc($('#note').value)}</div>`:''}</div>
    ${kind==='bao'?`<div class="pay"><img src="qr-bidv.png"><div><p>Ngân hàng: <b>BIDV – PGD Bắc Hải</b></p><p>Số TK: <span class="stk">8920852117</span></p><p>Chủ TK: <b>HO KINH DOANH TIENG ANH MS MINH THU</b></p><p><i>Nội dung CK: HP – ${esc($('#name').value)||'Họ tên HV'} – ${esc($('#cls').value)||'Lớp'}</i></p></div></div>`:''}
