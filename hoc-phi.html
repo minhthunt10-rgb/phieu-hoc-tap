@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Phiếu thu học phí</title>
-<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lora:ital,wght@0,700;1,600&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <link rel="stylesheet" href="style.css?v=202611261000">
 <style>
@@ -25,50 +25,50 @@
   .hp .hd{background:var(--gd);display:flex;align-items:center;gap:14px;padding:16px 22px;border-bottom:2px solid var(--gold)}
   .hp .hd img{width:58px;height:58px;border-radius:50%;background:#FFFBF2;border:2px solid var(--gold2);object-fit:cover}
   .hp .hd .b{flex:1}
-  .hp .hd h1{font:700 21px "Playfair Display",Lora,serif;margin:0;letter-spacing:1.6px;color:#fff}
+  .hp .hd h1{font:800 20px "Be Vietnam Pro",sans-serif;margin:0;letter-spacing:1.2px;color:#fff}
   .hp .hd p{font:600 10.5px "Be Vietnam Pro";color:var(--gold2);letter-spacing:4px;margin:4px 0 0}
   .hp .hd .no{text-align:right;color:var(--gold2);font-size:9.5px;letter-spacing:2px;font-weight:600}
-  .hp .hd .no b{display:block;font:700 14px Lora,serif;color:#fff;letter-spacing:.8px;margin-top:2px}
+  .hp .hd .no b{display:block;font:700 14px "Be Vietnam Pro",sans-serif;color:#fff;letter-spacing:.5px;margin-top:2px}
   .hp .ttl{text-align:center;padding:20px 0 4px}
   .hp .ttl small{display:block;font-size:10px;letter-spacing:5px;color:var(--gold);font-weight:700}
-  .hp .ttl h2{font:700 29px "Playfair Display",serif;color:var(--gd);margin:4px 0 0;letter-spacing:2px}
+  .hp .ttl h2{font:800 27px "Be Vietnam Pro",sans-serif;color:var(--gd);margin:4px 0 0;letter-spacing:1.5px}
   .hp .orn{display:flex;align-items:center;justify-content:center;gap:10px;margin:8px 0 14px;color:var(--gold);font-size:9px}
   .hp .orn:before,.hp .orn:after{content:"";width:80px;height:1px;background:linear-gradient(90deg,transparent,var(--gold))}
   .hp .orn:after{transform:scaleX(-1)}
   .hp .in{display:grid;grid-template-columns:1.7fr .7fr 1fr;gap:18px;padding:0 30px}
   .hp .in small,.hp .lab{display:block;font-size:9.5px;font-weight:700;color:var(--gold);letter-spacing:2px}
-  .hp .in b{display:block;font:700 16px Lora,serif;color:var(--gd);border-bottom:1px solid var(--gold2);padding:3px 0 5px;min-height:28px}
+  .hp .in b{display:block;font:700 16px "Be Vietnam Pro",sans-serif;color:var(--gd);border-bottom:1px solid var(--gold2);padding:3px 0 5px;min-height:28px}
   .hp .money{margin:18px 30px 0;border:1px solid var(--gold);background:#fff;padding:14px 18px;position:relative;text-align:center}
-  .hp .money .v{font:700 34px Lora,serif;color:var(--gd);line-height:1.15;margin-top:4px;letter-spacing:.5px}
+  .hp .money .v{font:800 34px "Be Vietnam Pro",sans-serif;color:var(--gd);line-height:1.15;margin-top:4px;letter-spacing:.5px}
   .hp .money .w{font-style:italic;font-size:12.5px;color:#55604c;margin-top:2px}
   .hp .money .r{font-size:12.5px;margin-top:8px;padding-top:8px;border-top:1px dashed var(--gold2);color:#55604c}
   .hp .money .r b{color:var(--ink)}
   .hp .money .paid{position:absolute;top:10px;right:12px;border:1px solid var(--g);color:var(--g);font-size:9.5px;font-weight:800;letter-spacing:1.5px;padding:3px 8px;border-radius:3px}
   .hp .sch{margin:18px 30px 0}
   .hp .head2{display:flex;align-items:baseline;justify-content:space-between;border-bottom:1px solid var(--gold);padding-bottom:6px}
-  .hp .head2 h3{font:700 15px "Playfair Display",serif;color:var(--gd);margin:0;letter-spacing:1px}
+  .hp .head2 h3{font:800 14.5px "Be Vietnam Pro",sans-serif;color:var(--gd);margin:0;letter-spacing:.5px}
   .hp .head2 span{font-size:11.5px;color:#55604c}
   .hp .sch .cur{margin-top:9px;font-size:12.5px;color:var(--ink)}
   .hp .sch .cur b{color:var(--o)}
   .hp .sch .g{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:9px}
   .hp .sch .g div{border:1px solid #D7CBA8;border-radius:4px;text-align:center;padding:6px 2px 5px;background:#fff}
   .hp .sch .g div i{display:block;font-style:normal;font-weight:700;color:var(--gold);font-size:9.5px;letter-spacing:1.2px}
-  .hp .sch .g div b{display:block;font:700 14px Lora,serif;color:var(--gd);margin-top:1px}
-  .hp .sch .g div.done{background:transparent;border-color:#E7E1D0}
-  .hp .sch .g div.done i,.hp .sch .g div.done b{color:#B3B3A6}
-  .hp .sch .g div.now{background:var(--o);border-color:var(--o)}
-  .hp .sch .g div.now i{color:#FFE7D2}.hp .sch .g div.now b{color:#fff}
+  .hp .sch .g div b{display:block;font:700 14px "Be Vietnam Pro",sans-serif;color:var(--gd);margin-top:1px}
+  .hp .sch .g div.done{background:#fff}
+  
+  .hp .sch .g div.now{background:#FDE6D4;border:1.5px solid #EE9A62}
+  .hp .sch .g div.now i{color:#C2561B}.hp .sch .g div.now b{color:#A8481A}
   .hp .sch .off{margin-top:7px;font-size:11.5px;font-style:italic;color:#8a5a2e}
   .hp .pay{margin:18px 30px 0;display:flex;gap:16px;align-items:center;border:1px solid var(--gold);background:#fff;padding:12px 16px}
   .hp .pay img{width:92px;border:1px solid var(--gold2);padding:3px;background:#fff}
   .hp .pay p{margin:3px 0;font-size:12.5px;color:#55604c}.hp .pay p b{color:var(--ink)}
-  .hp .pay .stk{font:700 19px Lora,serif;color:var(--gd);letter-spacing:1px}
+  .hp .pay .stk{font:800 19px "Be Vietnam Pro",sans-serif;color:var(--gd);letter-spacing:1px}
   .hp .low{display:grid;grid-template-columns:1fr 170px;gap:16px;margin:18px 30px 0;align-items:end}
   .hp .note{font-size:11.5px;line-height:1.6;color:#4A5243}
   .hp .note .lab{margin-bottom:3px}
   .hp .sg{text-align:center;font-size:11px;color:#55604c;padding-bottom:2px}
   .hp .sg .ln{height:40px}
-  .hp .sg b{display:block;font:italic 700 17px "Playfair Display",serif;color:var(--gd);border-top:1px solid var(--gold2);padding-top:5px}
+  .hp .sg b{display:block;font:700 16px "Be Vietnam Pro",sans-serif;color:var(--gd);border-top:1px solid var(--gold2);padding-top:5px}
   .hp .ft{margin-top:18px;background:var(--gd);border-top:2px solid var(--gold);color:var(--gold2);display:flex;justify-content:space-between;padding:9px 22px;font-size:10.5px;letter-spacing:1.8px;font-weight:600}
   .hp .ft b{color:#fff;letter-spacing:1px}
 </style>
@@ -186,7 +186,7 @@ function upd(){
      <span class="lab">${thu?'SỐ TIỀN ĐÃ NHẬN':'SỐ TIỀN CẦN ĐÓNG'}</span><div class="v">${a?fmt(a)+' đ':'…………… đ'}</div>
      <div class="w">${a?words(a):'&nbsp;'}</div>
      <div class="r">Nội dung: <b>${esc($('#what').value)}</b>${thu?' &nbsp;·&nbsp; Hình thức: <b>'+how+'</b>':''}</div></div>
-   ${out.length?`<div class="sch"><div class="head2"><h3>Lịch học ${out.length} buổi kế tiếp</h3><span>${rg}</span></div>${curTag}<div class="g">${cells}</div>
+   ${out.length?`<div class="sch"><div class="head2"><h3>LỊCH HỌC ${out.length} BUỔI KẾ TIẾP</h3><span>${rg}</span></div>${curTag}<div class="g">${cells}</div>
      ${skip.length?`<div class="off">Nghỉ: ${skip.map(s=>THU[dow(pd(s))]+' '+dm(s)).join(', ')} (đã lùi lịch)</div>`:''}
      ${$('#note').value?`<div class="off" style="color:#3F6E2A">${esc($('#note').value)}</div>`:''}</div>`:''}
    ${!thu?`<div class="pay"><img src="qr-bidv.png"><div><span class="lab">THÔNG TIN CHUYỂN KHOẢN</span><p>Ngân hàng: <b>BIDV – PGD Bắc Hải</b></p><p>Số tài khoản: <span class="stk">8920852117</span></p><p>Chủ tài khoản: <b>HO KINH DOANH TIENG ANH MS MINH THU</b></p><p><i>Nội dung CK: HP – ${esc($('#name').value)||'Họ tên HV'} – ${esc($('#cls').value)||'Lớp'}</i></p></div></div>`:''}
