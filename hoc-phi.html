@@ -78,7 +78,7 @@
   .hp .note{font-size:11.5px;line-height:1.6;color:#4A5243}
   .hp .note .lab{margin-bottom:3px}
   .hp .sg{text-align:center;font-size:11px;color:#55604c;padding-bottom:2px}
-  .hp .sg .ln{height:40px}
+  .hp .sg .sig{display:block;height:50px;margin:2px auto 0}
   .hp .sg b{display:block;font:700 16px "Be Vietnam Pro",sans-serif;color:var(--gd);border-top:1px solid var(--gold2);padding-top:5px}
   .hp .ft{margin-top:18px;background:var(--hdbg,var(--gd));border-top:2px solid var(--gold);color:var(--gold2);display:flex;justify-content:space-between;padding:9px 22px;font-size:10.5px;letter-spacing:1.8px;font-weight:600}
   .hp .ft b{color:#fff;letter-spacing:1px}
@@ -202,7 +202,7 @@ function upd(){
      ${$('#note').value?`<div class="off" style="color:#3F6E2A">${esc($('#note').value)}</div>`:''}</div>`:''}
    ${!thu?`<div class="pay"><img src="qr-bidv.png"><div><span class="lab">THÔNG TIN CHUYỂN KHOẢN</span><p>Ngân hàng: <b>BIDV – PGD Bắc Hải</b></p><p>Số tài khoản: <span class="stk">8920852117</span></p><p>Chủ tài khoản: <b>HO KINH DOANH TIENG ANH MS MINH THU</b></p><p><i>Nội dung CK: HP – ${esc($('#name').value)||'Họ tên HV'} – ${esc($('#cls').value)||'Lớp'}</i></p></div></div>`:''}
    <div class="low"><div class="note"><span class="lab">LƯU Ý</span>• Buổi nghỉ được học bù <b>tối đa 2 buổi/tháng</b>.<br>• Học phí không hoàn lại, chỉ được bảo lưu khi có lý do chính đáng.<br>• Học sinh đi học <b>đúng giờ</b>, hoàn thành <b>đầy đủ bài tập về nhà</b>. Không hoàn thành BTVN quá <b>3 buổi/khóa</b> sẽ bị nhắc nhở; tái diễn liên tục sẽ không nhận học tiếp.<br>• Mọi thắc mắc về học phí xin liên hệ <b>0966.101.957</b> (Zalo).</div>
-     <div class="sg">${thu?'Người thu tiền':'Giáo viên phụ trách'}<div class="ln"></div><b>Ms. Minh Thư</b>${thu?'<div class="thx">Cảm ơn Quý Phụ huynh!</div>':''}</div></div>
+     <div class="sg">${thu?'Người thu tiền':'Giáo viên phụ trách'}<img class="sig" src="chu-ky.png" alt=""><b>Ms. Minh Thư</b>${thu?'<div class="thx">Cảm ơn Quý Phụ huynh!</div>':''}</div></div>
    <div class="ft"><span>HOTLINE · ZALO <b>0966.101.957</b></span><span>GROW WITH ENGLISH</span></div></div></div>`;
   fit();
 }
