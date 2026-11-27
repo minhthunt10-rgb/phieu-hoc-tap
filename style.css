@@ -278,6 +278,9 @@ button.kt-tag{cursor:pointer}
 .lich-bai{display:block;margin-top:6px;clear:right}.lich-bai span{display:block;font-size:13px;font-weight:700;color:#7A4FB5;margin-bottom:2px}
 .lich-bai textarea{width:100%;min-height:44px;box-sizing:border-box;font:inherit;font-size:14px;padding:5px 8px;border:1px dashed #B9A3DC;border-radius:8px;background:#FBF8FF;resize:vertical}
 .lich-bai textarea:focus{border-style:solid;outline:none;border-color:#7A4FB5;background:#fff}
+.lich-bai .lb-btns{display:flex;gap:6px;margin-top:4px}.lich-bai .lb-open{background:#F4EEFC;color:#7A4FB5;border:1px dashed #B9A3DC;box-shadow:none}
+.lich-bai.saved{background:#F7F2FE;border:1px solid #D9CBEF;border-radius:8px;padding:5px 9px}.lich-bai .lb-txt{color:#3d2a5c}
+.lich-bai .lb-edit{border:0;background:none;color:#7A4FB5;font:inherit;font-size:12px;font-weight:600;cursor:pointer;text-decoration:underline;padding:0 4px}
 .lich-miss .lm-b{margin:3px 8px 3px 0}
 .lich-miss .lm-b small{font-weight:400;opacity:.9}
 .lich-miss>b small{font-weight:400;color:#8a4b4b}

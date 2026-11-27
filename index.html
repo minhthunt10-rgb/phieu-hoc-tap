@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lora:ital,wght@0,700;1,600&display=swap" rel="stylesheet">
 <script src="logo.js?v=202611111700"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<link rel="stylesheet" href="style.css?v=202611271100">
+<link rel="stylesheet" href="style.css?v=202611271200">
 </head>
 <body>
 <header class="app">
@@ -62,11 +62,6 @@
       <label class="f">Con đã học bù vào buổi</label>
       <input type="text" id="fMakeup" placeholder="VD: Thứ 7 15/11 – để trống nếu chưa bù">
       <p class="hint">Buổi nghỉ vẫn tính 1 buổi của khóa và được lưu để cuối tháng tổng hợp báo phụ huynh.</p>
-    </div>
-    <!-- Uống nước: chỉ máy cô (lưu trong lich, không lên phiếu, không đồng bộ) -->
-    <div id="nuocBox" class="nuoc-box" style="display:none">
-      <label class="nuoc-ck"><input type="checkbox" id="nuocCk"> 🥤 Uống nước hôm nay</label>
-      <div id="nuocNote" class="nuoc-note"></div>
     </div>
     <!-- Chăm sóc PH: chỉ máy cô (lưu trong lich.cs, không lên phiếu, không đồng bộ) -->
     <div id="csBox" class="nuoc-box cs-box" style="display:none">
@@ -167,6 +162,11 @@
    </div>
 
    <div class="card">
+    <!-- Uống nước: chỉ máy cô (lưu trong lich, không lên phiếu, không đồng bộ) – cô chuyển xuống cuối 2026-11-27 -->
+    <div id="nuocBox" class="nuoc-box" style="display:none;margin:0 0 12px">
+      <label class="nuoc-ck"><input type="checkbox" id="nuocCk"> 🥤 Uống nước hôm nay</label>
+      <div id="nuocNote" class="nuoc-note"></div>
+    </div>
     <div class="btns" style="margin-top:0">
       <button class="btn" id="bSave">💾 Lưu phiếu</button>
       <button class="btn o" id="bSaveNext">Lưu &amp; sang HS tiếp (giữ nội dung chung)</button>
@@ -1141,7 +1141,8 @@ function csFlags(s){
 }
 function csNav(){const n=db.students.filter(s=>!csThis(s.id).length).length;$('#navCs').textContent='📞 Chăm sóc PH'+(n?' ('+n+')':'');}
 window.renderCsBox=()=>{
-  const box=$('#csBox'),id=$('#fStudent').value;if(!lich.on||!id){box.style.display='none';return;}box.style.display='';
+  // cô bỏ ô này khỏi Nhập phiếu (2026-11-27) – chăm sóc PH ghi ở tab 📞 Chăm sóc PH
+  const box=$('#csBox'),id=$('#fStudent').value;box.style.display='none';if(!lich.on||!id||true)return;
   const d=$('#fDate').value||today(),m=d.slice(0,7),th=csThis(id,m),s=stu(id),fl=s?csFlags(s):[];
   $('#csCk').checked=th.length>0;$('#csCk').disabled=th.some(x=>!x.quick||x.d!==d);
   $('#csNote').innerHTML=(th.length?`<span class="ok">✓ Tháng ${+m.slice(5)} đã chăm sóc PH: ${th.map(x=>csDm(x.d)+' '+x.k.toLowerCase()).join(', ')}.</span>`
@@ -1275,12 +1276,16 @@ function renderLich(){
         +planLine(s.id,day)
         +(inn.length?'<div>🖨️ '+inn.map(esc).join('; ')+'</div>':'')+(prep.length?'<div>📌 '+prep.map(esc).join('; ')+'</div>':'')
         // ô ghi trước nội dung học hôm nay (cô yêu cầu 2026-11-27) → bấm Ghi phiếu tự điền vào ô Ngữ pháp
-        +`<label class="lich-bai"><span>📝 Nội dung học hôm nay</span><textarea rows="2" data-bai="${s.id}" placeholder="Ghi trước bài hôm nay (mỗi ý 1 dòng) – bấm Ghi phiếu sẽ tự điền vào ô Ngữ pháp">${esc(((lich.bai||{})[day]||{})[s.id]||'')}</textarea></label>`+'</div>';}).join('')+'</div>';
-  $$('#lPrep [data-bai]').forEach(t=>t.oninput=()=>{const B=lich.bai=lich.bai||{},o=B[day]=B[day]||{},v=t.value.trim();
-    if(v)o[t.dataset.bai]=t.value.replace(/\s+$/,''); else delete o[t.dataset.bai];
+        +baiHTML(s.id,day)+'</div>';}).join('')+'</div>';
+  // kế hoạch học: bấm nút mới hiện ô nhập, bấm Lưu mới ghi (cô chốt 2026-11-27)
+  $$('#lPrep [data-baiopen]').forEach(b=>b.onclick=()=>{baiEdit=b.dataset.baiopen+'@'+day;renderLich();const t=$(`#lPrep [data-bai="${b.dataset.baiopen}"]`);t&&t.focus();});
+  $$('#lPrep [data-baicancel]').forEach(b=>b.onclick=()=>{baiEdit=null;renderLich();});
+  $$('#lPrep [data-baisave]').forEach(b=>b.onclick=()=>{const id=b.dataset.baisave,t=$(`#lPrep [data-bai="${id}"]`);
+    const B=lich.bai=lich.bai||{},o=B[day]=B[day]||{},v=t.value.replace(/\s+$/,'');
+    if(v.trim())o[id]=v; else delete o[id];
     if(!Object.keys(o).length)delete B[day];
     Object.keys(B).sort().slice(0,-30).forEach(k=>delete B[k]); // giữ 30 ngày
-    saveLich();});
+    saveLich();baiEdit=null;renderLich();toast(v.trim()?'Đã lưu kế hoạch học của '+stu(id).name:'Đã xoá kế hoạch học');});
   $$('#lPrep [data-plan]').forEach(b=>b.onclick=()=>{pSel=b.dataset.plan;$('#navPlan').click();setTimeout(()=>$('#pDetail').scrollIntoView({behavior:'smooth'}),50);});
   // mỗi lần bấm mở 1 TAB TRÌNH DUYỆT MỚI (cô yêu cầu 2026-11-22) → tab đó tự vào Nhập phiếu
   $$('#lPrep [data-gp]').forEach(b=>b.onclick=()=>{
@@ -1319,6 +1324,15 @@ function renderLich(){
   // ô thêm học sinh: các em chưa có trong lịch
   const out=db.students.filter(s=>!lich.days[s.id]).sort(byKhoi);
   $('#lAddSel').innerHTML=out.length?out.map(s=>`<option value="${s.id}">${esc(s.name)}${s.cls?' – '+esc(s.cls):''}</option>`).join(''):'<option value="">(Mọi học sinh đã có trong lịch)</option>';
+}
+// kế hoạch học hôm nay của 1 em trong Lịch học: nút → ô nhập + Lưu; đã lưu thì hiện nội dung + Sửa
+let baiEdit=null;
+function baiHTML(sid,day){
+  const v=((lich.bai||{})[day]||{})[sid]||'';
+  if(baiEdit===sid+'@'+day)return `<div class="lich-bai"><span>📝 Kế hoạch học hôm nay</span><textarea rows="3" data-bai="${sid}" placeholder="Mỗi ý 1 dòng – lúc Ghi phiếu sẽ hiện ở mục Mục tiêu / nội dung buổi học">${esc(v)}</textarea>`
+    +`<div class="lb-btns"><button type="button" class="btn sm" data-baisave="${sid}">💾 Lưu</button><button type="button" class="btn sm g" data-baicancel="1">Huỷ</button></div></div>`;
+  if(v)return `<div class="lich-bai saved"><span>📝 Kế hoạch học hôm nay <button type="button" class="lb-edit" data-baiopen="${sid}">✏️ Sửa</button></span><div class="lb-txt">${esc(v).replace(/\n/g,'<br>')}</div></div>`;
+  return `<div class="lich-bai"><button type="button" class="btn sm lb-open" data-baiopen="${sid}">📝 Nhập kế hoạch học hôm nay</button></div>`;
 }
 // học 2 ca trong ngày vẫn chỉ 1 phiếu chung (cô chốt 2026-11-16) → mỗi ngày có lịch cần 1 phiếu
 // danh sách ngày (mới → cũ) trong n ngày qua có em thiếu phiếu so với lịch
