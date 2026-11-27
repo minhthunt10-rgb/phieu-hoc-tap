@@ -275,6 +275,9 @@ button.kt-tag{cursor:pointer}
 .lich-miss>b{display:block;color:#b23;margin-bottom:4px}
 .lich-miss .lm-hs{display:inline-flex;align-items:center;gap:6px;margin:3px 14px 3px 0}
 .lich-miss .btn.sm{padding:3px 10px;font-size:13px}
+.lich-miss .lm-b{margin:3px 8px 3px 0}
+.lich-miss .lm-b small{font-weight:400;opacity:.9}
+.lich-miss>b small{font-weight:400;color:#8a4b4b}
 /* Lộ trình học */
 .plan-tag{margin:8px 0 2px;padding:7px 12px;border-radius:10px;background:#EEF4FC;border:1.5px dashed #85B7EB;color:#0C447C;font-size:14px}
 .plan-tag small{color:#5878A0}

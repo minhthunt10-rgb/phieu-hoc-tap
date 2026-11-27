@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lora:ital,wght@0,700;1,600&display=swap" rel="stylesheet">
 <script src="logo.js?v=202611111700"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<link rel="stylesheet" href="style.css?v=202611261000">
+<link rel="stylesheet" href="style.css?v=202611271000">
 </head>
 <body>
 <header class="app">
@@ -1289,10 +1289,11 @@ function renderLich(){
   miss.forEach(m=>m.list.forEach(x=>missOf[x.s.id]=(missOf[x.s.id]||0)+x.need-x.have));
   const nMiss=Object.values(missOf).reduce((a,b)=>a+b,0);
   $('#lMiss').innerHTML=!nMiss?'<p class="hint" style="color:#2E7D32"><b>✅ Không thiếu phiếu nào</b> trong khoảng này.</p>':
-    `<p class="hint"><b style="color:#b23">Thiếu ${nMiss} phiếu</b> của ${Object.keys(missOf).length} học sinh.</p>`+miss.map(m=>{const [dd,mm]=dmy(m.date),w=dowOf(m.date);
-      return `<div class="lich-miss"><b>${w===6?'CN':'T'+(w+2)} ${dd}/${mm}${m.date===today()?' (hôm nay)':''}</b>`+m.list.map(x=>
-        `<span class="lm-hs">${esc(x.s.name)}${x.s.cls?' – '+esc(x.s.cls):''}${x.ca?` <span class="pill">${esc(x.ca)}</span>`:''}${x.need>1?` <small>(có ${x.have}/${x.need} phiếu)</small>`:''} <button class="btn sm" data-s="${x.s.id}" data-d="${m.date}">➕ Bổ sung</button></span>`).join('')+'</div>';}).join('');
-  $$('#lMiss button').forEach(b=>b.onclick=()=>fillByDate(b.dataset.s,b.dataset.d));
+    `<p class="hint"><b style="color:#b23">Thiếu ${nMiss} phiếu</b> của ${Object.keys(missOf).length} học sinh. Bấm nút từng buổi để bổ sung (dán ảnh phiếu buổi đó vào).</p>`+missByStudent(miss).map(g=>
+      // gom theo từng học sinh (cô yêu cầu 2026-11-27): mỗi buổi thiếu 1 nút Bổ sung, cũ → mới
+      `<div class="lich-miss"><b>${esc(g.s.name)}${g.s.cls?' – '+esc(g.s.cls):''} <small>· thiếu ${g.items.length} phiếu</small></b>`+g.items.map(x=>{const [dd,mm]=dmy(x.date),w=dowOf(x.date);
+        return `<button class="btn sm lm-b" data-s="${g.s.id}" data-d="${x.date}" data-n="${x.no}" title="Mở Nhập phiếu buổi ${x.no} ngày ${dd}/${mm} để bổ sung">➕ Buổi ${x.no} <small>· ${w===6?'CN':'T'+(w+2)} ${dd}/${mm}${x.date===today()?' (hôm nay)':''}${x.ca?' · '+esc(x.ca):''}</small></button>`;}).join('')+'</div>').join('');
+  $$('#lMiss button').forEach(b=>b.onclick=()=>fillByDate(b.dataset.s,b.dataset.d,b.dataset.n));
   // bảng lịch: chỉ các em đang có trong lịch, lớp cao → thấp; mỗi ô chọn ca
   const OPT=[['-','—'],['','Học'],['ca 1','Ca 1'],['ca 2','Ca 2'],['ca 1, ca 2','Ca 1+2']];
   const inL=db.students.filter(s=>lich.days[s.id]).sort((a,b)=>{const ka=khoi(a),kb=khoi(b);return (ka===99)-(kb===99)||kb-ka||byKhoi(a,b);});
@@ -1326,10 +1327,20 @@ function missingByLich(n){
   return res;
 }
 // mở Nhập phiếu để bổ sung phiếu của em vào đúng ngày (số buổi = buổi trước ngày đó + 1)
-function fillByDate(sid,date){
+function fillByDate(sid,date,no){
   const s=stu(sid),p=sessOf(sid).filter(x=>x.fDate&&x.fDate<date).sort((a,b)=>(a.fDate+a.created).localeCompare(b.fDate+b.created)).pop();
-  let no=p?noMax(p.fNo)+1:1; if(no>(+s.total||12))no=1;
+  if(!no){no=p?noMax(p.fNo)+1:1; if(no>(+s.total||12))no=1;}
   startFill(sid,no); $('#fDate').value=date; updatePreview();
+}
+// gom danh sách thiếu theo học sinh; số buổi tính nối tiếp: buổi đã ghi gần nhất + số ngày thiếu liền sau nó
+function missByStudent(miss){
+  const by={};miss.forEach(m=>m.list.forEach(x=>{(by[x.s.id]=by[x.s.id]||{s:x.s,items:[]}).items.push({date:m.date,ca:x.ca});}));
+  return Object.values(by).map(g=>{const T=+g.s.total||12,ss=sessOf(g.s.id).filter(x=>x.fDate);
+    g.items.sort((a,b)=>a.date.localeCompare(b.date));
+    g.items.forEach((it,i)=>{const p=ss.filter(x=>x.fDate<it.date).sort((a,b)=>(a.fDate+a.created).localeCompare(b.fDate+b.created)).pop();
+      const k=g.items.slice(0,i+1).filter(z=>!p||z.date>p.fDate).length;
+      let no=(p?noMax(p.fNo):0)+k; no=((no-1)%T)+1; it.no=no;});
+    return g;}).sort((a,b)=>khoi(b.s)-khoi(a.s)||byKhoi(a.s,b.s));
 }
 $('#lDay').addEventListener('change',renderLich);
 $('#lMissN').addEventListener('change',renderLich);
