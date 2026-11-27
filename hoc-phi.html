@@ -111,7 +111,9 @@
  <div>
   <div class="card"><h3>Học viên</h3>
    <label class="f">Chọn học sinh (lấy từ danh sách web Phiếu học tập)</label>
-   <select id="sel"><option value="">— Gõ tay bên dưới —</option></select>
+   <div style="position:relative"><input type="text" id="find" placeholder="🔍 Gõ tên học sinh để tra, VD: lâm, bá lâm…" autocomplete="off">
+     <div id="sugg" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:50;background:#fff;border:1px solid #cfd8c4;border-radius:10px;box-shadow:0 8px 22px rgba(0,0,0,.14);max-height:300px;overflow:auto;margin-top:3px"></div></div>
+   <select id="sel" style="margin-top:6px"><option value="">— Hoặc chọn trong danh sách / gõ tay bên dưới —</option></select>
    <div class="row"><div><label class="f">Họ tên</label><input type="text" id="name"></div>
      <div><label class="f">Lớp</label><input type="text" id="cls"></div></div>
    <label class="f">Loại phiếu</label>
@@ -155,6 +157,29 @@ try{db={...db,...JSON.parse(localStorage.getItem('gwe-phieu-hoc-tap-v1')||'{}')}
 try{lich={...lich,...JSON.parse(localStorage.getItem('gwe-lich-hoc-v1')||'{}')};}catch(e){}
 const khoi=s=>{const m=String(s.cls||'').match(/\d+/);return m?+m[0]:99;};
 (db.students||[]).slice().sort((a,b)=>khoi(a)-khoi(b)||a.name.localeCompare(b.name,'vi')).forEach(s=>{const o=document.createElement('option');o.value=s.id;o.textContent=s.name+(s.cls?' – '+s.cls:'');$('#sel').appendChild(o);});
+// Tra tên: gõ không cần dấu, bấm chọn hoặc Enter
+const bd=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/đ/g,'d').replace(/Đ/g,'D').toLowerCase().trim();
+let suggI=0,suggL=[];
+function pickStu(id){$('#sel').value=id;$('#sel').onchange();$('#sugg').style.display='none';const s=(db.students||[]).find(x=>x.id===id);$('#find').value=s?s.name+(s.cls?' – '+s.cls:''):'';}
+function drawSugg(){const q=bd($('#find').value),box=$('#sugg');
+  if(!q){box.style.display='none';return;}
+  const ws=q.split(/\s+/);
+  suggL=(db.students||[]).filter(s=>{const h=bd(s.name+' '+(s.cls||''));return ws.every(w=>h.includes(w));})
+    .sort((a,b)=>khoi(a)-khoi(b)||a.name.localeCompare(b.name,'vi')).slice(0,30);
+  suggI=0;
+  box.innerHTML=suggL.length?suggL.map((s,i)=>`<div data-id="${s.id}" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid #f0f0ea;${i===0?'background:#EEF5E8':''}"><b>${s.name.replace(/</g,'&lt;')}</b>${s.cls?' <span style="color:#888">– '+String(s.cls).replace(/</g,'&lt;')+'</span>':''}</div>`).join('')
+    :'<div style="padding:8px 12px;color:#999">Không thấy học sinh – cô gõ tay ô Họ tên bên dưới</div>';
+  box.style.display='block';
+  box.querySelectorAll('[data-id]').forEach(d=>d.onmousedown=e=>{e.preventDefault();pickStu(d.dataset.id);});}
+function hiSugg(){$('#sugg').querySelectorAll('[data-id]').forEach((d,i)=>d.style.background=i===suggI?'#EEF5E8':'');}
+$('#find').addEventListener('input',drawSugg);
+$('#find').addEventListener('focus',()=>{if($('#find').value)drawSugg();});
+$('#find').addEventListener('blur',()=>setTimeout(()=>$('#sugg').style.display='none',150));
+$('#find').addEventListener('keydown',e=>{if(!suggL.length)return;
+  if(e.key==='ArrowDown'){suggI=Math.min(suggI+1,suggL.length-1);hiSugg();e.preventDefault();}
+  else if(e.key==='ArrowUp'){suggI=Math.max(suggI-1,0);hiSugg();e.preventDefault();}
+  else if(e.key==='Enter'){pickStu(suggL[suggI].id);e.preventDefault();}
+  else if(e.key==='Escape'){$('#sugg').style.display='none';}});
 $('#days').innerHTML=THU.map((t,i)=>`<label><input type="checkbox" value="${i}"> ${t}</label>`).join('');
 $('#day').value=iso(new Date());$('#start').value=iso(new Date());
 [['800.000','1 buổi/tuần'],['1.200.000',''],['1.600.000','VIP'],['2.000.000','Kèm/IELTS'],['4.000.000','Kèm tại nhà']].forEach(([v,t])=>{const b=document.createElement('button');b.textContent=v+(t?' ('+t+')':'');b.onclick=()=>{$('#amt').value=v;upd();};$('#quick').appendChild(b);});
@@ -240,7 +265,7 @@ function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','
 // ô số: chỉ nhận chữ số (không nút tăng/giảm, cuộn chuột không đổi số); ô tiền tự thêm dấu chấm khi gõ
 document.querySelectorAll('input.num').forEach(e=>e.addEventListener('input',()=>{
   const d=e.value.replace(/\D/g,'');e.value=e.id==='amt'&&d?fmt(+d):d;}));
-document.querySelectorAll('input,select').forEach(e=>{if(e.id!=='sel'){e.addEventListener('input',upd);e.addEventListener('change',upd);}});
+document.querySelectorAll('input,select').forEach(e=>{if(e.id!=='sel'&&e.id!=='find'){e.addEventListener('input',upd);e.addEventListener('change',upd);}});
 upd();
 async function png(){await document.fonts.ready;const s=$('#sheet'),t=s.style.transform;s.style.transform='';
   try{const c=await Promise.race([html2canvas($('#sheet .hp'),{scale:2,backgroundColor:'#fff',logging:false,imageTimeout:8000}),
