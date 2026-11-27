@@ -91,11 +91,13 @@
   .hp .pay img{width:92px;border:1px solid var(--gold2);padding:3px;background:#fff}
   .hp .pay p{margin:3px 0;font-size:12.5px;color:#55604c}.hp .pay p b{color:var(--ink)}
   .hp .pay .stk{font:800 19px "Be Vietnam Pro",sans-serif;color:var(--gd);letter-spacing:1px}
-  .hp .low{display:grid;grid-template-columns:1fr 170px;gap:16px;margin:18px 30px 0;align-items:end}
+  .hp .low{margin:18px 30px 0}
   .hp .note{font-size:11.5px;line-height:1.6;color:#4A5243}
-  .hp .note .lab{margin-bottom:3px}
-  .hp .sg{text-align:center;font-size:11px;color:#55604c;padding-bottom:2px}
-  .hp .sg .sig{display:block;height:50px;margin:2px auto 0}
+  .hp .note .lab{margin-bottom:4px}
+  .hp .note ul{margin:0;padding-left:16px}.hp .note li{margin:1px 0}
+  .hp .sg{width:200px;margin:12px 0 0 auto;text-align:center;font-size:11px;color:#55604c;padding-bottom:2px}
+  .hp .sg .role{display:block;font-size:12.5px;font-weight:700;color:var(--gd);letter-spacing:.3px;margin-bottom:6px}
+  .hp .sg .sig{display:block;height:50px;margin:0 auto}
   .hp .sg b{display:block;font:700 16px "Be Vietnam Pro",sans-serif;color:var(--gd);border-top:1px solid var(--gold2);padding-top:5px}
   .hp .ft{margin-top:18px;background:var(--hdbg,var(--gd));border-top:2px solid var(--gold);color:var(--gold2);display:flex;justify-content:space-between;padding:9px 22px;font-size:10.5px;letter-spacing:1.8px;font-weight:600}
   .hp .ft b{color:#fff;letter-spacing:1px}
@@ -218,8 +220,13 @@ function upd(){
      ${skip.length?`<div class="off">Nghỉ: ${skip.map(s=>THU[dow(pd(s))]+' '+dm(s)).join(', ')} (đã lùi lịch)</div>`:''}
      ${$('#note').value?`<div class="off" style="color:#3F6E2A">${esc($('#note').value)}</div>`:''}</div>`:''}
    ${!thu?`<div class="pay"><img src="qr-bidv.png"><div><span class="lab">THÔNG TIN CHUYỂN KHOẢN</span><p>Ngân hàng: <b>BIDV – PGD Bắc Hải</b></p><p>Số tài khoản: <span class="stk">8920852117</span></p><p>Chủ tài khoản: <b>HO KINH DOANH TIENG ANH MS MINH THU</b></p><p><i>Nội dung CK: HP – ${esc($('#name').value)||'Họ tên HV'} – ${esc($('#cls').value)||'Lớp'}</i></p></div></div>`:''}
-   <div class="low"><div class="note"><span class="lab">LƯU Ý</span>• Buổi nghỉ được học bù <b>tối đa 2 buổi/tháng</b>.<br>• Học phí không hoàn lại, chỉ được bảo lưu khi có lý do chính đáng.<br>• Học sinh đi học <b>đúng giờ</b>, hoàn thành <b>đầy đủ bài tập về nhà</b>. Không hoàn thành BTVN quá <b>3 buổi/khóa</b> sẽ bị nhắc nhở; tái diễn liên tục sẽ không nhận học tiếp.<br>• Mọi thắc mắc về học phí xin liên hệ <b>0966.101.957</b> (Zalo).</div>
-     <div class="sg">${thu?'Người thu tiền':'Giáo viên phụ trách'}<img class="sig" src="chu-ky.png" alt=""><b>Ms. Minh Thư</b>${thu?'<div class="thx">Cảm ơn Quý Phụ huynh!</div>':''}</div></div>
+   <div class="low"><div class="note"><span class="lab">LƯU Ý VỀ HỌC PHÍ VÀ QUY ĐỊNH HỌC TẬP</span><ul>
+     <li>Học phí được thanh toán <b>đầy đủ vào đầu mỗi khóa học</b> để đảm bảo quyền lợi và duy trì lịch học của học sinh.</li>
+     <li>Học sinh được hỗ trợ học bù <b>tối đa 02 buổi/tháng</b> đối với các buổi nghỉ có thông báo trước.</li>
+     <li>Học sinh cần tham gia lớp học <b>đúng giờ</b> và hoàn thành <b>đầy đủ bài tập</b> được giao.</li>
+     <li>Học phí không hoàn lại. Trường hợp có lý do chính đáng, học phí được xem xét bảo lưu theo quy định của lớp.</li>
+     <li>Mọi thắc mắc liên quan đến học phí, vui lòng liên hệ Ms. Minh Thư <b>0966.101.957</b> (Zalo).</li></ul></div>
+     <div class="sg"><span class="role">${thu?'Người thu tiền':'Giáo viên phụ trách'}</span><img class="sig" src="chu-ky.png" alt=""><b>Ms. Minh Thư</b>${thu?'<div class="thx">Cảm ơn Quý Phụ huynh!</div>':''}</div></div>
    <div class="ft"><span>HOTLINE · ZALO <b>0966.101.957</b></span><span>GROW WITH ENGLISH</span></div></div></div>`;
   fit();
 }
