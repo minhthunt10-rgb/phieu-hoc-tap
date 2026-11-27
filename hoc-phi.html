@@ -173,7 +173,7 @@ function upd(){
      ${skip.length?`<div class="off">Nghỉ: ${skip.map(s=>THU[dow(pd(s))]+' '+dm(s)).join(', ')} (đã lùi lịch)</div>`:''}
      ${$('#note').value?`<div class="off" style="color:#3F6E2A">${esc($('#note').value)}</div>`:''}</div>
    ${kind==='bao'?`<div class="pay"><img src="qr-bidv.png"><div><p>Ngân hàng: <b>BIDV – PGD Bắc Hải</b></p><p>Số TK: <span class="stk">8920852117</span></p><p>Chủ TK: <b>HO KINH DOANH TIENG ANH MS MINH THU</b></p><p><i>Nội dung CK: HP – ${esc($('#name').value)||'Họ tên HV'} – ${esc($('#cls').value)||'Lớp'}</i></p></div></div>`:''}
-   <div class="note">• Buổi nghỉ có báo trước được học bù hoặc trừ vào kỳ sau.<br>• Mọi thắc mắc về học phí xin liên hệ <b>0966.101.957</b> (Zalo).</div>
+   <div class="note"><b style="color:#3F6E2A">Lưu ý:</b><br>• Buổi nghỉ được học bù <b>tối đa 2 buổi/tháng</b>.<br>• Học phí không hoàn lại, chỉ được bảo lưu khi có lý do chính đáng.<br>• Học sinh đi học <b>đúng giờ</b>, hoàn thành <b>đầy đủ bài tập về nhà</b>. Không hoàn thành BTVN quá <b>3 buổi/khóa</b> sẽ bị nhắc nhở; tái diễn liên tục sẽ không nhận học tiếp.<br>• Mọi thắc mắc về học phí xin liên hệ <b>0966.101.957</b> (Zalo).</div>
    <div class="sg"><div>Giáo viên phụ trách<b>Ms. Minh Thư</b></div></div>
    <div class="ft"><span>THÔNG TIN LIÊN HỆ</span><span>SĐT: <b>0966.101.957</b></span><span>GROW WITH ENGLISH</span></div></div>`;
   fit();
