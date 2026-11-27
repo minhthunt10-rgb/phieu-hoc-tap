@@ -275,6 +275,9 @@ button.kt-tag{cursor:pointer}
 .lich-miss>b{display:block;color:#b23;margin-bottom:4px}
 .lich-miss .lm-hs{display:inline-flex;align-items:center;gap:6px;margin:3px 14px 3px 0}
 .lich-miss .btn.sm{padding:3px 10px;font-size:13px}
+.lich-bai{display:block;margin-top:6px;clear:right}.lich-bai span{display:block;font-size:13px;font-weight:700;color:#7A4FB5;margin-bottom:2px}
+.lich-bai textarea{width:100%;min-height:44px;box-sizing:border-box;font:inherit;font-size:14px;padding:5px 8px;border:1px dashed #B9A3DC;border-radius:8px;background:#FBF8FF;resize:vertical}
+.lich-bai textarea:focus{border-style:solid;outline:none;border-color:#7A4FB5;background:#fff}
 .lich-miss .lm-b{margin:3px 8px 3px 0}
 .lich-miss .lm-b small{font-weight:400;opacity:.9}
 .lich-miss>b small{font-weight:400;color:#8a4b4b}
